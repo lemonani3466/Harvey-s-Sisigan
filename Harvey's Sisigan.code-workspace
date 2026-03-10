@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "sisigan backend",
+			"path": "sisigan backend"
+		},
+		{
+			"name": "sisigan-pos-web",
+			"path": "sisigan-pos-web"
+		}
+	],
+	"settings": {}
+}

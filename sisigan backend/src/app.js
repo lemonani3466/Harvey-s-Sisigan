@@ -1,0 +1,52 @@
+// src/app.js
+// Express app setup - routes, middleware, CORS
+
+const express = require('express');
+const cors = require('cors');
+
+const authRoutes      = require('./modules/auth/auth.routes');
+const menuRoutes      = require('./modules/menu/menu.routes');
+const orderRoutes     = require('./modules/orders/order.routes');
+const userRoutes      = require('./modules/users/user.routes');
+const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const errorMiddleware = require('./middleware/error.middleware');
+
+const app = express();
+
+// ── Core Middleware ───────────────────────────────────
+app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ── Inject Socket.IO into req (set by server.js) ──────
+app.use((req, res, next) => {
+  req.io = app.get('io');
+  next();
+});
+
+// ── Health Check ──────────────────────────────────────
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    service: 'Sisigan Restaurant POS API',
+    version: '1.0.0',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// ── API Routes ────────────────────────────────────────
+app.use('/api/auth',      authRoutes);
+app.use('/api/menu',      menuRoutes);
+app.use('/api/orders',    orderRoutes);
+app.use('/api/users',     userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+
+// ── 404 Handler ───────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route ${req.method} ${req.url} not found.` });
+});
+
+// ── Global Error Handler ──────────────────────────────
+app.use(errorMiddleware);
+
+module.exports = app;

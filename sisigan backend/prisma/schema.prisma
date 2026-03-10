@@ -1,0 +1,175 @@
+// prisma/schema.prisma
+// Sisigan Restaurant - Multi-branch POS System
+// Database: MySQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// BRANCH
+// ─────────────────────────────────────────
+model Branch {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  address   String   @db.VarChar(255)
+  city      String   @db.VarChar(100)
+  contactNo String?  @db.VarChar(20)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users  User[]
+  orders Order[]
+
+  @@map("branches")
+}
+
+// ─────────────────────────────────────────
+// USER (Staff)
+// ─────────────────────────────────────────
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  email     String   @unique @db.VarChar(150)
+  password  String   @db.VarChar(255)
+  role      Role     @default(CASHIER)
+  branchId  Int
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  branch Branch  @relation(fields: [branchId], references: [id])
+  orders Order[]
+
+  @@index([branchId])
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  CASHIER
+}
+
+// ─────────────────────────────────────────
+// MENU
+// ─────────────────────────────────────────
+model Category {
+  id        Int        @id @default(autoincrement())
+  name      String     @db.VarChar(100) // e.g. Sisig, Drinks, Add-ons
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+
+  items MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          Int      @id @default(autoincrement())
+  name        String   @db.VarChar(150)
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?  @db.VarChar(500)
+  isAvailable Boolean  @default(true)
+  categoryId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category   Category    @relation(fields: [categoryId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([categoryId])
+  @@index([isAvailable])
+  @@map("menu_items")
+}
+
+// ─────────────────────────────────────────
+// ORDER
+// ─────────────────────────────────────────
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNumber String      @unique @db.VarChar(30) // e.g. BR1-00001
+  status      OrderStatus @default(PENDING)
+  type        OrderType   @default(DINE_IN)
+  tableNumber String?     @db.VarChar(20)
+  customerName String?    @db.VarChar(100)
+  totalAmount Decimal     @db.Decimal(10, 2)
+  notes       String?     @db.Text
+  branchId    Int
+  cashierId   Int
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  branch  Branch      @relation(fields: [branchId], references: [id])
+  cashier User        @relation(fields: [cashierId], references: [id])
+  items   OrderItem[]
+  payment Payment?
+
+  @@index([branchId])
+  @@index([cashierId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+enum OrderStatus {
+  PENDING    // Order received, not yet confirmed
+  PREPARING  // Kitchen is preparing
+  READY      // Ready for serve/pickup
+  COMPLETED  // Paid and done
+  CANCELLED  // Void/Cancelled
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEOUT
+  DELIVERY
+}
+
+model OrderItem {
+  id         Int     @id @default(autoincrement())
+  orderId    Int
+  menuItemId Int
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(10, 2) // Snapshot of price at time of order
+  subtotal   Decimal @db.Decimal(10, 2)
+  notes      String? @db.VarChar(255)   // e.g. "Extra spicy, no onions"
+
+  order    Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id])
+
+  @@index([orderId])
+  @@index([menuItemId])
+  @@map("order_items")
+}
+
+// ─────────────────────────────────────────
+// PAYMENT
+// ─────────────────────────────────────────
+model Payment {
+  id          Int           @id @default(autoincrement())
+  orderId     Int           @unique
+  method      PaymentMethod
+  amountPaid  Decimal       @db.Decimal(10, 2)
+  change      Decimal       @db.Decimal(10, 2) @default(0)
+  referenceNo String?       @db.VarChar(100)   // GCash/Maya/Card ref
+  processedAt DateTime      @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+enum PaymentMethod {
+  CASH
+  GCASH
+  MAYA
+  CARD
+}

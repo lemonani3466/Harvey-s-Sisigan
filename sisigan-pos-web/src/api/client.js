@@ -1,0 +1,60 @@
+// src/api/client.js
+// Centralized API helper — all backend calls go through here
+
+const BASE = '/api'
+
+async function request(path, options = {}) {
+  const token = localStorage.getItem('sisigan_token')
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(`${BASE}${path}`, { ...options, headers })
+  const data = await res.json()
+
+  if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`)
+  return data
+}
+
+// ── Auth ──────────────────────────────────────────────────
+export const authApi = {
+  login:  (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me:     ()                => request('/auth/me'),
+}
+
+// ── Menu ──────────────────────────────────────────────────
+export const menuApi = {
+  categories: ()           => request('/menu/categories'),
+  all:        ()           => request('/menu'),
+  create:     (data)       => request('/menu',            { method: 'POST',  body: JSON.stringify(data) }),
+  update:     (id, data)   => request(`/menu/${id}`,      { method: 'PATCH', body: JSON.stringify(data) }),
+  toggle:     (id)         => request(`/menu/${id}/toggle`, { method: 'PATCH' }),
+}
+
+// ── Dashboard ─────────────────────────────────────────────
+export const dashboardApi = {
+  get:       (params = {}) => {
+    const q = new URLSearchParams(params).toString()
+    return request(`/dashboard${q ? '?' + q : ''}`)
+  },
+  branches:  () => request('/dashboard/branches'),
+}
+
+// ── Users ─────────────────────────────────────────────────
+export const usersApi = {
+  list:           ()             => request('/users'),
+  create:         (data)         => request('/users',                 { method: 'POST',  body: JSON.stringify(data) }),
+  update:         (id, data)     => request(`/users/${id}`,           { method: 'PATCH', body: JSON.stringify(data) }),
+  resetPassword:  (id, pwd)      => request(`/users/${id}/password`,  { method: 'PATCH', body: JSON.stringify({ newPassword: pwd }) }),
+  toggle:         (id)           => request(`/users/${id}/toggle`,    { method: 'PATCH' }),
+}
+export const ordersApi = {
+  list:          (params = {}) => {
+    const q = new URLSearchParams(params).toString()
+    return request(`/orders${q ? '?' + q : ''}`)
+  },
+  get:           (id)          => request(`/orders/${id}`),
+  create:        (data)        => request('/orders',               { method: 'POST',  body: JSON.stringify(data) }),
+  updateStatus:  (id, status)  => request(`/orders/${id}/status`,  { method: 'PATCH', body: JSON.stringify({ status }) }),
+  cancel:        (id)          => request(`/orders/${id}`,         { method: 'DELETE' }),
+  pay:           (id, data)    => request(`/orders/${id}/payment`, { method: 'POST',  body: JSON.stringify(data) }),
+}
