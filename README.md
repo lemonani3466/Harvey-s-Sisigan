@@ -1,19 +1,31 @@
-CD both backend and front end 
+### CD both backend and frontend mga hindot
 
+### Terminal 1 — Backend
+```bash
 cd sisigan backend
 npm install
 cp .env.example .env
 npx prisma generate
 npx prisma migrate dev
 npm run db:seed
-node server.js
-
-cd sisigan front end
+```
+### Terminal 2 — Frontend
+```bash
+cd sisigan frontend
 npm install
+```
+## How to Run
 
-How to run
-cd sisigan backend
+### Terminal 1 — Backend
+```bash
+cd sisigan-pos-backend
 npm run dev
+```
+> Runs at http://localhost:3000
 
-cd sisigan front end
+### Terminal 2 — Frontend
+```bash
+cd sisigan-frontend
 npm run dev
+```
+> Opens at http://localhost:5173
