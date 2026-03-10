@@ -12,6 +12,16 @@ prisma/*.db-journal
 *.log
 npm-debug.log*
 
+# Backend
+sisigan-pos-backend/node_modules/
+sisigan-pos-backend/.env
+
+# Frontend
+sisigan-pos-web/node_modules/
+sisigan-pos-web/.env
+
+
 # OS
 .DS_Store
 Thumbs.db
+
