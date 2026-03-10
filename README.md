@@ -1,4 +1,5 @@
 ### CD both backend and frontend mga hindot
+  Need niyo MySQL at Node.JS tyaka bago irun open niyo na XAMPP Apache at MySQL 
 
 ### Terminal 1 — Backend
 ```bash
@@ -29,3 +30,5 @@ cd sisigan-frontend
 npm run dev
 ```
 > Opens at http://localhost:5173
+
+|
