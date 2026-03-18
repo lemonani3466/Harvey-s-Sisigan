@@ -19,7 +19,7 @@ npm install
 
 ### Terminal 1 — Backend
 ```bash
-cd :sisigan backend"
+cd "sisigan backend"
 npm run dev
 ```
 > Runs at http://localhost:3000
