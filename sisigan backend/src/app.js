@@ -9,6 +9,7 @@ const menuRoutes      = require('./modules/menu/menu.routes');
 const orderRoutes     = require('./modules/orders/order.routes');
 const userRoutes      = require('./modules/users/user.routes');
 const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const branchRoutes    = require('./modules/branches/branch.routes');
 const errorMiddleware = require('./middleware/error.middleware');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/menu',      menuRoutes);
 app.use('/api/orders',    orderRoutes);
 app.use('/api/users',     userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/branches',  branchRoutes);
 
 // ── 404 Handler ───────────────────────────────────────
 app.use((req, res) => {

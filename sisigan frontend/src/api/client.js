@@ -30,6 +30,14 @@ export const menuApi = {
   toggle:     (id)         => request(`/menu/${id}/toggle`, { method: 'PATCH' }),
 }
 
+// ── Branches ──────────────────────────────────────────────
+export const branchesApi = {
+  list:   ()         => request('/branches'),
+  create: (data)     => request('/branches',           { method: 'POST',  body: JSON.stringify(data) }),
+  update: (id, data) => request(`/branches/${id}`,     { method: 'PATCH', body: JSON.stringify(data) }),
+  toggle: (id)       => request(`/branches/${id}/toggle`, { method: 'PATCH' }),
+}
+
 // ── Dashboard ─────────────────────────────────────────────
 export const dashboardApi = {
   get:       (params = {}) => {

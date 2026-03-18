@@ -12,8 +12,9 @@ export default function Navbar() {
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['MANAGER', 'ADMIN'] },
     { to: '/pos',       label: 'New Order', icon: '🧾', roles: ['ADMIN', 'CASHIER'] },
-    { to: '/orders',    label: 'Orders',    icon: '📋', roles: ['MANAGER', 'ADMIN', 'CASHIER'] },
+    { to: '/orders',    label: 'Orders',    icon: '📋', roles: ['ADMIN', 'CASHIER'] },
     { to: '/menu',      label: 'Menu',      icon: '🍽️', roles: ['MANAGER', 'ADMIN'] },
+    { to: '/branches',  label: 'Branches',  icon: '🏪', roles: ['MANAGER'] },
     { to: '/users',     label: 'Accounts',  icon: '👥', roles: ['MANAGER', 'ADMIN'] },
   ].filter(item => item.roles.includes(user?.role))
 

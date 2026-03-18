@@ -2,12 +2,12 @@
 
 const prisma = require('../../config/db');
 
-async function getMenuWithCategories() {
+async function getMenuWithCategories({ includeUnavailable = false } = {}) {
   return prisma.category.findMany({
     orderBy: { sortOrder: 'asc' },
     include: {
       items: {
-        where: { isAvailable: true },
+        where: includeUnavailable ? {} : { isAvailable: true },
         orderBy: { name: 'asc' },
       },
     },

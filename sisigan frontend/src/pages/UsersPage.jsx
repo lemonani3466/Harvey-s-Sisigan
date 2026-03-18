@@ -259,17 +259,26 @@ export default function UsersPage() {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                <button onClick={() => setEditUser(u)} style={actionBtn} title="Edit">✏️</button>
-                <button onClick={() => setResetUser(u)} style={actionBtn} title="Reset password">🔑</button>
-                {u.id !== me?.id && (
-                  <button
-                    onClick={() => handleToggle(u.id)}
-                    disabled={toggling === u.id}
-                    style={{ ...actionBtn, color: u.isActive ? 'var(--red)' : 'var(--green)' }}
-                    title={u.isActive ? 'Deactivate' : 'Activate'}
-                  >
-                    {toggling === u.id ? '…' : u.isActive ? '🚫' : '✅'}
-                  </button>
+                {/* Admin can only act on Cashiers — hide buttons for Manager/Admin rows */}
+                {(me?.role === 'MANAGER' || u.role === 'CASHIER') && (
+                  <>
+                    <button onClick={() => setEditUser(u)} style={actionBtn} title="Edit">✏️</button>
+                    <button onClick={() => setResetUser(u)} style={actionBtn} title="Reset password">🔑</button>
+                    {u.id !== me?.id && (
+                      <button
+                        onClick={() => handleToggle(u.id)}
+                        disabled={toggling === u.id}
+                        style={{ ...actionBtn, color: u.isActive ? 'var(--red)' : 'var(--green)' }}
+                        title={u.isActive ? 'Deactivate' : 'Activate'}
+                      >
+                        {toggling === u.id ? '…' : u.isActive ? '🚫' : '✅'}
+                      </button>
+                    )}
+                  </>
+                )}
+                {/* Show a lock icon for rows the Admin cannot touch */}
+                {me?.role === 'ADMIN' && u.role !== 'CASHIER' && u.id !== me?.id && (
+                  <span title="No permission to edit this account" style={{ fontSize: 16, opacity: 0.35 }}>🔒</span>
                 )}
               </div>
             </div>

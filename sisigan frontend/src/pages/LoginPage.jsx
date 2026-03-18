@@ -16,8 +16,13 @@ export default function LoginPage() {
   async function handleLogin() {
     setLoading(true); setError('')
     try {
-      await login(email, password)
-      navigate('/pos')
+      const loggedInUser = await login(email, password)
+      // Redirect based on role
+      if (loggedInUser?.role === 'CASHIER') {
+        navigate('/pos')
+      } else {
+        navigate('/dashboard') 
+      }
     } catch (e) {
       setError(e.message)
     } finally {

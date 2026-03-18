@@ -238,28 +238,36 @@ export default function DashboardPage() {
           ) : <EmptyState icon="🏆" title="No sales data yet" />}
         </Section>
 
-        {/* Payment Breakdown */}
+        {/* Payment Breakdown — always shown, even with 0 transactions */}
         <Section title="💳 Payment Methods">
-          {data?.paymentBreakdown?.length ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {data.paymentBreakdown.map((p, i) => {
-                const maxTotal = data.paymentBreakdown[0].total
-                const pct = Math.round((p.total / maxTotal) * 100)
-                return (
-                  <div key={p.method}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
-                      <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{p.method}</span>
-                      <span style={{ color: 'var(--brown-700)', fontWeight: 700 }}>{fmt(p.total)}</span>
-                    </div>
-                    <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
-                      <div style={{ width: `${pct}%`, background: COLORS[i % COLORS.length], borderRadius: 6, height: 8, transition: 'width 0.5s' }} />
-                    </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{p.count} transaction{p.count !== 1 ? 's' : ''}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {(data?.paymentBreakdown || []).map((p, i) => {
+              const maxTotal = Math.max(...(data.paymentBreakdown.map(x => x.total)), 1)
+              const pct = Math.round((p.total / maxTotal) * 100)
+              return (
+                <div key={p.method}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
+                    <span style={{ fontWeight: 600, color: p.count > 0 ? 'var(--text-dark)' : 'var(--text-faint)' }}>
+                      {p.method}
+                    </span>
+                    <span style={{ color: p.count > 0 ? 'var(--brown-700)' : 'var(--text-faint)', fontWeight: 700 }}>
+                      {fmt(p.total)}
+                    </span>
                   </div>
-                )
-              })}
-            </div>
-          ) : <EmptyState icon="💳" title="No payment data yet" />}
+                  <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
+                    <div style={{
+                      width: `${pct}%`, borderRadius: 6, height: 8,
+                      background: p.count > 0 ? COLORS[i % COLORS.length] : 'var(--border)',
+                      transition: 'width 0.5s',
+                    }} />
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
+                    {p.count} transaction{p.count !== 1 ? 's' : ''}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </Section>
       </div>
 

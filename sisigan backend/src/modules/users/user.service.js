@@ -1,5 +1,4 @@
 // src/modules/users/user.service.js
-// Account management — MANAGER sees all branches, ADMIN sees own branch only
 
 const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
@@ -72,6 +71,11 @@ async function updateUser(userId, { name, email, role, branchId, isActive }, req
     throw { statusCode: 403, message: 'Access denied.' };
   }
 
+  // Admin cannot edit Managers or other Admins — only Cashiers
+  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Admins can only edit Cashier accounts.' };
+  }
+
   // Admin cannot change roles or branches
   if (requestingUser.role === 'ADMIN' && (role || branchId)) {
     throw { statusCode: 403, message: 'Admins cannot change roles or branch assignments.' };
@@ -103,6 +107,11 @@ async function resetPassword(userId, newPassword, requestingUser) {
     throw { statusCode: 403, message: 'Access denied.' };
   }
 
+  // Admin can only reset passwords of Cashiers
+  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Admins can only reset passwords for Cashier accounts.' };
+  }
+
   const hashed = await bcrypt.hash(newPassword, 12);
   await prisma.user.update({ where: { id: Number(userId) }, data: { password: hashed } });
   return { message: 'Password updated successfully.' };
@@ -115,6 +124,11 @@ async function toggleActive(userId, requestingUser) {
 
   if (requestingUser.role === 'ADMIN' && target.branchId !== requestingUser.branchId) {
     throw { statusCode: 403, message: 'Access denied.' };
+  }
+
+  // Admin can only toggle Cashiers
+  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Admins can only activate/deactivate Cashier accounts.' };
   }
 
   // Cannot deactivate yourself

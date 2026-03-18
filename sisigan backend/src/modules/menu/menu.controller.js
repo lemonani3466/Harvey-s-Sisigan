@@ -5,7 +5,10 @@ const { validationResult } = require('express-validator');
 
 async function getMenuByCategory(req, res, next) {
   try {
-    const menu = await menuService.getMenuWithCategories();
+    // POS screen (no auth or cashier): available items only
+    // Menu management page (admin/manager): include disabled items too
+    const includeUnavailable = req.user?.role === 'ADMIN' || req.user?.role === 'MANAGER';
+    const menu = await menuService.getMenuWithCategories({ includeUnavailable });
     res.json({ success: true, data: menu });
   } catch (err) { next(err); }
 }

@@ -2,12 +2,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/layout/Navbar'
-import LoginPage    from './pages/LoginPage'
-import POSPage      from './pages/POSPage'
-import OrdersPage   from './pages/OrdersPage'
-import MenuPage     from './pages/MenuPage'
+import LoginPage     from './pages/LoginPage'
+import POSPage       from './pages/POSPage'
+import OrdersPage    from './pages/OrdersPage'
+import MenuPage      from './pages/MenuPage'
 import DashboardPage from './pages/DashboardPage'
-import UsersPage    from './pages/UsersPage'
+import UsersPage     from './pages/UsersPage'
+import BranchesPage  from './pages/BranchesPage'
 
 // ── Role guard: redirect if user doesn't have required role ──
 function RoleRoute({ element, roles }) {
@@ -39,6 +40,7 @@ function ProtectedLayout() {
         <Route path="/orders"    element={<OrdersPage />} />
         <Route path="/menu"      element={<RoleRoute element={<MenuPage />}      roles={['MANAGER', 'ADMIN']} />} />
         <Route path="/users"     element={<RoleRoute element={<UsersPage />}     roles={['MANAGER', 'ADMIN']} />} />
+        <Route path="/branches"  element={<RoleRoute element={<BranchesPage />} roles={['MANAGER']} />} />
         <Route path="*"          element={<Navigate to={defaultRoute} replace />} />
       </Routes>
     </>
