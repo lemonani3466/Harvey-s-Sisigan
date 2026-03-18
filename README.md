@@ -3,7 +3,7 @@
 
 ### Terminal 1 — Backend
 ```bash
-cd sisigan backend
+cd "sisigan backend"
 npm install
 cp .env.example .env
 npx prisma generate
@@ -12,23 +12,27 @@ npm run db:seed
 ```
 ### Terminal 2 — Frontend
 ```bash
-cd sisigan frontend
+cd "sisigan frontend"
 npm install
 ```
 ## How to Run
 
 ### Terminal 1 — Backend
 ```bash
-cd sisigan-pos-backend
+cd "sisigan backend"
 npm run dev
 ```
 > Runs at http://localhost:3000
 
 ### Terminal 2 — Frontend
 ```bash
-cd sisigan-frontend
+cd "sisigan frontend"
 npm run dev
 ```
 > Opens at http://localhost:5173
 
+<<<<<<< HEAD
 |
+=======
+|
+>>>>>>> 0a238746efde8312a5f608bcb22c4902a17b5ba1
