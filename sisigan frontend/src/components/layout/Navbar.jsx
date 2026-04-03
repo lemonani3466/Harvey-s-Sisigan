@@ -20,14 +20,14 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      height: 'var(--nav-height)', background: 'var(--brown-800)',
+      height: '70px', background: 'var(--brown-800)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 24px', boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
       position: 'sticky', top: 0, zIndex: 100,
     }}>
       {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 22 }}>🍖</span>
+        <span style={{ fontSize: 30 }}>🍖</span>
         <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: 18, fontWeight: 700 }}>Sisigan</span>
         <span style={{
           background: 'var(--brown-100)', color: 'var(--brown-800)',
@@ -42,9 +42,9 @@ export default function Navbar() {
       <div style={{ display: 'flex', gap: 4 }}>
         {navItems.map(item => (
           <NavLink key={item.to} to={item.to} style={({ isActive }) => ({
-            display: 'flex', alignItems: 'center', gap: 6,
+            display: 'flex', alignItems: 'center', gap: 7,
             padding: '7px 14px', borderRadius: 'var(--radius-md)',
-            textDecoration: 'none', fontSize: 13, fontWeight: 600,
+            textDecoration: 'none', fontSize: 15, fontWeight: 600,
             background: isActive ? 'rgba(255,255,255,0.18)' : 'transparent',
             color: isActive ? '#fff' : 'rgba(255,255,255,0.65)',
             transition: 'background 0.15s, color 0.15s',

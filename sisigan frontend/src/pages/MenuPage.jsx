@@ -143,10 +143,10 @@ export default function MenuPage() {
             const disabledCount = cat.items.filter(i => !i.isAvailable).length
             return (
               <button key={cat.id} onClick={() => setActiveTab(cat.id)} style={{
-                padding: '7px 18px', borderRadius: 'var(--radius-full)', border: 'none',
+                padding: '10px 18px', borderRadius: 'var(--radius-full)', border: 'none',
                 background: activeTab === cat.id ? 'var(--brown-600)' : 'var(--brown-100)',
                 color: activeTab === cat.id ? '#fff' : 'var(--brown-800)',
-                fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+                fontWeight: 700, fontSize: 13, cursor: 'pointer', transition: 'all 0.15s',
               }}>
                 {cat.name} <span style={{ opacity: 0.7 }}>({cat.items.length})</span>
                 {disabledCount > 0 && (
