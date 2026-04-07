@@ -173,6 +173,7 @@ export default function DashboardPage() {
         <StatCard icon="💰" label="Total Sales"       value={fmt(s.totalSales || 0)}      color="var(--brown-800)" />
         <StatCard icon="🧾" label="Completed Orders"  value={s.totalOrders || 0}           sub={`Avg ${fmt(s.avgOrderValue || 0)} / order`} />
         <StatCard icon="📦" label="All Orders"        value={s.allOrdersCount || 0}        sub={`${s.cancelledCount || 0} cancelled`} />
+        {/*<StatCard icon="📊" label="Avg Order Value"   value={fmt(s.avgOrderValue || 0)}    color="var(--green)" />*/}
       </div>
 
       {/* ── Charts row 1 ───────────────────────────────── */}
@@ -212,7 +213,7 @@ export default function DashboardPage() {
                   ))}
                 </Pie>
                 <Tooltip formatter={(v) => [`₱${Number(v).toLocaleString('en-PH', { minimumFractionDigits: 2 })}`, 'Sales']} />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 14 }} />
+                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
           ) : <EmptyState icon="🥧" title="No category data yet" />}
@@ -225,48 +226,40 @@ export default function DashboardPage() {
         {/* Best Sellers */}
         <Section title="🏆 Best Sellers (by quantity)">
           {data?.bestSellers?.length ? (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={data.bestSellers} layout="vertical" margin={{ left: 10, right: 20 }} barCategoryGap="10%">
+            <ResponsiveContainer width="100%" height={240}>~
+              <BarChart data={data.bestSellers} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 13 }} />
+                <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
                 <Tooltip content={<ChartTooltip prefix="" />} formatter={(v, n) => [v, n === 'qty' ? 'Qty sold' : 'Revenue']} />
-                <Bar dataKey="qty" name="Quanty" fill="var(--brown-500)" radius={[0, 4, 4, 0]} />
+                <Bar dataKey="qty" name="qty" fill="var(--brown-500)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : <EmptyState icon="🏆" title="No sales data yet" />}
         </Section>
 
-        {/* Payment Breakdown — always shown, even with 0 transactions */}
+        {/* Payment Breakdown */}
         <Section title="💳 Payment Methods">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {(data?.paymentBreakdown || []).map((p, i) => {
-              const maxTotal = Math.max(...(data.paymentBreakdown.map(x => x.total)), 1)
-              const pct = Math.round((p.total / maxTotal) * 100)
-              return (
-                <div key={p.method}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
-                    <span style={{ fontWeight: 600, color: p.count > 0 ? 'var(--text-dark)' : 'var(--text-faint)' }}>
-                      {p.method}
-                    </span>
-                    <span style={{ color: p.count > 0 ? 'var(--brown-700)' : 'var(--text-faint)', fontWeight: 700 }}>
-                      {fmt(p.total)}
-                    </span>
+          {data?.paymentBreakdown?.length ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {data.paymentBreakdown.map((p, i) => {
+                const maxTotal = data.paymentBreakdown[0].total
+                const pct = Math.round((p.total / maxTotal) * 100)
+                return (
+                  <div key={p.method}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{p.method}</span>
+                      <span style={{ color: 'var(--brown-700)', fontWeight: 700 }}>{fmt(p.total)}</span>
+                    </div>
+                    <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
+                      <div style={{ width: `${pct}%`, background: COLORS[i % COLORS.length], borderRadius: 6, height: 8, transition: 'width 0.5s' }} />
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{p.count} transaction{p.count !== 1 ? 's' : ''}</div>
                   </div>
-                  <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
-                    <div style={{
-                      width: `${pct}%`, borderRadius: 6, height: 8,
-                      background: p.count > 0 ? COLORS[i % COLORS.length] : 'var(--border)',
-                      transition: 'width 0.5s',
-                    }} />
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
-                    {p.count} transaction{p.count !== 1 ? 's' : ''}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          ) : <EmptyState icon="💳" title="No payment data yet" />}
         </Section>
       </div>
 
@@ -296,8 +289,8 @@ export default function DashboardPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
               <thead>
                 <tr style={{ background: 'var(--brown-50)' }}>
-                  {['#', 'Item', 'Quanty Sold', 'Revenue'].map(h => (
-                    <th key={h} style={{ padding: '9px 12px', textAlign: h === '#' || h === 'Quanty Sold' || h === 'Revenue' ? 'center' : 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                  {['#', 'Item', 'Qty Sold', 'Revenue'].map(h => (
+                    <th key={h} style={{ padding: '9px 12px', textAlign: h === '#' || h === 'Qty Sold' || h === 'Revenue' ? 'center' : 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {h}
                     </th>
                   ))}
@@ -309,9 +302,9 @@ export default function DashboardPage() {
                     <td style={{ padding: '9px 12px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                     </td>
-                    <td style={{ padding: '9px 12px',fontSize: 14,fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center',fontSize: 14, fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center',fontSize: 14 ,fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
+                    <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
+                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
+                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
                   </tr>
                 ))}
               </tbody>

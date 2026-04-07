@@ -146,8 +146,14 @@ function PaymentModal({ order, onClose, onPaid }) {
   )
 }
 
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+
+
 // ─── POS PAGE ─────────────────────────────────────────────
 export default function POSPage() {
+
+  console.log("Backend URL:", BACKEND_URL)
+
   const [menu,           setMenu]           = useState([])
   const [activeCategory, setActiveCategory] = useState(null)
   const [cart,           setCart]           = useState([])
@@ -252,6 +258,7 @@ export default function POSPage() {
           gap: 10, alignContent: 'start',
         }}>
           {currentItems.map(item => {
+            console.log(item.imageUrl)
             const inCart = cart.find(i => i.id === item.id)
             return (
               <div
@@ -266,6 +273,20 @@ export default function POSPage() {
                 onMouseEnter={e => { if (!inCart) e.currentTarget.style.borderColor = 'var(--brown-300)' }}
                 onMouseLeave={e => { if (!inCart) e.currentTarget.style.borderColor = 'var(--border)' }}
               >
+                {item.imageUrl && (
+                  <img
+                    src={`${BACKEND_URL}${item.imageUrl}`}
+                    alt={item.name}
+                    //onError={e => { e.currentTarget.src = '/fallback.jpg' }} // fallback if missing
+                    style={{
+                      width: '100%',
+                      height: 100,
+                      objectFit: 'cover',
+                      borderRadius: 'var(--radius-md)',
+                      marginBottom: 8,
+                    }}
+                  />
+                )}
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 4, lineHeight: 1.3 }}>
                   {item.name}
                 </div>

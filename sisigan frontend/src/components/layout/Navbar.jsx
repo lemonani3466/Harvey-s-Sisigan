@@ -2,6 +2,8 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
+import logo from '../../assets/LOGO/logo.jpg'
+
 export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -27,8 +29,9 @@ export default function Navbar() {
     }}>
       {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 30 }}>🍖</span>
-        <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: 18, fontWeight: 700 }}>Sisigan</span>
+        {/* <span style={{ fontSize: 22 }}>🍖</span> */}
+        <img src={logo} alt="Harvey's Sisig Logo" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
+        <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: 18, fontWeight: 700 }}>Harvey's Special Crispy Sisig</span>
         <span style={{
           background: 'var(--brown-100)', color: 'var(--brown-800)',
           fontSize: 11, fontWeight: 700, padding: '3px 10px',

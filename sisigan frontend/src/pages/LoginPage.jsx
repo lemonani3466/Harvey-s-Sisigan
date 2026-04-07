@@ -4,117 +4,191 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button, Input } from '../components/ui'
 
+import wall1 from '../assets/LOGO/wall1.jpg'
+import logo from '../assets/LOGO/logo.jpg'
+
 export default function LoginPage() {
-  const { login } = useAuth()
-  const navigate  = useNavigate()
 
-  const [email,    setEmail]    = useState('cashier1@sisigan.ph')
-  const [password, setPassword] = useState('cashier123')
-  const [loading,  setLoading]  = useState(false)
-  const [error,    setError]    = useState('')
+const { login } = useAuth()
+const navigate = useNavigate()
 
-  async function handleLogin() {
-    setLoading(true); setError('')
-    try {
-      const loggedInUser = await login(email, password)
-      // Redirect based on role
-      if (loggedInUser?.role === 'CASHIER') {
-        navigate('/pos')
-      } else {
-        navigate('/dashboard') 
-      }
-    } catch (e) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
+const [email, setEmail] = useState('cashier1@sisigan.ph')
+const [password, setPassword] = useState('cashier123')
+const [loading, setLoading] = useState(false)
+const [error, setError] = useState('')
+
+async function handleLogin() {
+setLoading(true)
+setError('')
+
+try {
+  const loggedInUser = await login(email, password)
+
+  if (loggedInUser?.role === 'CASHIER') {
+    navigate('/pos')
+  } else {
+    navigate('/dashboard')
   }
 
-  return (
+} catch (e) {
+  setError(e.message)
+} finally {
+  setLoading(false)
+}
+
+
+}
+
+return (
+
+<div style={{
+  minHeight: '100vh',
+
+  background: 'var(--brown-900)',
+  // backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${wall1})`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
+
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: 20
+}}>
+
+  {/* Login Container */}
+  <div style={{
+    display: 'flex',
+    width: 900,
+    maxWidth: '95%',
+    borderRadius: 'var(--radius-xl)',
+    overflow: 'hidden',
+    boxShadow: 'var(--shadow-xl)'
+  }}>
+
+    {/* LEFT PANEL (LOGO) */}
     <div style={{
-      minHeight: '100vh',
-      background: 'var(--brown-950)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 16,
+      flex: 1,
+      background: 'var(--brown-600)',
+      color: '#fff',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: 40,
+      textAlign: 'center'
     }}>
-      {/* Background texture */}
-      <div style={{
-        position: 'fixed', inset: 0, opacity: 0.04,
-        backgroundImage: 'radial-gradient(circle at 2px 2px, #fff 1px, transparent 0)',
-        backgroundSize: '32px 32px',
-      }} />
 
-      <div className="animate-slide" style={{
-        background: 'var(--cream)', borderRadius: 'var(--radius-xl)',
-        padding: '48px 40px', width: 380,
-        boxShadow: 'var(--shadow-xl)',
-        position: 'relative',
+      <img
+        src={logo}
+        alt="logo"
+        style={{ width: 160, marginBottom: 20 }}
+      />
+
+      <h2 style={{
+        fontFamily: 'var(--font-display)',
+        fontWeight: 700
       }}>
-        {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ fontSize: 48, marginBottom: 8 }}>🍖</div>
-          <h1 style={{
-            fontFamily: 'var(--font-display)', fontSize: 28,
-            color: 'var(--brown-800)', fontWeight: 700, marginBottom: 4,
-          }}>
-            Sisigan
-          </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            Point of Sale System
-          </p>
+        Harvey's Special Crispy Sisig
+      </h2>
+
+      <p style={{
+        opacity: 0.8,
+        fontSize: 13
+      }}>
+        Point of Sale System
+      </p>
+
+    </div>
+
+
+    {/* RIGHT PANEL (LOGIN FORM) */}
+    <div style={{
+      flex: 1,
+      background: 'var(--cream)',
+      padding: '50px 40px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center'
+    }}>
+
+      <h2 style={{
+        fontSize: 24,
+        marginBottom: 20,
+        color: 'var(--brown-800)'
+      }}>
+        Login
+      </h2>
+
+      {error && (
+        <div style={{
+          background: 'var(--red-light)',
+          color: 'var(--red-dark)',
+          padding: '10px 14px',
+          borderRadius: 'var(--radius-md)',
+          marginBottom: 16,
+          fontSize: 13,
+        }}>
+          {error}
         </div>
+      )}
 
-        {/* Error */}
-        {error && (
-          <div style={{
-            background: 'var(--red-light)', color: 'var(--red-dark)',
-            padding: '10px 14px', borderRadius: 'var(--radius-md)',
-            marginBottom: 16, fontSize: 13,
-          }}>
-            {error}
-          </div>
-        )}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 14
+      }}>
 
-        {/* Form */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            placeholder="Enter your email"
-          />
-          <Input
-            label="Password"
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            placeholder="Enter your password"
-            onKeyDown={e => e.key === 'Enter' && handleLogin()}
-          />
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            disabled={loading}
-            onClick={handleLogin}
-            style={{ marginTop: 6 }}
-          >
-            {loading ? 'Signing in…' : 'Sign In'}
-          </Button>
-        </div>
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          placeholder="Enter your email"
+        />
 
-        {/* Hint */}
+        <Input
+          label="Password"
+          type="password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          placeholder="Enter your password"
+          onKeyDown={e => e.key === 'Enter' && handleLogin()}
+        />
+
+        <Button
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={loading}
+          onClick={handleLogin}
+          style={{ marginTop: 6 }}
+        >
+          {loading ? 'Signing in…' : 'Login'}
+        </Button>
+
+      </div>
+
+      {/* Hint */}
         <div style={{
           marginTop: 24, padding: '12px 14px',
           background: 'var(--brown-100)', borderRadius: 'var(--radius-md)',
           fontSize: 12, color: 'var(--brown-800)', lineHeight: 1.8,
         }}>
-          <strong>Dev accounts:</strong><br />
-          admin@sisigan.ph / admin123<br />
-          cashier1@sisigan.ph / cashier123
+      {/* Dev Accounts */}
+        <div style={{
+                fontSize: 12,
+                color: 'var(--text-muted)'
+              }}>
+                <strong>Dev accounts:</strong><br />
+                admin@sisigan.ph / admin123<br />
+                cashier1@sisigan.ph / cashier123
+              </div>
         </div>
-      </div>
     </div>
-  )
+
+  </div>
+
+</div>
+
+)
 }

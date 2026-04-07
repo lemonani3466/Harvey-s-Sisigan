@@ -3,6 +3,7 @@
 
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 
 const authRoutes      = require('./modules/auth/auth.routes');
 const menuRoutes      = require('./modules/menu/menu.routes');
@@ -18,6 +19,10 @@ const app = express();
 app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// ── Serve Menu Images ─────────────────────────────────
+app.use('/images', express.static(path.join(__dirname, '..', 'images')))
+
 
 // ── Inject Socket.IO into req (set by server.js) ──────
 app.use((req, res, next) => {
