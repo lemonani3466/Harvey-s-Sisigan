@@ -257,12 +257,12 @@ export default function POSPage() {
           display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
           gap: 10, alignContent: 'start',
         }}>
-          {currentItems.map(item => {
-            console.log(item.imageUrl)
+           {currentItems.map(item => {
             const inCart = cart.find(i => i.id === item.id)
             return (
               <div
-                key={item.id} onClick={() => addToCart(item)}
+                key={item.id}
+                onClick={() => addToCart(item)}
                 className="animate-fade"
                 style={{
                   background: inCart ? 'var(--brown-100)' : 'var(--cream)',
@@ -273,11 +273,11 @@ export default function POSPage() {
                 onMouseEnter={e => { if (!inCart) e.currentTarget.style.borderColor = 'var(--brown-300)' }}
                 onMouseLeave={e => { if (!inCart) e.currentTarget.style.borderColor = 'var(--border)' }}
               >
-                {item.imageUrl && (
+                {/* Photo */}
+                {item.photo && (
                   <img
-                    src={`${BACKEND_URL}${item.imageUrl}`}
+                    src={`data:image/jpeg;base64,${item.photo}`}
                     alt={item.name}
-                    //onError={e => { e.currentTarget.src = '/fallback.jpg' }} // fallback if missing
                     style={{
                       width: '100%',
                       height: 100,
@@ -287,12 +287,17 @@ export default function POSPage() {
                     }}
                   />
                 )}
+
+                {/* Name */}
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-dark)', marginBottom: 4, lineHeight: 1.3 }}>
                   {item.name}
                 </div>
+
+                {/* Price */}
                 <div style={{ fontSize: 15, color: 'var(--brown-600)', fontWeight: 700 }}>
                   ₱{Number(item.price).toFixed(0)}
                 </div>
+
                 {inCart && (
                   <div style={{ marginTop: 6, fontSize: 11, color: 'var(--brown-700)', fontWeight: 600 }}>
                     ✓ ×{inCart.qty} in cart

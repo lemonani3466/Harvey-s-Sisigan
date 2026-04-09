@@ -5,11 +5,33 @@ const { validationResult } = require('express-validator');
 
 async function getMenuByCategory(req, res, next) {
   try {
-    // POS screen (no auth or cashier): available items only
-    // Menu management page (admin/manager): include disabled items too
     const includeUnavailable = req.user?.role === 'ADMIN' || req.user?.role === 'MANAGER';
     const menu = await menuService.getMenuWithCategories({ includeUnavailable });
-    res.json({ success: true, data: menu });
+
+    // Convert photo blob to Base64 for frontend
+    const menuWithPhoto = menu.map(item => ({
+      photo: item.photo ? item.photo.toString('base64') : null,
+      name: item.name,
+      price: item.price,
+      category: item.category, // optional if you want categories
+    }));
+
+    res.json({ success: true, data: menuWithPhoto });
+  } catch (err) { next(err); }
+}
+
+async function getAllItems(req, res, next) {
+  try {
+    const includeUnavailable = req.user?.role === 'ADMIN' || req.user?.role === 'MANAGER';
+    const items = await menuService.getAllMenuItems({ includeUnavailable });
+
+    const itemsWithPhoto = items.map(item => ({
+      photo: item.photo ? item.photo.toString('base64') : null,
+      name: item.name,
+      price: item.price
+    }));
+
+    res.json({ success: true, data: itemsWithPhoto });
   } catch (err) { next(err); }
 }
 
