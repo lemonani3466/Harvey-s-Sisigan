@@ -23,7 +23,10 @@ export const authApi = {
 
 // ── Menu ──────────────────────────────────────────────────
 export const menuApi = {
-  categories: ()           => request('/menu/categories'),
+  categories: (params = {}) => {
+  const q = new URLSearchParams(params).toString()
+  return request(`/menu/categories${q ? '?' + q : ''}`)
+},
   all:        ()           => request('/menu'),
   create:     (data)       => request('/menu',            { method: 'POST',  body: JSON.stringify(data) }),
   update:     (id, data)   => request(`/menu/${id}`,      { method: 'PATCH', body: JSON.stringify(data) }),
