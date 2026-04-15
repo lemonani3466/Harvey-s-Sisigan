@@ -58,6 +58,169 @@ async function applyMenuItemPhotosFromSql() {
   return { updated, scanned };
 }
 
+function round3(n) {
+  return Math.round(Number(n) * 1000) / 1000;
+}
+
+function getInventorySeedItems() {
+  return [
+    // SAUCES / CONDIMENTS
+    { name: 'Chilli Oil', category: 'SAUCE', unit: 'ML', quantity: 200, consumptionDays: 2, consumptionLabel: '2 days' },
+    { name: 'Dried Garlic', category: 'SAUCE', unit: 'ML', quantity: 200, consumptionDays: 2, consumptionLabel: '2 days' },
+    { name: 'Ketchup', category: 'SAUCE', unit: 'PCS', quantity: 1, consumptionDays: 1, consumptionLabel: 'Daily' },
+    { name: 'Hot Sauce', category: 'SAUCE', unit: 'ML', quantity: 200, consumptionDays: 3, consumptionLabel: '3 days' },
+    { name: 'Suka (Vinegar)', category: 'SAUCE', unit: 'ML', quantity: 200, consumptionDays: 3, consumptionLabel: '3 days' },
+    { name: 'Mang Tomas', category: 'SAUCE', unit: 'PCS', quantity: 2, consumptionDays: 1, consumptionLabel: 'Daily' },
+    // Assumption: Knorr stock is 1 pack consumed daily.
+    { name: 'Knorr', category: 'SAUCE', unit: 'PACK', quantity: 1, consumptionDays: 1, consumptionLabel: 'Daily' },
+    { name: 'Patis', category: 'SAUCE', unit: 'LITER', quantity: 1, consumptionDays: 14, consumptionLabel: '2 weeks' },
+    { name: 'Mayonnaise', category: 'SAUCE', unit: 'TUB', quantity: 1, consumptionDays: 1, consumptionLabel: 'Daily' },
+
+    // SPICES
+    // Assumption: combined sili inventory is tracked as 300 grams for 2-3 days.
+    { name: 'Sili (Red & Green)', category: 'SPICES', unit: 'GRAM', quantity: 300, consumptionDays: 3, consumptionLabel: '2-3 days' },
+    { name: 'Paminta', category: 'SPICES', unit: 'PACK', quantity: 1, consumptionDays: 1, consumptionLabel: 'Daily', price: 50 },
+
+    // MAIN INGREDIENTS
+    { name: 'Silog Meat', category: 'MAIN_INGREDIENT', unit: 'GRAM', quantity: 10000, consumptionDays: null, consumptionLabel: '100 grams per serving' },
+    { name: 'Barkada Meat', category: 'MAIN_INGREDIENT', unit: 'GRAM', quantity: 20000, consumptionDays: null, consumptionLabel: '200 grams per serving' },
+    { name: 'Pizza (Any Flavor)', category: 'MAIN_INGREDIENT', unit: 'PCS', quantity: 18, consumptionDays: null, consumptionLabel: '1 piece per pizza order' },
+
+    // RICE
+    // Practical conversion: 1 bag is tracked as 50000 grams so 100g per serving deduction can work.
+    { name: 'Bigas', category: 'RICE', unit: 'GRAM', quantity: 50000, consumptionDays: 2, consumptionLabel: '1 bag (2 days)', price: 1350 },
+
+    // UTILITIES
+    { name: 'Tubig', category: 'UTILITIES', unit: 'GALLON', quantity: 5, consumptionDays: 7, consumptionLabel: '1 week', price: 25 },
+
+    // GAS
+    { name: 'LPG Gas (Bulalo Kalan)', category: 'GAS', unit: 'TANK', quantity: 1, consumptionDays: 14, consumptionLabel: '2 weeks', price: 900 },
+    { name: 'LPG Gas (Sisigan Kalan)', category: 'GAS', unit: 'TANK', quantity: 1, consumptionDays: 5, consumptionLabel: '5 days', price: 900 },
+    { name: 'LPG Gas (Rice / Kanin)', category: 'GAS', unit: 'TANK', quantity: 1, consumptionDays: 60, consumptionLabel: '2 months', price: 900 },
+    { name: 'LPG Gas (Pizza Oven)', category: 'GAS', unit: 'TANK', quantity: 1, consumptionDays: 180, consumptionLabel: '6 months', price: 900 },
+  ].map((item) => ({
+    ...item,
+    dailyDeduction: item.consumptionDays ? round3(item.quantity / item.consumptionDays) : null,
+    minThreshold: round3(item.quantity * 0.2),
+  }));
+}
+
+async function seedInventoryAndRecipes(branches) {
+  const items = getInventorySeedItems();
+
+  // 1) Global ingredient catalog
+  for (const item of items) {
+    await prisma.ingredient.upsert({
+      where: { name: item.name },
+      update: {
+        category: item.category,
+        unit: item.unit,
+        defaultConsumptionRateDays: item.consumptionDays,
+        defaultConsumptionLabel: item.consumptionLabel,
+        defaultDailyDeduction: item.dailyDeduction,
+        defaultMinThreshold: item.minThreshold,
+        defaultPrice: item.price ?? null,
+      },
+      create: {
+        name: item.name,
+        category: item.category,
+        unit: item.unit,
+        defaultConsumptionRateDays: item.consumptionDays,
+        defaultConsumptionLabel: item.consumptionLabel,
+        defaultDailyDeduction: item.dailyDeduction,
+        defaultMinThreshold: item.minThreshold,
+        defaultPrice: item.price ?? null,
+      },
+    });
+  }
+
+  const ingredients = await prisma.ingredient.findMany({
+    where: { name: { in: items.map((i) => i.name) } },
+  });
+  const ingredientByName = new Map(ingredients.map((i) => [i.name, i]));
+
+  // 2) Branch-level inventory stock
+  for (const branch of branches) {
+    for (const item of items) {
+      const ingredient = ingredientByName.get(item.name);
+      if (!ingredient) continue;
+
+      await prisma.inventoryItem.upsert({
+        where: {
+          branchId_ingredientId: {
+            branchId: branch.id,
+            ingredientId: ingredient.id,
+          },
+        },
+        update: {
+          quantity: item.quantity,
+          minThreshold: item.minThreshold,
+          price: item.price ?? null,
+          consumptionRateDays: item.consumptionDays,
+          consumptionLabel: item.consumptionLabel,
+          dailyDeductionAmount: item.dailyDeduction,
+        },
+        create: {
+          branchId: branch.id,
+          ingredientId: ingredient.id,
+          quantity: item.quantity,
+          minThreshold: item.minThreshold,
+          price: item.price ?? null,
+          consumptionRateDays: item.consumptionDays,
+          consumptionLabel: item.consumptionLabel,
+          dailyDeductionAmount: item.dailyDeduction,
+        },
+      });
+    }
+  }
+
+  // 3) Recipe mapping:
+  //    - Silog menu items -> Bigas 100g + Silog Meat 100g
+  //    - Barkada items -> Barkada Meat 200g
+  const bigas = ingredientByName.get('Bigas');
+  const silogMeat = ingredientByName.get('Silog Meat');
+  const barkadaMeat = ingredientByName.get('Barkada Meat');
+  const pizzaAnyFlavor = ingredientByName.get('Pizza (Any Flavor)');
+
+  if (!bigas || !silogMeat || !barkadaMeat || !pizzaAnyFlavor) {
+    console.log('⚠️  Skipping recipe seed: required ingredient(s) not found');
+    return;
+  }
+
+  await prisma.menuItemRecipeIngredient.deleteMany({});
+
+  const menuItems = await prisma.menuItem.findMany({
+    include: { category: true },
+  });
+
+  const recipeRows = [];
+  for (const menuItem of menuItems) {
+    const lowerName = menuItem.name.toLowerCase();
+    const isSilog = lowerName.includes('silog');
+    const isBarkada = menuItem.category?.name === 'Barkada Meals' || lowerName.includes('barkada');
+
+    if (isSilog) {
+      recipeRows.push({ menuItemId: menuItem.id, ingredientId: bigas.id, quantity: 100 });
+      recipeRows.push({ menuItemId: menuItem.id, ingredientId: silogMeat.id, quantity: 100 });
+    }
+
+    if (isBarkada) {
+      recipeRows.push({ menuItemId: menuItem.id, ingredientId: barkadaMeat.id, quantity: 200 });
+    }
+
+    const isPizza = menuItem.category?.name === 'Pizza' || lowerName.includes('pizza');
+    if (isPizza) {
+      recipeRows.push({ menuItemId: menuItem.id, ingredientId: pizzaAnyFlavor.id, quantity: 1 });
+    }
+  }
+
+  if (recipeRows.length) {
+    await prisma.menuItemRecipeIngredient.createMany({ data: recipeRows, skipDuplicates: true });
+  }
+
+  console.log(`✅ Seeded ${items.length} ingredients, ${branches.length * items.length} inventory stocks, ${recipeRows.length} recipe rows`);
+}
+
 async function main() {
   console.log('🌱 Seeding Sisigan Restaurant POS...\n');
 
@@ -215,6 +378,8 @@ async function main() {
   }
   console.log(`✅ Created ${createdItems} menu items`);
 
+  await seedInventoryAndRecipes(branches);
+
   const photoResult = await applyMenuItemPhotosFromSql();
   if (photoResult.updated > 0) {
     console.log(`✅ Applied photos to ${photoResult.updated} menu items`);
@@ -239,3 +404,5 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+
+

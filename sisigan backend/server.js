@@ -8,6 +8,7 @@ const { Server } = require('socket.io');
 
 const app = require('./src/app');
 const { initSocket } = require('./src/socket/orderSocket');
+const { startInventoryDailyDeductionJob } = require('./src/jobs/inventory.cron');
 
 const PORT = process.env.PORT || 3000;
 
@@ -26,6 +27,7 @@ app.set('io', io);
 
 // Initialize socket event handlers
 initSocket(io);
+startInventoryDailyDeductionJob();
 
 // ── Start Server ──────────────────────────────────────
 httpServer.listen(PORT, () => {

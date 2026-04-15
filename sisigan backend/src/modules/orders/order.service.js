@@ -2,6 +2,7 @@
 // Core business logic for Order Management
 
 const prisma = require('../../config/db');
+const inventoryService = require('../inventory/inventory.service');
 
 // ─────────────────────────────────────────
 // HELPERS
@@ -68,7 +69,7 @@ async function createOrder({ items, type, tableNumber, customerName, notes, bran
 
   // 5. Persist in a transaction (order + items atomically)
   const order = await prisma.$transaction(async (tx) => {
-    return tx.order.create({
+    const createdOrder = await tx.order.create({
       data: {
         orderNumber,
         type,
@@ -92,6 +93,20 @@ async function createOrder({ items, type, tableNumber, customerName, notes, bran
         branch: { select: { id: true, name: true, city: true } },
       },
     });
+
+    // 6. Deduct inventory based on configured recipe ingredients.
+    // If stock is insufficient, this throws and the entire transaction rolls back.
+    await inventoryService.deductInventoryForOrder({
+      tx,
+      branchId,
+      orderId: createdOrder.id,
+      items: items.map((item) => ({
+        menuItemId: item.menuItemId,
+        quantity: item.quantity,
+      })),
+    });
+
+    return createdOrder;
   });
 
   return order;

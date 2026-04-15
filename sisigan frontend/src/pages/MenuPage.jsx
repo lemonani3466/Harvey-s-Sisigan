@@ -211,7 +211,7 @@ export default function MenuPage() {
   const canEdit = user?.role === 'OWNER' || user?.role === 'MANAGER'
 
   async function load() {
-    const data = await menuApi.categories()
+    const data = await menuApi.categories({ includeUnavailable: true })
     setMenu(data.data || [])
     if (!activeTab && data.data?.length) setActiveTab(data.data[0].id)
   }

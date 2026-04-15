@@ -79,3 +79,19 @@ export const ordersApi = {
   cancel:        (id)          => request(`/orders/${id}`,         { method: 'DELETE' }),
   pay:           (id, data)    => request(`/orders/${id}/payment`, { method: 'POST',  body: JSON.stringify(data) }),
 }
+
+export const inventoryApi = {
+  list: (params = {}) => {
+    const q = new URLSearchParams(params).toString()
+    return request(`/inventory${q ? '?' + q : ''}`)
+  },
+  create: (data) => request('/inventory', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/inventory/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+}
+
+export const reportsApi = {
+  usage: (params = {}) => {
+    const q = new URLSearchParams(params).toString()
+    return request(`/reports${q ? '?' + q : ''}`)
+  },
+}

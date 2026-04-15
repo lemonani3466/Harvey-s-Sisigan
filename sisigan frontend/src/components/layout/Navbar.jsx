@@ -17,6 +17,7 @@ export default function Navbar() {
     { to: '/pos',       label: 'New Order', icon: '??', roles: ['MANAGER', 'CASHIER'] },
     { to: '/orders',    label: 'Orders',    icon: '??', roles: ['MANAGER', 'CASHIER'] },
     { to: '/menu',      label: 'Menu',      icon: '???', roles: ['OWNER', 'MANAGER'] },
+    { to: '/inventory', label: 'Inventory', icon: 'INV', roles: ['OWNER', 'MANAGER'] },
     { to: '/branches',  label: 'Branches',  icon: '??', roles: ['OWNER'] },
     { to: '/users',     label: 'Accounts',  icon: '??', roles: ['OWNER', 'MANAGER'] },
   ].filter(item => item.roles.includes(user?.role))

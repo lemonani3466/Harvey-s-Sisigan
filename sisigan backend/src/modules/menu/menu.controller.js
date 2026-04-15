@@ -3,12 +3,17 @@ const { validationResult } = require('express-validator');
 
 async function getMenuByCategory(req, res, next) {
   try {
-    console.log('query params:', req.query)
-    const includeUnavailable = req.user?.role === 'OWNER' || req.user?.role === 'MANAGER';
+    const includeUnavailable = req.query.includeUnavailable === 'true';
     const includePhoto       = req.query.includePhoto === 'true';
-    console.log('includePhoto:', includePhoto)
+    const enforceStock       = req.query.enforceStock === 'true';
+    const branchId           = req.query.branchId ? Number(req.query.branchId) : req.user?.branchId;
 
-    const menu = await menuService.getMenuWithCategories({ includeUnavailable, includePhoto });
+    const menu = await menuService.getMenuWithCategories({
+      includeUnavailable,
+      includePhoto,
+      enforceStock,
+      branchId,
+    });
     res.json({ success: true, data: menu });
   } catch (err) {
     next(err);
@@ -17,10 +22,17 @@ async function getMenuByCategory(req, res, next) {
 
 async function getAllItems(req, res, next) {
   try {
-    const includeUnavailable = req.user?.role === 'OWNER' || req.user?.role === 'MANAGER';
+    const includeUnavailable = req.query.includeUnavailable === 'true';
     const includePhoto       = req.query.includePhoto === 'true';
+    const enforceStock       = req.query.enforceStock === 'true';
+    const branchId           = req.query.branchId ? Number(req.query.branchId) : req.user?.branchId;
 
-    const items = await menuService.getAllMenuItems({ includeUnavailable, includePhoto });
+    const items = await menuService.getAllMenuItems({
+      includeUnavailable,
+      includePhoto,
+      enforceStock,
+      branchId,
+    });
     res.json({ success: true, data: items });
   } catch (err) {
     next(err);

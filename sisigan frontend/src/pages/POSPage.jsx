@@ -22,7 +22,7 @@ export default function POSPage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    menuApi.categories({ includePhoto: true }).then(d => {
+    menuApi.categories({ includePhoto: true, enforceStock: true }).then(d => {
       setMenu(d.data || [])
       if (d.data?.length) setActiveCategory(d.data[0].id)
     })
