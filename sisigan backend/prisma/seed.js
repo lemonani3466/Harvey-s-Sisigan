@@ -9,15 +9,15 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Seeding Sisigan Restaurant POS...\n');
 
-  // ── Branches ──────────────────────────────────────────
+    // ── Branches ──────────────────────────────────────────
   const branches = await Promise.all([
     prisma.branch.upsert({
       where: { id: 1 },
       update: {},
       create: {
-        name: 'Sisigan BGC',
-        address: '5th Ave, Bonifacio Global City',
-        city: 'Taguig',
+        name: 'Lumban Branch',
+        address: 'Lumban',
+        city: 'Laguna',
         contactNo: '09171234001',
       },
     }),
@@ -25,9 +25,9 @@ async function main() {
       where: { id: 2 },
       update: {},
       create: {
-        name: 'Sisigan Makati',
-        address: 'Ayala Ave, Legazpi Village',
-        city: 'Makati',
+        name: 'Pagsanjan Branch',
+        address: 'Pagsanjan',
+        city: 'Laguna',
         contactNo: '09171234002',
       },
     }),
@@ -35,16 +35,30 @@ async function main() {
       where: { id: 3 },
       update: {},
       create: {
-        name: 'Sisigan Eastwood',
-        address: 'Eastwood Ave, Bagumbayan',
-        city: 'Quezon City',
+        name: 'Paete Branch',
+        address: 'Paete',
+        city: 'Laguna',
         contactNo: '09171234003',
       },
     }),
   ]);
   console.log(`✅ Created ${branches.length} branches`);
 
-  // ── Manager (oversees all branches) ───────────────────
+  // ── Owner (oversees all branches) ─────────────────────
+  const ownerPassword = await bcrypt.hash('owner123', 12);
+  await prisma.user.upsert({
+    where: { email: 'owner@sisigan.ph' },
+    update: {},
+    create: {
+      name: 'Sisigan Owner',
+      email: 'owner@sisigan.ph',
+      password: ownerPassword,
+      role: 'OWNER',
+      branchId: 1, // Owner is seated at Branch 1 but sees all
+    },
+  });
+
+  // ── Manager User ───────────────────────────────────────
   const managerPassword = await bcrypt.hash('manager123', 12);
   await prisma.user.upsert({
     where: { email: 'manager@sisigan.ph' },
@@ -54,20 +68,6 @@ async function main() {
       email: 'manager@sisigan.ph',
       password: managerPassword,
       role: 'MANAGER',
-      branchId: 1, // Manager is seated at Branch 1 but sees all
-    },
-  });
-
-  // ── Admin User ─────────────────────────────────────────
-  const hashedPassword = await bcrypt.hash('admin123', 12);
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@sisigan.ph' },
-    update: {},
-    create: {
-      name: 'Admin Sisigan',
-      email: 'admin@sisigan.ph',
-      password: hashedPassword,
-      role: 'ADMIN',
       branchId: 1,
     },
   });
@@ -89,7 +89,7 @@ async function main() {
       })
     )
   );
-  console.log(`✅ Created admin + ${cashiers.length} cashiers`);
+  console.log(`✅ Created owner + manager + ${cashiers.length} cashiers`);
 
   // ── Menu Categories ────────────────────────────────────
   const categories = await Promise.all([
@@ -165,8 +165,8 @@ async function main() {
 
   console.log('\n🎉 Seeding complete!\n');
   console.log('📋 Login credentials:');
-  console.log('   Manager:  manager@sisigan.ph   / manager123');
-  console.log('   Admin:    admin@sisigan.ph      / admin123');
+  console.log('   Owner:  owner@sisigan.ph   / owner123');
+  console.log('   Manager:  manager@sisigan.ph      / manager123');
   console.log('   Cashier1: cashier1@sisigan.ph   / cashier123');
   console.log('   Cashier2: cashier2@sisigan.ph   / cashier123');
   console.log('   Cashier3: cashier3@sisigan.ph   / cashier123\n');

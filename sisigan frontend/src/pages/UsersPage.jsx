@@ -5,8 +5,8 @@ import { useAuth } from '../context/AuthContext'
 import { Button, Input, Modal, Badge, EmptyState } from '../components/ui'
 
 const ROLE_COLORS = {
-  MANAGER: { bg: '#EDE9FE', color: '#5B21B6' },
-  ADMIN:   { bg: '#DBEAFE', color: '#1E40AF' },
+  OWNER:   { bg: '#FEE2E2', color: '#991B1B' },
+  MANAGER: { bg: '#DBEAFE', color: '#1E40AF' },
   CASHIER: { bg: '#D1FAE5', color: '#065F46' },
 }
 
@@ -35,9 +35,9 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
   const [error,   setError]   = useState('')
 
   // Roles that current user can assign
-  const assignableRoles = requestingRole === 'MANAGER'
-    ? ['MANAGER', 'ADMIN', 'CASHIER']
-    : ['CASHIER']  // Admin can only create cashiers
+  const assignableRoles = requestingRole === 'OWNER'
+    ? ['MANAGER', 'CASHIER']
+    : ['CASHIER']  // Manager can only create cashiers
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
@@ -46,7 +46,7 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
     try {
       if (isEdit) {
         const payload = { name: form.name, email: form.email }
-        if (requestingRole === 'MANAGER') {
+        if (requestingRole === 'OWNER') {
           payload.role = form.role
           payload.branchId = form.branchId
         }
@@ -86,8 +86,8 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
           </div>
         </div>
 
-        {/* Branch assignment — Manager can pick any branch */}
-        {requestingRole === 'MANAGER' && (
+        {/* Branch assignment — Owner can pick any branch */}
+        {requestingRole === 'OWNER' && (
           <div>
             <label style={lbl}>Branch</label>
             <select value={form.branchId} onChange={e => set('branchId', e.target.value)}
@@ -167,11 +167,11 @@ export default function UsersPage() {
     try {
       const [u, b] = await Promise.all([
         usersApi.list(),
-        me?.role === 'MANAGER' ? dashboardApi.branches() : Promise.resolve({ data: [] }),
+        me?.role === 'OWNER' ? dashboardApi.branches() : Promise.resolve({ data: [] }),
       ])
       setUsers(u.data || [])
-      // For admin, their own branch only
-      if (me?.role === 'ADMIN') {
+      // For manager, their own branch only
+      if (me?.role === 'MANAGER') {
         setBranches([me.branch].filter(Boolean))
       } else {
         setBranches(b.data || [])
@@ -197,7 +197,7 @@ export default function UsersPage() {
         <div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)' }}>Accounts</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
-            {me?.role === 'MANAGER' ? 'Manage accounts across all branches' : `Manage accounts for ${me?.branch?.name}`}
+            {me?.role === 'OWNER' ? 'Manage accounts across all branches' : `Manage accounts for ${me?.branch?.name}`}
           </p>
         </div>
         <Button variant="primary" onClick={() => setShowCreate(true)}>+ New Account</Button>
@@ -205,7 +205,7 @@ export default function UsersPage() {
 
       {/* Role filter */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {['ALL', 'MANAGER', 'ADMIN', 'CASHIER'].map(r => (
+        {['ALL', 'OWNER', 'MANAGER', 'CASHIER'].map(r => (
           <button key={r} onClick={() => setFilterRole(r)} style={{
             padding: '7px 16px', borderRadius: 'var(--radius-full)', border: 'none',
             background: filterRole === r ? 'var(--brown-600)' : 'var(--brown-100)',
@@ -259,8 +259,8 @@ export default function UsersPage() {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                {/* Admin can only act on Cashiers — hide buttons for Manager/Admin rows */}
-                {(me?.role === 'MANAGER' || u.role === 'CASHIER') && (
+                {/* Manager can only act on Cashiers — hide buttons for Owner/Manager rows */}
+                {(me?.role === 'OWNER' || u.role === 'CASHIER') && (
                   <>
                     <button onClick={() => setEditUser(u)} style={actionBtn} title="Edit">✏️</button>
                     <button onClick={() => setResetUser(u)} style={actionBtn} title="Reset password">🔑</button>
@@ -276,8 +276,8 @@ export default function UsersPage() {
                     )}
                   </>
                 )}
-                {/* Show a lock icon for rows the Admin cannot touch */}
-                {me?.role === 'ADMIN' && u.role !== 'CASHIER' && u.id !== me?.id && (
+                {/* Show a lock icon for rows the Manager cannot touch */}
+                {me?.role === 'MANAGER' && u.role !== 'CASHIER' && u.id !== me?.id && (
                   <span title="No permission to edit this account" style={{ fontSize: 16, opacity: 0.35 }}>🔒</span>
                 )}
               </div>

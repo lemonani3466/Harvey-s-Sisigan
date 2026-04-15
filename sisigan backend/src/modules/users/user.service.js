@@ -4,15 +4,15 @@ const bcrypt = require('bcryptjs');
 const prisma = require('../../config/db');
 
 // ── LIST USERS ────────────────────────────────────────────
-// Manager: all users across all branches
-// Admin:   only users in their own branch
+// Owner:   all users across all branches
+// Manager: only users in their own branch
 async function listUsers({ requestingUser }) {
   const where = {};
 
-  if (requestingUser.role === 'ADMIN') {
+  if (requestingUser.role === 'MANAGER') {
     where.branchId = requestingUser.branchId;
   }
-  // MANAGER sees everyone — no filter
+  // OWNER sees everyone — no filter
 
   return prisma.user.findMany({
     where,
@@ -26,22 +26,22 @@ async function listUsers({ requestingUser }) {
 }
 
 // ── CREATE USER ───────────────────────────────────────────
-// Manager: can create ADMIN or CASHIER for any branch
-// Admin:   can only create CASHIER for their own branch
+// Owner:   can create MANAGER or CASHIER for any branch
+// Manager: can only create CASHIER for their own branch
 async function createUser({ name, email, password, role, branchId }, requestingUser) {
-  // Admins can only create cashiers in their own branch
-  if (requestingUser.role === 'ADMIN') {
+  // Managers can only create cashiers in their own branch
+  if (requestingUser.role === 'MANAGER') {
     if (role !== 'CASHIER') {
-      throw { statusCode: 403, message: 'Admins can only create Cashier accounts.' };
+      throw { statusCode: 403, message: 'Managers can only create Cashier accounts.' };
     }
     if (Number(branchId) !== requestingUser.branchId) {
-      throw { statusCode: 403, message: 'Admins can only create accounts for their own branch.' };
+      throw { statusCode: 403, message: 'Managers can only create accounts for their own branch.' };
     }
   }
 
-  // Only MANAGER can create ADMIN or MANAGER accounts
-  if (role === 'MANAGER' && requestingUser.role !== 'MANAGER') {
-    throw { statusCode: 403, message: 'Only Managers can create Manager accounts.' };
+  // Only OWNER can create OWNER accounts
+  if (role === 'OWNER' && requestingUser.role !== 'OWNER') {
+    throw { statusCode: 403, message: 'Only Owners can create Owner accounts.' };
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -66,19 +66,19 @@ async function updateUser(userId, { name, email, role, branchId, isActive }, req
   const target = await prisma.user.findUnique({ where: { id: Number(userId) } });
   if (!target) throw { statusCode: 404, message: 'User not found.' };
 
-  // Admin can only edit users in their own branch
-  if (requestingUser.role === 'ADMIN' && target.branchId !== requestingUser.branchId) {
+  // Manager can only edit users in their own branch
+  if (requestingUser.role === 'MANAGER' && target.branchId !== requestingUser.branchId) {
     throw { statusCode: 403, message: 'Access denied.' };
   }
 
-  // Admin cannot edit Managers or other Admins — only Cashiers
-  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
-    throw { statusCode: 403, message: 'Admins can only edit Cashier accounts.' };
+  // Manager cannot edit Owners or other Managers — only Cashiers
+  if (requestingUser.role === 'MANAGER' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Managers can only edit Cashier accounts.' };
   }
 
-  // Admin cannot change roles or branches
-  if (requestingUser.role === 'ADMIN' && (role || branchId)) {
-    throw { statusCode: 403, message: 'Admins cannot change roles or branch assignments.' };
+  // Manager cannot change roles or branches
+  if (requestingUser.role === 'MANAGER' && (role || branchId)) {
+    throw { statusCode: 403, message: 'Managers cannot change roles or branch assignments.' };
   }
 
   const data = {};
@@ -103,13 +103,13 @@ async function resetPassword(userId, newPassword, requestingUser) {
   const target = await prisma.user.findUnique({ where: { id: Number(userId) } });
   if (!target) throw { statusCode: 404, message: 'User not found.' };
 
-  if (requestingUser.role === 'ADMIN' && target.branchId !== requestingUser.branchId) {
+  if (requestingUser.role === 'MANAGER' && target.branchId !== requestingUser.branchId) {
     throw { statusCode: 403, message: 'Access denied.' };
   }
 
-  // Admin can only reset passwords of Cashiers
-  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
-    throw { statusCode: 403, message: 'Admins can only reset passwords for Cashier accounts.' };
+  // Manager can only reset passwords of Cashiers
+  if (requestingUser.role === 'MANAGER' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Managers can only reset passwords for Cashier accounts.' };
   }
 
   const hashed = await bcrypt.hash(newPassword, 12);
@@ -122,13 +122,13 @@ async function toggleActive(userId, requestingUser) {
   const target = await prisma.user.findUnique({ where: { id: Number(userId) } });
   if (!target) throw { statusCode: 404, message: 'User not found.' };
 
-  if (requestingUser.role === 'ADMIN' && target.branchId !== requestingUser.branchId) {
+  if (requestingUser.role === 'MANAGER' && target.branchId !== requestingUser.branchId) {
     throw { statusCode: 403, message: 'Access denied.' };
   }
 
-  // Admin can only toggle Cashiers
-  if (requestingUser.role === 'ADMIN' && target.role !== 'CASHIER') {
-    throw { statusCode: 403, message: 'Admins can only activate/deactivate Cashier accounts.' };
+  // Manager can only toggle Cashiers
+  if (requestingUser.role === 'MANAGER' && target.role !== 'CASHIER') {
+    throw { statusCode: 403, message: 'Managers can only activate/deactivate Cashier accounts.' };
   }
 
   // Cannot deactivate yourself

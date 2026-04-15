@@ -26,8 +26,8 @@ function initSocket(io) {
     // Join branch-specific room for scoped broadcasts
     socket.join(`branch_${branchId}`);
 
-    // ADMIN joins all branches
-    if (role === 'ADMIN') socket.join('admin_room');
+    // OWNER joins all branches
+    if (role === 'OWNER') socket.join('admin_room');
 
     // Kitchen display: subscribe to order events
     socket.on('join_kitchen', () => {

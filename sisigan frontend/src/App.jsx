@@ -35,12 +35,12 @@ function ProtectedLayout() {
     <>
       <Navbar />
       <Routes>
-        <Route path="/dashboard" element={<RoleRoute element={<DashboardPage />} roles={['MANAGER', 'ADMIN']} />} />
-        <Route path="/pos"       element={<RoleRoute element={<POSPage />}       roles={['ADMIN', 'CASHIER']} />} />
+        <Route path="/dashboard" element={<RoleRoute element={<DashboardPage />} roles={['OWNER', 'MANAGER']} />} />
+        <Route path="/pos"       element={<RoleRoute element={<POSPage />}       roles={['MANAGER', 'CASHIER']} />} />
         <Route path="/orders"    element={<OrdersPage />} />
-        <Route path="/menu"      element={<RoleRoute element={<MenuPage />}      roles={['MANAGER', 'ADMIN']} />} />
-        <Route path="/users"     element={<RoleRoute element={<UsersPage />}     roles={['MANAGER', 'ADMIN']} />} />
-        <Route path="/branches"  element={<RoleRoute element={<BranchesPage />} roles={['MANAGER']} />} />
+        <Route path="/menu"      element={<RoleRoute element={<MenuPage />}      roles={['OWNER', 'MANAGER']} />} />
+        <Route path="/users"     element={<RoleRoute element={<UsersPage />}     roles={['OWNER', 'MANAGER']} />} />
+        <Route path="/branches"  element={<RoleRoute element={<BranchesPage />} roles={['OWNER']} />} />
         <Route path="*"          element={<Navigate to={defaultRoute} replace />} />
       </Routes>
     </>

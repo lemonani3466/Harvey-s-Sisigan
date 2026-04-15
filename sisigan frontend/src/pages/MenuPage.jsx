@@ -89,8 +89,9 @@ function AddItemModal({ categories, onClose, onSaved }) {
 }
 
 function EditItemModal({ item, categories, role, onClose, onSaved }) {
-  const isAdmin   = role === 'ADMIN'
-  const isManager = role === 'MANAGER' || isAdmin
+  const isManager = role === 'MANAGER'
+  const isOwner   = role === 'OWNER'
+  const canManageMenu = isOwner || isManager
 
   const [form,    setForm]    = useState({
     name:        item.name        || '',
@@ -130,7 +131,7 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
         price:       Number(form.price),
         description: form.description,
         categoryId:  Number(form.categoryId),
-        ...(isAdmin && { remarks: form.remarks }),
+        ...(isOwner && { remarks: form.remarks }),
         ...(photo   && { photo }),
       }
       await menuApi.update(item.id, payload)
@@ -146,14 +147,14 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
     <Modal title="Edit Menu Item" onClose={onClose} width={400}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Fields only MANAGER/ADMIN can edit */}
-        <Input label="Item Name" value={form.name} onChange={e => set('name', e.target.value)} disabled={!isManager} />
-        <Input label="Price (₱)" type="number" value={form.price} onChange={e => set('price', e.target.value)} disabled={!isManager} />
+        {/* Fields only OWNER/MANAGER can edit */}
+        <Input label="Item Name" value={form.name} onChange={e => set('name', e.target.value)} disabled={!canManageMenu} />
+        <Input label="Price (₱)" type="number" value={form.price} onChange={e => set('price', e.target.value)} disabled={!canManageMenu} />
 
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
-          <select value={form.categoryId} onChange={e => set('categoryId', e.target.value)} disabled={!isManager}
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: isManager ? '#fff' : 'var(--cream)', outline: 'none', color: 'var(--text-dark)', opacity: isManager ? 1 : 0.6 }}>
+          <select value={form.categoryId} onChange={e => set('categoryId', e.target.value)} disabled={!canManageMenu}
+            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: canManageMenu ? '#fff' : 'var(--cream)', outline: 'none', color: 'var(--text-dark)', opacity: canManageMenu ? 1 : 0.6 }}>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
@@ -161,13 +162,13 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Description</label>
           <textarea value={form.description} onChange={e => set('description', e.target.value)}
-            disabled={!isManager} rows={3} placeholder="Short description…"
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: isManager ? '#fff' : 'var(--cream)', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-body)', opacity: isManager ? 1 : 0.6 }}
+            disabled={!canManageMenu} rows={3} placeholder="Short description…"
+            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: canManageMenu ? '#fff' : 'var(--cream)', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-body)', opacity: canManageMenu ? 1 : 0.6 }}
           />
         </div>
 
-        {/* Photo — manager/admin only */}
-        {isManager && (
+        {/* Photo — owner/manager only */}
+        {canManageMenu && (
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Photo</label>
             {displayPhoto ? (
@@ -207,7 +208,7 @@ export default function MenuPage() {
   const [toggling,  setToggling]  = useState(null)
   const [search,    setSearch]    = useState('')
 
-  const canEdit = user?.role === 'ADMIN' || user?.role === 'MANAGER'
+  const canEdit = user?.role === 'OWNER' || user?.role === 'MANAGER'
 
   async function load() {
     const data = await menuApi.categories()

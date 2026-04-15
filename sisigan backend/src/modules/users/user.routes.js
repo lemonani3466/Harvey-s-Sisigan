@@ -8,14 +8,14 @@ const roleMiddleware = require('../../middleware/role.middleware');
 const router = express.Router();
 router.use(authMiddleware);
 
-// Only MANAGER and ADMIN can access user management
-router.use(roleMiddleware('MANAGER', 'ADMIN'));
+// Only OWNER and MANAGER can access user management
+router.use(roleMiddleware('OWNER', 'MANAGER'));
 
 const createValidation = [
   body('name').notEmpty().withMessage('Name is required.'),
   body('email').isEmail().withMessage('Valid email is required.'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
-  body('role').isIn(['MANAGER', 'ADMIN', 'CASHIER']).withMessage('Role must be MANAGER, ADMIN, or CASHIER.'),
+  body('role').isIn(['OWNER', 'MANAGER', 'CASHIER']).withMessage('Role must be OWNER, MANAGER, or CASHIER.'),
   body('branchId').isInt({ min: 1 }).withMessage('Valid branchId is required.'),
 ];
 

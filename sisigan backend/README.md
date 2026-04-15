@@ -169,7 +169,7 @@ GET /api/menu/categories
 GET /api/menu
 ```
 
-#### Create Menu Item *(ADMIN/MANAGER)*
+#### Create Menu Item *(OWNER/MANAGER)*
 ```http
 POST /api/menu
 {
@@ -223,7 +223,7 @@ POST /api/orders
 ```http
 GET /api/orders?status=PENDING&date=2025-02-14&page=1&limit=20
 ```
-*Non-admins automatically scoped to their branch.*
+*Non-owners automatically scoped to their branch.*
 
 #### Get Order Detail
 ```http
@@ -244,7 +244,7 @@ PENDING → PREPARING → READY → COMPLETED
 Any (except COMPLETED) → CANCELLED
 ```
 
-#### Cancel Order *(MANAGER/ADMIN only)*
+#### Cancel Order *(OWNER/MANAGER only)*
 ```http
 DELETE /api/orders/:id
 ```
@@ -304,7 +304,7 @@ final socket = io('http://localhost:3000', {
 
 ## Roles & Permissions
 
-| Action | CASHIER | MANAGER | ADMIN |
+| Action | CASHIER | MANAGER | OWNER |
 |---|---|---|---|
 | Login | ✅ | ✅ | ✅ |
 | View menu | ✅ | ✅ | ✅ |
@@ -321,7 +321,8 @@ final socket = io('http://localhost:3000', {
 
 | Role | Email | Password |
 |---|---|---|
-| Admin | admin@sisigan.ph | admin123 |
+| Owner | owner@sisigan.ph | owner123 |
+| Manager | manager@sisigan.ph | manager123 |
 | Cashier (BGC) | cashier1@sisigan.ph | cashier123 |
 | Cashier (Makati) | cashier2@sisigan.ph | cashier123 |
 | Cashier (Eastwood) | cashier3@sisigan.ph | cashier123 |

@@ -180,7 +180,8 @@ return (
                 color: 'var(--text-muted)'
               }}>
                 <strong>Dev accounts:</strong><br />
-                admin@sisigan.ph / admin123<br />
+                owner@sisigan.ph / owner123<br />
+                manager@sisigan.ph / manager123<br />
                 cashier1@sisigan.ph / cashier123
               </div>
         </div>

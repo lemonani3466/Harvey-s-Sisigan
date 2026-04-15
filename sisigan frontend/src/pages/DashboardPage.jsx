@@ -75,7 +75,7 @@ function ChartTooltip({ active, payload, label, prefix = '₱' }) {
 // ─── DASHBOARD PAGE ───────────────────────────────────────
 export default function DashboardPage() {
   const { user } = useAuth()
-  const isManager = user?.role === 'MANAGER'
+  const isOwner = user?.role === 'OWNER'
 
   const [data,      setData]      = useState(null)
   const [branches,  setBranches]  = useState([])
@@ -85,12 +85,12 @@ export default function DashboardPage() {
   const [from,      setFrom]      = useState('')
   const [to,        setTo]        = useState('')
 
-  // Load branch list for Manager filter
+  // Load branch list for Owner filter
   useEffect(() => {
-    if (isManager) {
+    if (isOwner) {
       dashboardApi.branches().then(d => setBranches(d.data || []))
     }
-  }, [isManager])
+  }, [isOwner])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -127,7 +127,7 @@ export default function DashboardPage() {
             Dashboard
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-            {isManager ? 'All branches overview' : `${user?.branch?.name} overview`}
+            {isOwner ? 'All branches overview' : `${user?.branch?.name} overview`}
           </p>
         </div>
 
@@ -155,8 +155,8 @@ export default function DashboardPage() {
             </>
           )}
 
-          {/* Branch filter — Manager only */}
-          {isManager && (
+          {/* Branch filter — Owner only */}
+          {isOwner && (
             <select value={branchId} onChange={e => setBranchId(e.target.value)}
               style={{ padding: '7px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13, background: '#fff' }}>
               <option value="">All Branches</option>
@@ -263,8 +263,8 @@ export default function DashboardPage() {
         </Section>
       </div>
 
-      {/* ── Branch Comparison (Manager only) ───────────── */}
-      {isManager && data?.salesByBranch?.length > 0 && (
+      {/* ── Branch Comparison (Owner only) ─────────────── */}
+      {isOwner && data?.salesByBranch?.length > 0 && (
         <Section title="🏪 Sales by Branch" style={{ marginBottom: 16 }}>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={data.salesByBranch}>
