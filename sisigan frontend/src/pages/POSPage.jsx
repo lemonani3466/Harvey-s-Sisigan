@@ -1,5 +1,6 @@
 // src/pages/POSPage.jsx
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { menuApi, ordersApi } from '../api/client'
 import { Button, EmptyState } from '../components/ui'
 
@@ -12,6 +13,7 @@ const qtyBtnStyle = {
 }
 
 export default function POSPage() {
+  const navigate = useNavigate()
   const [menu, setMenu] = useState([])
   const [activeCategory, setActiveCategory] = useState(null)
   const [cart, setCart] = useState([])
@@ -51,11 +53,17 @@ export default function POSPage() {
     if (!cart.length) return
     setLoading(true); setError('')
     try {
-      await ordersApi.create({
+      const result = await ordersApi.create({
         type: orderType,
         items: cart.map(i => ({ menuItemId: i.id, quantity: i.qty })),
       })
+      const orderId = result?.data?.id
       clearCart()
+      if (orderId) {
+        navigate('/orders', {
+          state: { openOrderId: orderId, autoPay: true },
+        })
+      }
     } catch (e) {
       setError(e.message)
     } finally {

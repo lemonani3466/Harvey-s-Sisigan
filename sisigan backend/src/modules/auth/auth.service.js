@@ -7,7 +7,7 @@ const prisma = require('../../config/db');
 /**
  * Authenticate a user and return a signed JWT
  */
-async function login(email, password) {
+async function login(email, password, metadata = {}) {
   // 1. Find user by email
   const user = await prisma.user.findUnique({
     where: { email },
@@ -37,6 +37,17 @@ async function login(email, password) {
     expiresIn: process.env.JWT_EXPIRES_IN || '8h',
   });
 
+  await prisma.authLog.create({
+    data: {
+      userId: user.id,
+      branchId: user.branchId,
+      role: user.role,
+      action: 'LOGIN',
+      ipAddress: metadata.ipAddress || null,
+      userAgent: metadata.userAgent || null,
+    },
+  });
+
   return {
     token,
     user: {
@@ -49,4 +60,19 @@ async function login(email, password) {
   };
 }
 
-module.exports = { login };
+async function logout(requestingUser, metadata = {}) {
+  await prisma.authLog.create({
+    data: {
+      userId: requestingUser.id,
+      branchId: requestingUser.branchId,
+      role: requestingUser.role,
+      action: 'LOGOUT',
+      ipAddress: metadata.ipAddress || null,
+      userAgent: metadata.userAgent || null,
+    },
+  });
+
+  return { message: 'Logged out successfully.' };
+}
+
+module.exports = { login, logout };

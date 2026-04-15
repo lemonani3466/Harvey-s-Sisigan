@@ -19,6 +19,7 @@ async function request(path, options = {}) {
 export const authApi = {
   login:  (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   me:     ()                => request('/auth/me'),
+  logout: ()                => request('/auth/logout', { method: 'POST' }),
 }
 
 // ── Menu ──────────────────────────────────────────────────
@@ -48,6 +49,10 @@ export const dashboardApi = {
     return request(`/dashboard${q ? '?' + q : ''}`)
   },
   branches:  () => request('/dashboard/branches'),
+  authLogs:  (params = {}) => {
+    const q = new URLSearchParams(params).toString()
+    return request(`/dashboard/auth-logs${q ? '?' + q : ''}`)
+  },
 }
 
 // ── Users ─────────────────────────────────────────────────

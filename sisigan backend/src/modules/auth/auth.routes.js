@@ -19,5 +19,6 @@ router.post(
 
 // GET /api/auth/me  (protected)
 router.get('/me', authMiddleware, authController.me);
+router.post('/logout', authMiddleware, authController.logout);
 
 module.exports = router;

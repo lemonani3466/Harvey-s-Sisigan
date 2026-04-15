@@ -26,9 +26,15 @@ export function AuthProvider({ children }) {
     return data.data.user
   }
 
-  function logout() {
-    localStorage.removeItem('sisigan_token')
-    setUser(null)
+  async function logout() {
+    try {
+      await authApi.logout()
+    } catch (_) {
+      // Clear local session even if backend log endpoint fails.
+    } finally {
+      localStorage.removeItem('sisigan_token')
+      setUser(null)
+    }
   }
 
   return (

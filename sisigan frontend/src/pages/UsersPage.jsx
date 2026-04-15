@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import { usersApi, dashboardApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
-import { Button, Input, Modal, Badge, EmptyState } from '../components/ui'
+import { Button, Input, Modal, EmptyState } from '../components/ui'
 
 const ROLE_COLORS = {
   OWNER:   { bg: '#FEE2E2', color: '#991B1B' },
@@ -161,15 +161,18 @@ export default function UsersPage() {
   const [resetUser,  setResetUser]  = useState(null)
   const [toggling,   setToggling]   = useState(null)
   const [filterRole, setFilterRole] = useState('ALL')
+  const [authLogs, setAuthLogs] = useState([])
 
   async function load() {
     setLoading(true)
     try {
-      const [u, b] = await Promise.all([
+      const [u, b, logs] = await Promise.all([
         usersApi.list(),
         me?.role === 'OWNER' ? dashboardApi.branches() : Promise.resolve({ data: [] }),
+        dashboardApi.authLogs({ period: 'month', limit: 50 }),
       ])
       setUsers(u.data || [])
+      setAuthLogs(logs.data || [])
       // For manager, their own branch only
       if (me?.role === 'MANAGER') {
         setBranches([me.branch].filter(Boolean))
@@ -190,6 +193,7 @@ export default function UsersPage() {
   }
 
   const filtered = filterRole === 'ALL' ? users : users.filter(u => u.role === filterRole)
+  const fmtDateTime = (value) => new Date(value).toLocaleString('en-PH')
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
@@ -285,6 +289,60 @@ export default function UsersPage() {
           ))}
         </div>
       )}
+
+      <div style={{ marginTop: 20, background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--brown-50)' }}>
+          <h3 style={{ margin: 0, fontSize: 14, color: 'var(--brown-800)' }}>Login / Logout Audit Trail</h3>
+          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+            Latest authentication activity for accounts in your scope.
+          </p>
+        </div>
+
+        {authLogs.length === 0 ? (
+          <div style={{ padding: 24, color: 'var(--text-faint)', fontSize: 13 }}>
+            No login or logout activity yet.
+          </div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: 'var(--brown-50)' }}>
+                  {['When', 'Account', 'Role', 'Action', 'Branch'].map(h => (
+                    <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {authLogs.map((log, i) => (
+                  <tr key={log.id} style={{ borderBottom: i < authLogs.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                    <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{fmtDateTime(log.createdAt)}</td>
+                    <td style={{ padding: '9px 12px' }}>
+                      <div style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{log.user?.name || 'Unknown user'}</div>
+                      <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{log.user?.email || '-'}</div>
+                    </td>
+                    <td style={{ padding: '9px 12px' }}><RoleBadge role={log.role} /></td>
+                    <td style={{ padding: '9px 12px' }}>
+                      <span style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        padding: '2px 10px',
+                        borderRadius: 'var(--radius-full)',
+                        background: log.action === 'LOGIN' ? 'var(--green-light)' : 'var(--brown-100)',
+                        color: log.action === 'LOGIN' ? 'var(--green-dark)' : 'var(--brown-800)',
+                      }}>
+                        {log.action}
+                      </span>
+                    </td>
+                    <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{log.branch?.name || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {showCreate && (
         <UserModal

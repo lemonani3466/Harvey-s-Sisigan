@@ -29,13 +29,13 @@ function ProtectedLayout() {
   if (!user) return <Navigate to="/login" replace />
 
   // Default landing page per role
-  const defaultRoute = user.role === 'CASHIER' ? '/pos' : '/dashboard'
+  const defaultRoute = '/dashboard'
 
   return (
     <>
       <Navbar />
       <Routes>
-        <Route path="/dashboard" element={<RoleRoute element={<DashboardPage />} roles={['OWNER', 'MANAGER']} />} />
+        <Route path="/dashboard" element={<RoleRoute element={<DashboardPage />} roles={['OWNER', 'MANAGER', 'CASHIER']} />} />
         <Route path="/pos"       element={<RoleRoute element={<POSPage />}       roles={['MANAGER', 'CASHIER']} />} />
         <Route path="/orders"    element={<OrdersPage />} />
         <Route path="/menu"      element={<RoleRoute element={<MenuPage />}      roles={['OWNER', 'MANAGER']} />} />

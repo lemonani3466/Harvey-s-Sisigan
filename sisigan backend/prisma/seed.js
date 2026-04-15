@@ -3,8 +3,60 @@
 
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
 
 const prisma = new PrismaClient();
+
+async function applyMenuItemPhotosFromSql() {
+  const sqlPath = path.join(__dirname, 'mediumBlob photos.sql');
+  if (!fs.existsSync(sqlPath)) {
+    console.log(`⚠️  Skipping photos: missing file ${sqlPath}`);
+    return { updated: 0, scanned: 0 };
+  }
+
+  const stream = fs.createReadStream(sqlPath, { encoding: 'utf8' });
+  const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+
+  let scanned = 0;
+  let updated = 0;
+  let inMenuItemsInsert = false;
+
+  // Tuple lines look like:
+  // (1, 'Beef Bulalo', '', 160.00, NULL, 1, 1, '...', '...', 0xffd8...)
+  const tupleRe = /^\((\d+),[\s\S]*?,\s*0x([0-9a-fA-F]+)\)\s*;?\s*$/;
+
+  for await (const line of rl) {
+    if (!inMenuItemsInsert) {
+      if (line.startsWith('INSERT INTO `menu_items`')) inMenuItemsInsert = true;
+      continue;
+    }
+
+    // Each INSERT line is followed by a single tuple line in your export, then repeats.
+    if (line.startsWith('INSERT INTO `menu_items`')) continue;
+
+    const m = line.match(tupleRe);
+    if (!m) continue;
+
+    scanned++;
+    const id = Number(m[1]);
+    const hex = m[2];
+
+    // Avoid doing work if already matches (optional), but simplest is just update.
+    const photo = Buffer.from(hex, 'hex');
+    await prisma.menuItem.update({
+      where: { id },
+      data: { photo },
+    });
+    updated++;
+
+    // If file contains only menu_items inserts, we can keep going; otherwise stop when inserts end.
+    // Heuristic: if we ever hit an empty line after having processed inserts, end.
+  }
+
+  return { updated, scanned };
+}
 
 async function main() {
   console.log('🌱 Seeding Sisigan Restaurant POS...\n');
@@ -162,6 +214,13 @@ async function main() {
     createdItems++;
   }
   console.log(`✅ Created ${createdItems} menu items`);
+
+  const photoResult = await applyMenuItemPhotosFromSql();
+  if (photoResult.updated > 0) {
+    console.log(`✅ Applied photos to ${photoResult.updated} menu items`);
+  } else {
+    console.log('ℹ️  No menu item photos applied');
+  }
 
   console.log('\n🎉 Seeding complete!\n');
   console.log('📋 Login credentials:');

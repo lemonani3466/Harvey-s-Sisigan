@@ -1,4 +1,3 @@
-// src/components/layout/Navbar.jsx
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
@@ -8,16 +7,18 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  function handleLogout() { logout(); navigate('/login') }
+  async function handleLogout() {
+    await logout()
+    navigate('/login')
+  }
 
-  // Nav items visible per role
   const navItems = [
-    { to: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['MANAGER', 'ADMIN'] },
-    { to: '/pos',       label: 'New Order', icon: '🧾', roles: ['ADMIN', 'CASHIER'] },
-    { to: '/orders',    label: 'Orders',    icon: '📋', roles: ['ADMIN', 'CASHIER'] },
-    { to: '/menu',      label: 'Menu',      icon: '🍽️', roles: ['MANAGER', 'ADMIN'] },
-    { to: '/branches',  label: 'Branches',  icon: '🏪', roles: ['MANAGER'] },
-    { to: '/users',     label: 'Accounts',  icon: '👥', roles: ['MANAGER', 'ADMIN'] },
+    { to: '/dashboard', label: 'Dashboard', icon: '??', roles: ['OWNER', 'MANAGER', 'CASHIER'] },
+    { to: '/pos',       label: 'New Order', icon: '??', roles: ['MANAGER', 'CASHIER'] },
+    { to: '/orders',    label: 'Orders',    icon: '??', roles: ['MANAGER', 'CASHIER'] },
+    { to: '/menu',      label: 'Menu',      icon: '???', roles: ['OWNER', 'MANAGER'] },
+    { to: '/branches',  label: 'Branches',  icon: '??', roles: ['OWNER'] },
+    { to: '/users',     label: 'Accounts',  icon: '??', roles: ['OWNER', 'MANAGER'] },
   ].filter(item => item.roles.includes(user?.role))
 
   return (
@@ -27,9 +28,7 @@ export default function Navbar() {
       padding: '0 24px', boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
       position: 'sticky', top: 0, zIndex: 100,
     }}>
-      {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {/* <span style={{ fontSize: 22 }}>🍖</span> */}
         <img src={logo} alt="Harvey's Sisig Logo" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
         <span style={{ fontFamily: 'var(--font-display)', color: '#fff', fontSize: 18, fontWeight: 700 }}>Harvey's Special Crispy Sisig</span>
         <span style={{
@@ -37,11 +36,10 @@ export default function Navbar() {
           fontSize: 11, fontWeight: 700, padding: '3px 10px',
           borderRadius: 'var(--radius-full)', letterSpacing: 0.3,
         }}>
-          {user?.role === 'MANAGER' ? 'All Branches' : user?.branch?.name || 'POS'}
+          {user?.role === 'OWNER' ? 'All Branches' : user?.branch?.name || 'POS'}
         </span>
       </div>
 
-      {/* Nav links */}
       <div style={{ display: 'flex', gap: 4 }}>
         {navItems.map(item => (
           <NavLink key={item.to} to={item.to} style={({ isActive }) => ({
@@ -58,7 +56,6 @@ export default function Navbar() {
         ))}
       </div>
 
-      {/* User info + logout */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         <div style={{ textAlign: 'right' }}>
           <div style={{ color: '#fff', fontSize: 13, fontWeight: 600 }}>{user?.name}</div>

@@ -18,6 +18,7 @@ model Branch {
   updatedAt DateTime @updatedAt
   orders    Order[]
   users     User[]
+  authLogs  AuthLog[]
 
   @@map("branches")
 }
@@ -34,6 +35,7 @@ model User {
   updatedAt DateTime @updatedAt
   orders    Order[]
   branch    Branch   @relation(fields: [branchId], references: [id])
+  authLogs  AuthLog[]
 
   @@index([branchId])
   @@map("users")
@@ -122,8 +124,27 @@ model Payment {
   @@map("payments")
 }
 
+model AuthLog {
+  id        Int            @id @default(autoincrement())
+  userId    Int
+  branchId  Int
+  role      Role
+  action    AuthLogAction
+  ipAddress String?        @db.VarChar(45)
+  userAgent String?        @db.VarChar(255)
+  createdAt DateTime       @default(now())
+  branch    Branch         @relation(fields: [branchId], references: [id])
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([branchId])
+  @@index([createdAt])
+  @@index([action])
+  @@map("auth_logs")
+}
+
 enum Role {
-  ADMIN
+  OWNER
   MANAGER
   CASHIER
 }
@@ -147,4 +168,9 @@ enum PaymentMethod {
   GCASH
   MAYA
   CARD
+}
+
+enum AuthLogAction {
+  LOGIN
+  LOGOUT
 }

@@ -25,7 +25,7 @@ try {
   const loggedInUser = await login(email, password)
 
   if (loggedInUser?.role === 'CASHIER') {
-    navigate('/pos')
+    navigate('/dashboard')
   } else {
     navigate('/dashboard')
   }
