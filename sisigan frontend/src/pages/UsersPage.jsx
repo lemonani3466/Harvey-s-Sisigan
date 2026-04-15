@@ -53,7 +53,17 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
         await usersApi.update(editUser.id, payload)
       } else {
         if (!form.password) { setError('Password is required.'); setLoading(false); return }
-        await usersApi.create(form)
+        const fallbackBranchId = branches[0]?.id
+        const payload = {
+          ...form,
+          branchId: Number(form.branchId || fallbackBranchId),
+        }
+        if (!payload.branchId) {
+          setError('Branch is required.')
+          setLoading(false)
+          return
+        }
+        await usersApi.create(payload)
       }
       onSaved()
     } catch (e) { setError(e.message) }
@@ -175,7 +185,9 @@ export default function UsersPage() {
       setAuthLogs(logs.data || [])
       // For manager, their own branch only
       if (me?.role === 'MANAGER') {
-        setBranches([me.branch].filter(Boolean))
+        const selfFromList = (u.data || []).find(x => x.id === me?.id)
+        const managerBranch = me?.branch || selfFromList?.branch
+        setBranches(managerBranch ? [managerBranch] : [])
       } else {
         setBranches(b.data || [])
       }

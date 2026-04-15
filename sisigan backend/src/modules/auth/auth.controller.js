@@ -2,6 +2,7 @@
 
 const { validationResult } = require('express-validator');
 const authService = require('./auth.service');
+const prisma = require('../../config/db');
 
 function getRequestMetadata(req) {
   const forwardedFor = req.headers['x-forwarded-for'];
@@ -31,9 +32,28 @@ async function login(req, res, next) {
   }
 }
 
-// Returns the current logged-in user's profile
-async function me(req, res) {
-  res.json({ success: true, data: { user: req.user } });
+// Returns the current logged-in user's profile (with branch details)
+async function me(req, res, next) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        branch: { select: { id: true, name: true, city: true } },
+      },
+    });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    res.json({ success: true, data: { user } });
+  } catch (err) {
+    next(err);
+  }
 }
 
 async function logout(req, res, next) {

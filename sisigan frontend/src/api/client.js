@@ -11,7 +11,12 @@ async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, { ...options, headers })
   const data = await res.json()
 
-  if (!res.ok) throw new Error(data.message || `Request failed: ${res.status}`)
+  if (!res.ok) {
+    const validationMessage = Array.isArray(data?.errors) && data.errors.length
+      ? data.errors[0]?.msg
+      : ''
+    throw new Error(validationMessage || data.message || `Request failed: ${res.status}`)
+  }
   return data
 }
 
