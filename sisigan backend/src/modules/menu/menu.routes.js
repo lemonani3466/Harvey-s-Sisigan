@@ -22,13 +22,13 @@ router.get('/categories', menuController.getMenuByCategory);
 // GET  /api/menu             - Flat list of all items
 router.get('/', menuController.getAllItems);
 
-// POST /api/menu             - Add item (ADMIN/MANAGER)
-router.post('/', roleMiddleware('ADMIN', 'MANAGER'), itemValidation, menuController.createItem);
+// POST /api/menu             - Add item (OWNER/MANAGER)
+router.post('/', roleMiddleware('OWNER', 'MANAGER'), itemValidation, menuController.createItem);
 
 // PATCH /api/menu/:id        - Edit item
-router.patch('/:id', roleMiddleware('ADMIN', 'MANAGER'), menuController.updateItem);
+router.patch('/:id', roleMiddleware('OWNER', 'MANAGER'), menuController.updateItem);
 
 // PATCH /api/menu/:id/toggle - Toggle availability (86'd item)
-router.patch('/:id/toggle', roleMiddleware('ADMIN', 'MANAGER'), menuController.toggleItem);
+router.patch('/:id/toggle', roleMiddleware('OWNER', 'MANAGER'), menuController.toggleItem);
 
 module.exports = router;

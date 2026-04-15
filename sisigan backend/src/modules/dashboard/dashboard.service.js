@@ -1,5 +1,5 @@
 // src/modules/dashboard/dashboard.service.js
-// Analytics — MANAGER sees all branches, ADMIN sees only their branch
+// Analytics — OWNER sees all branches, MANAGER sees only their branch
 
 const prisma = require('../../config/db');
 
@@ -45,7 +45,7 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
 
   // Branch scoping
   const scopedBranchId =
-    requestingUser.role === 'MANAGER'
+    requestingUser.role === 'OWNER'
       ? (branchId ? Number(branchId) : null)   // Manager can filter by branch or see all
       : requestingUser.branchId;                // Admin always sees only their branch
 
@@ -122,9 +122,9 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
   }
   const salesTrend = Object.values(trendMap).sort((a, b) => a.date.localeCompare(b.date));
 
-  // ── 5. Sales by branch (Manager only) ────────────────
+  // ── 5. Sales by branch (Owner only) ─────────────────
   let salesByBranch = [];
-  if (requestingUser.role === 'MANAGER' && !scopedBranchId) {
+  if (requestingUser.role === 'OWNER' && !scopedBranchId) {
     const branchMap = {};
     for (const order of completedOrders) {
       const bName = order.branch?.name || 'Unknown';

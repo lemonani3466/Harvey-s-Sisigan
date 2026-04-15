@@ -103,12 +103,12 @@ async function createOrder({ items, type, tableNumber, customerName, notes, bran
 
 /**
  * List orders for a branch, with optional filters
- * - ADMIN can query any branch
+ * - OWNER can query any branch
  * - CASHIER/MANAGER only see their own branch
  */
 async function getOrders({ branchId, status, type, date, page = 1, limit = 20, userRole, userBranchId }) {
   // Enforce branch scope for non-admins
-  const effectiveBranchId = userRole === 'ADMIN' ? branchId : userBranchId;
+  const effectiveBranchId = userRole === 'MANAGER' ? branchId : userBranchId;
 
   const where = {};
   if (effectiveBranchId) where.branchId = Number(effectiveBranchId);
@@ -174,8 +174,8 @@ async function getOrderById(orderId, { userRole, userBranchId }) {
 
   if (!order) throw { statusCode: 404, message: 'Order not found.' };
 
-  // Non-admins can only view their branch's orders
-  if (userRole !== 'ADMIN' && order.branchId !== userBranchId) {
+  // Non-owners can only view their branch's orders
+  if (userRole !== 'OWNER' && order.branchId !== userBranchId) {
     throw { statusCode: 403, message: 'Access denied to this order.' };
   }
 
@@ -204,7 +204,7 @@ async function updateOrderStatus(orderId, newStatus, { userRole, userBranchId })
 
   if (!order) throw { statusCode: 404, message: 'Order not found.' };
 
-  if (userRole !== 'ADMIN' && order.branchId !== userBranchId) {
+  if (userRole !== 'OWNER' && order.branchId !== userBranchId) {
     throw { statusCode: 403, message: 'Access denied to this order.' };
   }
 
@@ -253,7 +253,7 @@ async function processPayment({ orderId, method, amountPaid, referenceNo }, { us
 
   if (!order) throw { statusCode: 404, message: 'Order not found.' };
 
-  if (userRole !== 'ADMIN' && order.branchId !== userBranchId) {
+  if (userRole !== 'OWNER' && order.branchId !== userBranchId) {
     throw { statusCode: 403, message: 'Access denied to this order.' };
   }
 

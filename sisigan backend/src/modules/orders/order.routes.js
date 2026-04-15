@@ -70,8 +70,8 @@ router.get('/:id', orderController.getOrderById);
 // PATCH  /api/orders/:id/status  - Update order status (cashier/manager)
 router.patch('/:id/status', statusValidation, orderController.updateOrderStatus);
 
-// DELETE /api/orders/:id         - Cancel order (manager/admin only)
-router.delete('/:id', roleMiddleware('ADMIN', 'MANAGER'), orderController.cancelOrder);
+// DELETE /api/orders/:id         - Cancel order (owner/manager only)
+router.delete('/:id', roleMiddleware('OWNER', 'MANAGER'), orderController.cancelOrder);
 
 // POST   /api/orders/:id/payment - Process payment (cashier+)
 router.post('/:id/payment', paymentValidation, orderController.processPayment);

@@ -12,6 +12,6 @@ router.use(authMiddleware);
 router.get('/', dashboardController.getDashboard);
 
 // GET /api/dashboard/branches — branch list for filter dropdown (Manager only)
-router.get('/branches', roleMiddleware('MANAGER'), dashboardController.getBranches);
+router.get('/branches', roleMiddleware('OWNER'), dashboardController.getBranches);
 
 module.exports = router;

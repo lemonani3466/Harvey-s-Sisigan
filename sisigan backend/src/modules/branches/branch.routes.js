@@ -7,7 +7,7 @@ const roleMiddleware = require('../../middleware/role.middleware');
 
 const router = express.Router();
 router.use(authMiddleware);
-router.use(roleMiddleware('MANAGER'));  // Manager only
+router.use(roleMiddleware('OWNER'));  // Owner only
 
 const createValidation = [
   body('name').notEmpty().trim().withMessage('Branch name is required.'),

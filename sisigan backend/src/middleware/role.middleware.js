@@ -1,5 +1,5 @@
 // src/middleware/role.middleware.js
-// Guards routes by user role (ADMIN > MANAGER > CASHIER)
+// Guards routes by user role (OWNER > MANAGER > CASHIER)
 
 const roleMiddleware = (...allowedRoles) => {
   return (req, res, next) => {

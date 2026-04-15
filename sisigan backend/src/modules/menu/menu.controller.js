@@ -4,7 +4,7 @@ const { validationResult } = require('express-validator');
 async function getMenuByCategory(req, res, next) {
   try {
     console.log('query params:', req.query)
-    const includeUnavailable = req.user?.role === 'ADMIN' || req.user?.role === 'MANAGER';
+    const includeUnavailable = req.user?.role === 'OWNER' || req.user?.role === 'MANAGER';
     const includePhoto       = req.query.includePhoto === 'true';
     console.log('includePhoto:', includePhoto)
 
@@ -17,7 +17,7 @@ async function getMenuByCategory(req, res, next) {
 
 async function getAllItems(req, res, next) {
   try {
-    const includeUnavailable = req.user?.role === 'ADMIN' || req.user?.role === 'MANAGER';
+    const includeUnavailable = req.user?.role === 'OWNER' || req.user?.role === 'MANAGER';
     const includePhoto       = req.query.includePhoto === 'true';
 
     const items = await menuService.getAllMenuItems({ includeUnavailable, includePhoto });
