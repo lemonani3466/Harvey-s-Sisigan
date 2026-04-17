@@ -226,7 +226,7 @@ export default function DashboardPage() {
         {/* Best Sellers */}
         <Section title="🏆 Best Sellers (by quantity)">
           {data?.bestSellers?.length ? (
-            <ResponsiveContainer width="100%" height={240}>~
+            <ResponsiveContainer width="100%" height={240}>
               <BarChart data={data.bestSellers} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} />

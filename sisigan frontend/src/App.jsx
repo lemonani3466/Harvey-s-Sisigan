@@ -10,6 +10,8 @@ import DashboardPage from './pages/DashboardPage'
 import UsersPage     from './pages/UsersPage'
 import BranchesPage  from './pages/BranchesPage'
 import InventoryPage from './pages/InventoryPage'
+import ForecastPage from "./pages/ForecastPage";
+
 
 // ── Role guard: redirect if user doesn't have required role ──
 function RoleRoute({ element, roles }) {
@@ -43,6 +45,7 @@ function ProtectedLayout() {
         <Route path="/inventory" element={<RoleRoute element={<InventoryPage />} roles={['OWNER', 'MANAGER']} />} />
         <Route path="/users"     element={<RoleRoute element={<UsersPage />}     roles={['OWNER', 'MANAGER']} />} />
         <Route path="/branches"  element={<RoleRoute element={<BranchesPage />} roles={['OWNER']} />} />
+        <Route path="/forecast"  element={<RoleRoute element={<ForecastPage />} roles={['OWNER']} />} />
         <Route path="*"          element={<Navigate to={defaultRoute} replace />} />
       </Routes>
     </>
