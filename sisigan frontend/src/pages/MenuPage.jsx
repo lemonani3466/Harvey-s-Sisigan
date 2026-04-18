@@ -89,9 +89,8 @@ function AddItemModal({ categories, onClose, onSaved }) {
 }
 
 function EditItemModal({ item, categories, role, onClose, onSaved }) {
-  const isManager = role === 'MANAGER'
   const isOwner   = role === 'OWNER'
-  const canManageMenu = isOwner || isManager
+  const isManager = role === 'MANAGER'
 
   const [form,    setForm]    = useState({
     name:        item.name        || '',
@@ -100,8 +99,8 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
     categoryId:  item.categoryId  || categories[0]?.id || '',
     remarks:     item.remarks     || '',
   })
-  const [photo,   setPhoto]   = useState(null)   // new photo base64
-  const [preview, setPreview] = useState(null)   // new photo preview URL
+  const [photo,   setPhoto]   = useState(null)
+  const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
   const fileRef = useRef()
@@ -123,52 +122,82 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
   }
 
   async function save() {
-    if (!form.name || !form.price) { setError('Name and price are required.'); return }
+    if (isOwner && (!form.name || !form.price)) { setError('Name and price are required.'); return }
     setLoading(true); setError('')
     try {
-      const payload = {
-        name:        form.name,
-        price:       Number(form.price),
-        description: form.description,
-        categoryId:  Number(form.categoryId),
-        ...(isOwner && { remarks: form.remarks }),
-        ...(photo   && { photo }),
-      }
+      const payload = isOwner
+        ? {
+            name:        form.name,
+            price:       Number(form.price),
+            description: form.description,
+            categoryId:  Number(form.categoryId),
+            remarks:     form.remarks,
+            ...(photo && { photo }),
+          }
+        : {
+            description: form.description, // manager: description only
+          }
       await menuApi.update(item.id, payload)
       onSaved()
     } catch (e) { setError(e.message) }
     finally     { setLoading(false) }
   }
 
-  // Current photo to show (existing item photo or new preview)
   const displayPhoto = preview || (item.photo ? item.photo : null)
 
   return (
     <Modal title="Edit Menu Item" onClose={onClose} width={400}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-        {/* Fields only OWNER/MANAGER can edit */}
-        <Input label="Item Name" value={form.name} onChange={e => set('name', e.target.value)} disabled={!canManageMenu} />
-        <Input label="Price (₱)" type="number" value={form.price} onChange={e => set('price', e.target.value)} disabled={!canManageMenu} />
+        {/* Name — owner only */}
+        <Input
+          label="Item Name"
+          value={form.name}
+          onChange={e => set('name', e.target.value)}
+          disabled={!isOwner}
+        />
 
+        {/* Price — owner only */}
+        <Input
+          label="Price (₱)"
+          type="number"
+          value={form.price}
+          onChange={e => set('price', e.target.value)}
+          disabled={!isOwner}
+        />
+
+        {/* Category — owner only */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
-          <select value={form.categoryId} onChange={e => set('categoryId', e.target.value)} disabled={!canManageMenu}
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: canManageMenu ? '#fff' : 'var(--cream)', outline: 'none', color: 'var(--text-dark)', opacity: canManageMenu ? 1 : 0.6 }}>
+          <select
+            value={form.categoryId}
+            onChange={e => set('categoryId', e.target.value)}
+            disabled={!isOwner}
+            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: isOwner ? '#fff' : 'var(--cream)', outline: 'none', color: 'var(--text-dark)', opacity: isOwner ? 1 : 0.6 }}
+          >
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
+        {/* Description — owner AND manager can edit */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Description</label>
-          <textarea value={form.description} onChange={e => set('description', e.target.value)}
-            disabled={!canManageMenu} rows={3} placeholder="Short description…"
-            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: canManageMenu ? '#fff' : 'var(--cream)', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-body)', opacity: canManageMenu ? 1 : 0.6 }}
+          <textarea
+            value={form.description}
+            onChange={e => set('description', e.target.value)}
+            rows={3}
+            placeholder="Short description…"
+            style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: '#fff', outline: 'none', resize: 'vertical', fontFamily: 'var(--font-body)' }}
           />
+          {isManager && (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+              As a manager, you can only edit the description.
+            </p>
+          )}
         </div>
 
-        {/* Photo — owner/manager only */}
-        {canManageMenu && (
+        {/* Photo — owner only */}
+        {isOwner && (
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Photo</label>
             {displayPhoto ? (
@@ -178,9 +207,12 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
                 <button onClick={() => fileRef.current?.click()} style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.55)', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}>Change</button>
               </div>
             ) : (
-              <div onClick={() => fileRef.current?.click()} style={{ width: '100%', height: 100, border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 6, background: 'var(--cream)' }}
+              <div
+                onClick={() => fileRef.current?.click()}
+                style={{ width: '100%', height: 100, border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: 6, background: 'var(--cream)' }}
                 onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--brown-400)'}
-                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              >
                 <span style={{ fontSize: 24 }}>📷</span>
                 <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>Click to upload photo</span>
               </div>
@@ -192,7 +224,9 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
         {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
         <div style={{ display: 'flex', gap: 10 }}>
           <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" fullWidth disabled={loading} onClick={save}>{loading ? 'Saving…' : 'Save Changes'}</Button>
+          <Button variant="primary" fullWidth disabled={loading} onClick={save}>
+            {loading ? 'Saving…' : 'Save Changes'}
+          </Button>
         </div>
       </div>
     </Modal>

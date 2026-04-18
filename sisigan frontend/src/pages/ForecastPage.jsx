@@ -381,11 +381,7 @@ export default function ForecastPage() {
           value={summary.totalOrders || 0}
           sub={`${summary.avgOrders.toFixed(0)} avg / day`}
         />
-        <StatCard
-          icon="🧾"
-          label="Avg Order Value"
-          value={fmtPeso(summary.avgOrderValue)}
-        />
+        
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
