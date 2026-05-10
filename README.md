@@ -14,6 +14,7 @@ npm run db:seed
 ```bash
 cd "sisigan frontend"
 npm install
+npm install xlsx
 ```
 ## How to Run
 
