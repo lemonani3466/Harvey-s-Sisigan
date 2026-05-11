@@ -2,6 +2,8 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/layout/Navbar'
+// Add this import at the top with the others
+import SalesAnalyticsDashboard from './pages/SalesAnalyticsDashboard'
 import LoginPage     from './pages/LoginPage'
 import POSPage       from './pages/POSPage'
 import OrdersPage    from './pages/OrdersPage'
@@ -46,6 +48,7 @@ function ProtectedLayout() {
         <Route path="/users"     element={<RoleRoute element={<UsersPage />}     roles={['OWNER', 'MANAGER']} />} />
         <Route path="/branches"  element={<RoleRoute element={<BranchesPage />} roles={['OWNER']} />} />
         <Route path="/forecast"  element={<RoleRoute element={<ForecastPage />} roles={['OWNER']} />} />
+        <Route path="/analytics" element={<RoleRoute element={<SalesAnalyticsDashboard />} roles={['OWNER']} />} />
         <Route path="*"          element={<Navigate to={defaultRoute} replace />} />
       </Routes>
     </>

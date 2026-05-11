@@ -14,6 +14,7 @@ export default function Navbar() {
 
   const navItems = [
     { to: '/dashboard', label: 'Dashboard', icon: '📊', roles: ['OWNER', 'MANAGER', 'CASHIER'] },
+    { to: '/analytics', label: 'Analytics', icon: '📉', roles: ['OWNER'] },
     { to: '/forecast', label: 'Forecast',   icon: '📈', roles: ['OWNER'] },
     { to: '/inventory', label: 'Inventory', icon: '📋', roles: ['OWNER', 'MANAGER'] },
     { to: '/pos',       label: 'New Order', icon: '🛒', roles: ['MANAGER', 'CASHIER'] },
