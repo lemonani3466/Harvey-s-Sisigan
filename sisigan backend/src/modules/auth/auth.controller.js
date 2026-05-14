@@ -1,4 +1,4 @@
-// src/modules/auth/auth.controller.js
+// src/modules/auth/auth.controller.js - UPDATED
 
 const { validationResult } = require('express-validator');
 const authService = require('./auth.service');
@@ -16,6 +16,7 @@ function getRequestMetadata(req) {
   return { ipAddress, userAgent };
 }
 
+// EXISTING LOGIN (keep as-is)
 async function login(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -32,7 +33,7 @@ async function login(req, res, next) {
   }
 }
 
-// Returns the current logged-in user's profile (with branch details)
+// EXISTING ME (keep as-is)
 async function me(req, res, next) {
   try {
     const user = await prisma.user.findUnique({
@@ -56,6 +57,7 @@ async function me(req, res, next) {
   }
 }
 
+// EXISTING LOGOUT (keep as-is)
 async function logout(req, res, next) {
   try {
     const result = await authService.logout(req.user, getRequestMetadata(req));
@@ -65,4 +67,62 @@ async function logout(req, res, next) {
   }
 }
 
-module.exports = { login, me, logout };
+// NEW - Forgot Password Handler
+async function forgotPassword(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email } = req.body;
+    const result = await authService.forgotPassword(email);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// NEW - Verify Reset Code Handler
+async function verifyResetCode(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email, code } = req.body;
+    const result = await authService.verifyResetCode(email, code);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// NEW - Reset Password Handler
+async function resetPassword(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    const { email, code, newPassword } = req.body;
+    const result = await authService.resetPassword(email, code, newPassword);
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  login,
+  me,
+  logout,
+  forgotPassword,
+  verifyResetCode,
+  resetPassword,
+};

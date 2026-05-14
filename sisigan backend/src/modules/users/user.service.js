@@ -34,9 +34,12 @@ async function createUser({ name, email, password, role, branchId }, requestingU
     if (role !== 'CASHIER') {
       throw { statusCode: 403, message: 'Managers can only create Cashier accounts.' };
     }
-    if (Number(branchId) !== requestingUser.branchId) {
-      throw { statusCode: 403, message: 'Managers can only create accounts for their own branch.' };
+    // FIX: Auto-assign manager's own branch
+    // Make sure it's a valid number
+    if (!requestingUser.branchId) {
+      throw { statusCode: 400, message: 'Manager branch is not set.' };
     }
+    branchId = requestingUser.branchId;
   }
 
   // Only OWNER can create OWNER accounts
@@ -44,22 +47,42 @@ async function createUser({ name, email, password, role, branchId }, requestingU
     throw { statusCode: 403, message: 'Only Owners can create Owner accounts.' };
   }
 
+  // For OWNER: branchId must be provided
+  if (requestingUser.role === 'OWNER' && !branchId) {
+    throw { statusCode: 400, message: 'Branch is required.' };
+  }
+
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) throw { statusCode: 409, message: 'Email is already in use.' };
 
-  const branch = await prisma.branch.findUnique({ where: { id: Number(branchId) } });
+  // Ensure branchId is a number
+  const finalBranchId = Number(branchId);
+
+  const branch = await prisma.branch.findUnique({ where: { id: finalBranchId } });
   if (!branch) throw { statusCode: 404, message: 'Branch not found.' };
 
   const hashed = await bcrypt.hash(password, 12);
 
   return prisma.user.create({
-    data: { name, email, password: hashed, role, branchId: Number(branchId) },
+    data: {
+      name,
+      email,
+      password: hashed,
+      role,
+      branchId: finalBranchId
+    },
     select: {
-      id: true, name: true, email: true, role: true, isActive: true, createdAt: true,
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      createdAt: true,
       branch: { select: { id: true, name: true, city: true } },
     },
   });
 }
+
 
 // ── UPDATE USER ───────────────────────────────────────────
 async function updateUser(userId, { name, email, role, branchId, isActive }, requestingUser) {
@@ -82,10 +105,10 @@ async function updateUser(userId, { name, email, role, branchId, isActive }, req
   }
 
   const data = {};
-  if (name)      data.name     = name;
-  if (email)     data.email    = email;
-  if (role)      data.role     = role;
-  if (branchId)  data.branchId = Number(branchId);
+  if (name) data.name = name;
+  if (email) data.email = email;
+  if (role) data.role = role;
+  if (branchId) data.branchId = Number(branchId);
   if (isActive !== undefined) data.isActive = isActive;
 
   return prisma.user.update({

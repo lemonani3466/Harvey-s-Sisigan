@@ -1,6 +1,6 @@
-// src/pages/LoginPage.jsx
+// src/pages/LoginPage.jsx - UPDATED
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button, Input } from '../components/ui'
 
@@ -154,6 +154,27 @@ return (
           placeholder="Enter your password"
           onKeyDown={e => e.key === 'Enter' && handleLogin()}
         />
+
+        {/* Forgot Password Link - NEW */}
+        <div style={{
+          textAlign: 'right',
+          marginBottom: 6
+        }}>
+          <Link
+            to="/forgot-password"
+            style={{
+              fontSize: 13,
+              color: 'var(--brown-600)',
+              textDecoration: 'none',
+              fontWeight: 500,
+              transition: 'color 0.2s'
+            }}
+            onMouseEnter={e => e.target.style.color = 'var(--brown-800)'}
+            onMouseLeave={e => e.target.style.color = 'var(--brown-600)'}
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         <Button
           variant="primary"

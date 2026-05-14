@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { Button, Input, Modal, EmptyState } from '../components/ui'
 
 const ROLE_COLORS = {
-  OWNER:   { bg: '#FEE2E2', color: '#991B1B' },
+  OWNER: { bg: '#FEE2E2', color: '#991B1B' },
   MANAGER: { bg: '#DBEAFE', color: '#1E40AF' },
   CASHIER: { bg: '#D1FAE5', color: '#065F46' },
 }
@@ -25,14 +25,14 @@ function RoleBadge({ role }) {
 function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
   const isEdit = !!editUser
   const [form, setForm] = useState({
-    name:     editUser?.name     || '',
-    email:    editUser?.email    || '',
+    name: editUser?.name || '',
+    email: editUser?.email || '',
     password: '',
-    role:     editUser?.role     || 'CASHIER',
+    role: editUser?.role || 'CASHIER',
     branchId: editUser?.branch?.id || branches[0]?.id || '',
   })
   const [loading, setLoading] = useState(false)
-  const [error,   setError]   = useState('')
+  const [error, setError] = useState('')
 
   // Roles that current user can assign
   const assignableRoles = requestingRole === 'OWNER'
@@ -52,22 +52,41 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
         }
         await usersApi.update(editUser.id, payload)
       } else {
-        if (!form.password) { setError('Password is required.'); setLoading(false); return }
-        const fallbackBranchId = branches[0]?.id
-        const payload = {
-          ...form,
-          branchId: Number(form.branchId || fallbackBranchId),
-        }
-        if (!payload.branchId) {
-          setError('Branch is required.')
-          setLoading(false)
+        // CREATE NEW ACCOUNT
+        if (!form.password) {
+          setError('Password is required.');
+          setLoading(false);
           return
         }
+
+        // Build payload
+        const payload = {
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          role: form.role,
+        }
+
+        // Only OWNER specifies branchId - Manager's branch is auto-assigned by backend
+        if (requestingRole === 'OWNER') {
+          payload.branchId = Number(form.branchId)
+          // Validate branch selected
+          if (!payload.branchId) {
+            setError('Branch is required.')
+            setLoading(false)
+            return
+          }
+        }
+        // For MANAGER: don't send branchId - backend will use their own branch
+
         await usersApi.create(payload)
       }
       onSaved()
-    } catch (e) { setError(e.message) }
-    finally { setLoading(false) }
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -122,10 +141,10 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
 
 // ─── RESET PASSWORD MODAL ─────────────────────────────────
 function ResetPasswordModal({ user, onClose }) {
-  const [pwd,     setPwd]     = useState('')
+  const [pwd, setPwd] = useState('')
   const [loading, setLoading] = useState(false)
-  const [done,    setDone]    = useState(false)
-  const [error,   setError]   = useState('')
+  const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
 
   async function save() {
     setLoading(true); setError('')
@@ -163,13 +182,13 @@ function ResetPasswordModal({ user, onClose }) {
 // ─── USERS PAGE ───────────────────────────────────────────
 export default function UsersPage() {
   const { user: me } = useAuth()
-  const [users,    setUsers]    = useState([])
+  const [users, setUsers] = useState([])
   const [branches, setBranches] = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [loading, setLoading] = useState(true)
   const [showCreate, setShowCreate] = useState(false)
-  const [editUser,   setEditUser]   = useState(null)
-  const [resetUser,  setResetUser]  = useState(null)
-  const [toggling,   setToggling]   = useState(null)
+  const [editUser, setEditUser] = useState(null)
+  const [resetUser, setResetUser] = useState(null)
+  const [toggling, setToggling] = useState(null)
   const [filterRole, setFilterRole] = useState('ALL')
   const [authLogs, setAuthLogs] = useState([])
 

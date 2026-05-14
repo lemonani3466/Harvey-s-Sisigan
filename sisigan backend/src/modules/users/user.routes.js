@@ -16,7 +16,7 @@ const createValidation = [
   body('email').isEmail().withMessage('Valid email is required.'),
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters.'),
   body('role').isIn(['OWNER', 'MANAGER', 'CASHIER']).withMessage('Role must be OWNER, MANAGER, or CASHIER.'),
-  body('branchId').isInt({ min: 1 }).withMessage('Valid branchId is required.'),
+  body('branchId').optional().isInt({ min: 1 }).withMessage('Valid branchId is required.'),
 ];
 
 const resetPasswordValidation = [

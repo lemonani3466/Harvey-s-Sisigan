@@ -1,4 +1,4 @@
-// src/api/client.js
+// src/api/client.js - UPDATED
 // Centralized API helper — all backend calls go through here
 
 const BASE = '/api'
@@ -22,9 +22,13 @@ async function request(path, options = {}) {
 
 // ── Auth ──────────────────────────────────────────────────
 export const authApi = {
-  login:  (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  me:     ()                => request('/auth/me'),
-  logout: ()                => request('/auth/logout', { method: 'POST' }),
+  login:                (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  me:                   ()                => request('/auth/me'),
+  logout:               ()                => request('/auth/logout', { method: 'POST' }),
+  // NEW - Password reset endpoints
+  forgotPassword:       (email)           => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  verifyResetCode:      (email, code)     => request('/auth/verify-reset-code', { method: 'POST', body: JSON.stringify({ email, code }) }),
+  resetPassword:        (email, code, newPassword) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ email, code, newPassword }) }),
 }
 
 // ── Menu ──────────────────────────────────────────────────
@@ -68,6 +72,7 @@ export const usersApi = {
   resetPassword:  (id, pwd)      => request(`/users/${id}/password`,  { method: 'PATCH', body: JSON.stringify({ newPassword: pwd }) }),
   toggle:         (id)           => request(`/users/${id}/toggle`,    { method: 'PATCH' }),
 }
+
 export const ordersApi = {
   list:          (params = {}) => {
     const q = new URLSearchParams(params).toString()

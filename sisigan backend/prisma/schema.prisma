@@ -29,6 +29,7 @@ model User {
   name      String   @db.VarChar(100)
   email     String   @unique @db.VarChar(150)
   password  String   @db.VarChar(255)
+  passwordResets PasswordReset[]
   role      Role     @default(CASHIER)
   branchId  Int
   isActive  Boolean  @default(true)
@@ -38,9 +39,27 @@ model User {
   branch    Branch   @relation(fields: [branchId], references: [id])
   authLogs  AuthLog[]
   inventoryAuditLogs InventoryAuditLog[] @relation("InventoryAuditActor")
+  
 
   @@index([branchId])
   @@map("users")
+}
+
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code      String   @db.VarChar(6)
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, code])
+  @@index([userId])
+  @@index([code])
+  @@index([expiresAt])
+  @@map("password_resets")
 }
 
 model Category {

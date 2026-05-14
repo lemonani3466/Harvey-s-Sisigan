@@ -1,10 +1,11 @@
-// src/App.jsx
+// src/App.jsx - UPDATED
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Navbar from './components/layout/Navbar'
 // Add this import at the top with the others
 import SalesAnalyticsDashboard from './pages/SalesAnalyticsDashboard'
 import LoginPage     from './pages/LoginPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'  // NEW
 import POSPage       from './pages/POSPage'
 import OrdersPage    from './pages/OrdersPage'
 import MenuPage      from './pages/MenuPage'
@@ -60,6 +61,7 @@ export default function App() {
     <AuthProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />  {/* NEW */}
         <Route path="/*"     element={<ProtectedLayout />} />
       </Routes>
     </AuthProvider>
