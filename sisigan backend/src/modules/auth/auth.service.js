@@ -72,8 +72,10 @@ async function login(email, password, metadata = {}) {
     throw new Error('Invalid email or password.');
   }
 
+  console.log('user.branch:', user.branch)
+  console.log('user.branchId:', user.branchId)
   const token = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
+    { id: user.id, email: user.email, role: user.role, branchId: user.branch?.id },
     process.env.JWT_SECRET || 'your_secret_key_here'
   );
 
@@ -84,6 +86,8 @@ async function login(email, password, metadata = {}) {
         data: {
           userId: user.id,
           action: 'LOGIN',
+          role:      user.role, 
+          branchId:  user.branch?.id, 
           ipAddress: metadata.ipAddress,
           userAgent: metadata.userAgent,
         },
@@ -113,6 +117,8 @@ async function logout(user, metadata = {}) {
         data: {
           userId: user.id,
           action: 'LOGOUT',
+          role:      user.role, 
+          branchId:  user.branch?.id, 
           ipAddress: metadata.ipAddress,
           userAgent: metadata.userAgent,
         },

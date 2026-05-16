@@ -207,11 +207,11 @@ async function getOrderById(orderId, { userRole, userBranchId }) {
  * Any → CANCELLED (except COMPLETED)
  */
 const VALID_TRANSITIONS = {
-  PENDING: ['PREPARING', 'CANCELLED'],
+  PENDING:   ['PREPARING', 'CANCELLED'],
   PREPARING: ['READY', 'CANCELLED'],
-  READY: ['COMPLETED', 'CANCELLED'],
-  COMPLETED: [],
-  CANCELLED: [],
+  READY:     ['COMPLETED', 'CANCELLED'],
+  COMPLETED: ['PENDING'],  
+  CANCELLED: ['PENDING'], 
 };
 
 async function updateOrderStatus(orderId, newStatus, { userRole, userBranchId }) {
@@ -219,7 +219,9 @@ async function updateOrderStatus(orderId, newStatus, { userRole, userBranchId })
 
   if (!order) throw { statusCode: 404, message: 'Order not found.' };
 
-  if (userRole !== 'OWNER' && order.branchId !== userBranchId) {
+  // Branch check — any role in same branch can cancel/reopen
+  // Only OWNER can touch other branches
+  if (userRole !== 'OWNER' && userRole !== 'ADMIN' && order.branchId !== userBranchId) {
     throw { statusCode: 403, message: 'Access denied to this order.' };
   }
 
@@ -235,9 +237,9 @@ async function updateOrderStatus(orderId, newStatus, { userRole, userBranchId })
     where: { id: Number(orderId) },
     data: { status: newStatus },
     include: {
-      items: { include: { menuItem: { select: { id: true, name: true } } } },
+      items:   { include: { menuItem: { select: { id: true, name: true } } } },
       payment: true,
-      branch: { select: { id: true, name: true } },
+      branch:  { select: { id: true, name: true } },
     },
   });
 
@@ -249,6 +251,7 @@ async function updateOrderStatus(orderId, newStatus, { userRole, userBranchId })
 // ─────────────────────────────────────────
 
 async function cancelOrder(orderId, { userRole, userBranchId }) {
+  console.log('cancelling order:', orderId, 'role:', userRole, 'branchId:', userBranchId)
   return updateOrderStatus(orderId, 'CANCELLED', { userRole, userBranchId });
 }
 
@@ -276,15 +279,7 @@ async function processPayment({ orderId, method, amountPaid, referenceNo }, { us
     throw { statusCode: 400, message: 'Order is already completed and paid.' };
   }
 
-  if (order.status === 'CANCELLED') {
-    throw { statusCode: 400, message: 'Cannot pay a cancelled order.' };
-  }
-
-  if (order.payment) {
-    throw { statusCode: 400, message: 'Payment already exists for this order.' };
-  }
-
-  const paid = Number(amountPaid);
+  const paid  = Number(amountPaid);
   const total = Number(order.totalAmount);
 
   if (paid < total) {
@@ -296,22 +291,23 @@ async function processPayment({ orderId, method, amountPaid, referenceNo }, { us
 
   const change = paid - total;
 
-  // Atomic: create payment + mark order COMPLETED
-  const [payment, updatedOrder] = await prisma.$transaction([
+  const ops = []
+  if (order.payment) {
+    ops.push(prisma.payment.delete({ where: { orderId: Number(orderId) } }))
+  }
+  ops.push(
     prisma.payment.create({
-      data: {
-        orderId: Number(orderId),
-        method,
-        amountPaid: paid,
-        change,
-        referenceNo: referenceNo || null,
-      },
+      data: { orderId: Number(orderId), method, amountPaid: paid, change, referenceNo: referenceNo || null },
     }),
     prisma.order.update({
       where: { id: Number(orderId) },
-      data: { status: 'COMPLETED' },
+      data:  { status: 'COMPLETED' },
     }),
-  ]);
+  )
+
+  const results      = await prisma.$transaction(ops)
+  const payment      = results[results.length - 2]
+  const updatedOrder = results[results.length - 1]
 
   return { payment, order: updatedOrder, change };
 }
