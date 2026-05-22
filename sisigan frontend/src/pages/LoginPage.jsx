@@ -44,7 +44,7 @@ return (
 <div style={{
   minHeight: '100vh',
 
-  background: 'var(--brown-800)',
+  background: 'var(--brown-600)',
   //backgroundImage: `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url(${wall1})`,
   backgroundSize: 'cover',
   backgroundPosition: 'center',

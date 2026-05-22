@@ -8,15 +8,25 @@ import {
 const API = "http://localhost:8000/api";
 
 const C = {
-  primary:  "#e8372c",
-  secondary:"#f5a623",
-  forecast: "#7c3aed",
-  conf:     "#c4b5fd",
-  grid:     "#e5e7eb",
-  text:     "#1f2937",
-  muted:    "#6b7280",
-  cardBg:   "#ffffff",
-  pageBg:   "#f9fafb",
+  // Main brand colors
+  primary:   "#8B3A0E", // dark brown-orange (navbar/title/buttons)
+  secondary: "#D9A15B", // warm gold
+  forecast:  "#A65E2E", // medium brown accent
+  conf:      "#E8C9A7", // soft beige highlight
+
+  // UI colors
+  grid:      "#E7D7C8", // soft border/grid
+  text:      "#5A2A0C", // dark brown text
+  muted:     "#9B8A7A", // muted warm gray-brown
+
+  // Backgrounds
+  cardBg:    "#FFFDFB", // almost white cream
+  pageBg:    "#F8F1E9", // warm beige background
+
+  // Extra colors
+  success:   "#8C9A5B",
+  danger:    "#B94A48",
+
 };
 
 const fmt = (n) => n?.toLocaleString() ?? "—";
@@ -104,7 +114,8 @@ function KPICard({ label, value, sub, color }) {
   return (
     <div style={{
       background: C.cardBg, borderRadius: 12, padding: "20px 24px",
-      boxShadow: "0 1px 3px rgba(0,0,0,.08)", flex: 1, minWidth: 160,
+      border: `1px solid ${C.grid}`,
+      boxShadow: "none",
     }}>
       <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
       <div style={{ fontSize: 26, fontWeight: 800, color: color || C.text, marginTop: 4 }}>{value}</div>
@@ -126,7 +137,8 @@ function Card({ children, style }) {
   return (
     <div style={{
       background: C.cardBg, borderRadius: 12, padding: 24,
-      boxShadow: "0 1px 3px rgba(0,0,0,.08)", ...style,
+      border: `1px solid ${C.grid}`,
+      boxShadow: "none",
     }}>
       {children}
     </div>
