@@ -7,24 +7,109 @@ import { useAuth } from '../context/AuthContext'
 
 const STATUSES = ['COMPLETED', 'CANCELLED']
 
+// ── Deduction Modal ───────────────────────────────────
+function DeductionModal({ total, onApply, onClose }) {
+  const [type,  setType]  = useState('percentage')
+  const [value, setValue] = useState('')
+  const [error, setError] = useState('')
+
+  const numVal    = Number(value) || 0
+  const deducted  = type === 'percentage'
+    ? (numVal / 100) * total
+    : numVal
+  const newTotal  = Math.max(0, total - deducted)
+
+  function handleApply() {
+    if (!value || numVal <= 0) { setError('Please enter a value.'); return }
+    if (type === 'percentage' && numVal > 100) { setError('Percentage cannot exceed 100%.'); return }
+    if (type === 'amount' && numVal > total) { setError('Deduction cannot exceed the total.'); return }
+    onApply({ type, value: numVal, deducted })
+  }
+
+  return (
+    <Modal title="Apply Deduction" onClose={onClose} width={340}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* Type selector */}
+        <div>
+          <label style={labelStyle}>Deduction Type</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {[
+              { key: 'percentage', label: '% Percentage' },
+              { key: 'amount',     label: '₱ Amount' },
+            ].map(opt => (
+              <button key={opt.key} onClick={() => { setType(opt.key); setValue(''); setError('') }} style={{
+                flex: 1, padding: '10px 8px',
+                border:      `2px solid ${type === opt.key ? 'var(--brown-600)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-md)',
+                background:  type === opt.key ? 'var(--brown-600)' : '#fff',
+                color:       type === opt.key ? '#fff' : 'var(--brown-700)',
+                fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+              }}>{opt.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Value input */}
+        <div>
+          <label style={labelStyle}>
+            {type === 'percentage' ? 'Percentage (%)' : 'Amount (₱)'}
+          </label>
+          <input
+            type="number" min={0} value={value}
+            onChange={e => { setValue(e.target.value); setError('') }}
+            placeholder={type === 'percentage' ? 'e.g. 10' : 'e.g. 50'}
+            style={inputStyle}
+            autoFocus
+          />
+        </div>
+
+        {/* Preview */}
+        {numVal > 0 && (
+          <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-mid)', marginBottom: 6 }}>
+              <span>Original Total</span>
+              <span>₱{total.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--red-dark)', marginBottom: 6 }}>
+              <span>Deduction {type === 'percentage' ? `(${numVal}%)` : ''}</span>
+              <span>- ₱{deducted.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--brown-800)', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+              <span>New Total</span>
+              <span>₱{newTotal.toFixed(2)}</span>
+            </div>
+          </div>
+        )}
+
+        {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>}
+
+        <div style={{ display: 'flex', gap: 10 }}>
+          <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
+          <Button variant="primary" fullWidth onClick={handleApply}>Apply</Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 // ── Cancel Confirmation Modal ─────────────────────────
 function CancelModal({ order, onClose, onCancelled }) {
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
 
- async function handleCancel() {
-  console.log('cancel called, order:', order)  // 👈 log full order object
-  setLoading(true); setError('')
-  try {
-    await ordersApi.cancel(order.id)
-    onCancelled()
-  } catch (e) {
-    console.log('cancel error:', e.message)  // 👈 log any error
-    setError(e.message)
-  } finally {
-    setLoading(false)
+  async function handleCancel() {
+    setLoading(true); setError('')
+    try {
+      await ordersApi.cancel(order.id)
+      onCancelled()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setLoading(false)
+    }
   }
-}
+
   return (
     <Modal title="Cancel Order" onClose={onClose} width={360}>
       <div style={{ textAlign: 'center', padding: '8px 0 20px' }}>
@@ -58,10 +143,7 @@ function ReopenModal({ order, onClose, onReopened }) {
     if (!password.trim()) { setError('Password is required.'); return }
     setLoading(true); setError('')
     try {
-      // Verify password by attempting login with current user's email
       await authApi.login(user.email, password)
-      // Password correct — reopen order to PENDING
-     // await ordersApi.updateStatus(order.id, 'PENDING')
       onReopened(order)
     } catch (e) {
       setError('Incorrect password. Please try again.')
@@ -84,13 +166,11 @@ function ReopenModal({ order, onClose, onReopened }) {
       <div style={{ marginBottom: 16 }}>
         <label style={labelStyle}>Your Password</label>
         <input
-          type="password"
-          value={password}
+          type="password" value={password}
           onChange={e => setPassword(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleReopen()}
           placeholder="Enter your password"
-          style={inputStyle}
-          autoFocus
+          style={inputStyle} autoFocus
         />
       </div>
       {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 12 }}>{error}</p>}
@@ -106,13 +186,16 @@ function ReopenModal({ order, onClose, onReopened }) {
 
 function PaymentModal({ order, onClose, onPaid }) {
   const { user } = useAuth()
-  const [method,     setMethod]     = useState('CASH')
-  const [amountPaid, setAmountPaid] = useState('')
-  const [refNo,      setRefNo]      = useState('')
-  const [loading,    setLoading]    = useState(false)
-  const [error,      setError]      = useState('')
+  const [method,       setMethod]       = useState('CASH')
+  const [amountPaid,   setAmountPaid]   = useState('')
+  const [refNo,        setRefNo]        = useState('')
+  const [loading,      setLoading]      = useState(false)
+  const [error,        setError]        = useState('')
+  const [deduction,    setDeduction]    = useState(null)   // { type, value, deducted }
+  const [showDeduct,   setShowDeduct]   = useState(false)
 
-  const total      = Number(order.totalAmount)
+  const baseTotal  = Number(order.totalAmount)
+  const total      = deduction ? Math.max(0, baseTotal - deduction.deducted) : baseTotal
   const paid       = Number(amountPaid) || 0
   const change     = paid - total
   const needsRef   = method !== 'CASH'
@@ -140,66 +223,114 @@ function PaymentModal({ order, onClose, onPaid }) {
 
   return (
     <Modal title="Process Payment" onClose={onClose} width={400}>
-      <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: 'var(--brown-800)', fontSize: 13 }}>{order.orderNumber}</span>
-        <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 20, fontFamily: 'var(--font-display)' }}>P{total.toFixed(2)}</span>
-      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-      <div style={{ marginBottom: 16 }}>
-        <label style={labelStyle}>Payment Method</label>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {['CASH', 'GCASH', 'MAYA', 'CARD'].map(m => (
-            <button key={m} onClick={() => { setMethod(m); setRefNo('') }} style={{
-              flex: 1, padding: '9px 4px',
-              border:      `2px solid ${method === m ? 'var(--brown-600)' : 'var(--border)'}`,
-              borderRadius: 'var(--radius-md)',
-              background:  method === m ? 'var(--brown-600)' : '#fff',
-              color:       method === m ? '#fff' : 'var(--brown-700)',
-              fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
-            }}>{m}</button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: needsRef ? 14 : 0 }}>
-        <label style={labelStyle}>Amount Paid (P)</label>
-        <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)}
-          placeholder={`Minimum P${total.toFixed(2)}`} style={inputStyle} />
-      </div>
-
-      {needsRef && (
-        <div style={{ marginTop: 14 }}>
-          <label style={labelStyle}>{method} Reference No. *</label>
-          <input value={refNo} onChange={e => setRefNo(e.target.value)}
-            placeholder={`Enter ${method} reference number`} style={inputStyle} />
-        </div>
-      )}
-
-      {paid > 0 && (
-        <div style={{ background: change >= 0 ? 'var(--green-light)' : 'var(--red-light)', borderRadius: 'var(--radius-md)', padding: '10px 14px', marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontSize: 13, fontWeight: 600 }}>
-            {change >= 0 ? 'Change' : 'Short by'}
-          </span>
-          <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontWeight: 700, fontSize: 18 }}>
-            P{Math.abs(change).toFixed(2)}
+        {/* Order summary */}
+        <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: 'var(--brown-800)', fontSize: 13 }}>{order.orderNumber}</span>
+          <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 20, fontFamily: 'var(--font-display)' }}>
+            P{baseTotal.toFixed(2)}
           </span>
         </div>
-      )}
 
-      {needsRef && !refNo.trim() && paid >= total && (
-        <p style={{ color: 'var(--brown-600)', fontSize: 12, marginTop: 10 }}>
-          Reference number is required for {method} payments.
-        </p>
-      )}
+        {/* Deduction */}
+        {deduction ? (
+          <div style={{ background: 'var(--red-light)', borderRadius: 'var(--radius-md)', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--red-dark)' }}>
+                Deduction: {deduction.type === 'percentage' ? `${deduction.value}%` : `₱${deduction.value}`}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--red-dark)' }}>
+                - ₱{deduction.deducted.toFixed(2)} → New total: ₱{total.toFixed(2)}
+              </div>
+            </div>
+            <button
+              onClick={() => { setDeduction(null); setAmountPaid('') }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red-dark)', fontWeight: 700, fontSize: 18, padding: '0 4px' }}
+            >✕</button>
+          </div>
+        ) : (
+          <button
+            onClick={() => setShowDeduct(true)}
+            style={{
+              width: '100%', padding: '7px 12px',
+              border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)',
+              background: '#fff', color: 'var(--brown-600)',
+              fontWeight: 700, fontSize: 13, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            }}
+          >🏷️ Add Deduction</button>
+        )}
 
-      {error && <p style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{error}</p>}
+        {/* Payment method */}
+        <div>
+          <label style={labelStyle}>Payment Method</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {['CASH', 'GCASH', 'MAYA', 'CARD'].map(m => (
+              <button key={m} onClick={() => { setMethod(m); setRefNo('') }} style={{
+                flex: 1, padding: '7px 4px',
+                border: `2px solid ${method === m ? 'var(--brown-600)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-md)',
+                background: method === m ? 'var(--brown-600)' : '#fff',
+                color: method === m ? '#fff' : 'var(--brown-700)',
+                fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+              }}>{m}</button>
+            ))}
+          </div>
+        </div>
 
-      <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-        <Button variant="outline" onClick={onClose} style={{ flex: '0 0 auto' }}>Cancel</Button>
-        <Button variant="success" size="lg" fullWidth disabled={loading || !canConfirm} onClick={handlePay}>
-          {loading ? 'Processing...' : 'Confirm and Print Receipt'}
-        </Button>
+        {/* Amount paid */}
+        <div>
+          <label style={labelStyle}>Amount Paid (P)</label>
+          <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)}
+            placeholder={`Minimum P${total.toFixed(2)}`} style={inputStyle} />
+        </div>
+
+        {/* Reference number */}
+        {needsRef && (
+          <div>
+            <label style={labelStyle}>{method} Reference No. *</label>
+            <input value={refNo} onChange={e => setRefNo(e.target.value)}
+              placeholder={`Enter ${method} reference number`} style={inputStyle} />
+          </div>
+        )}
+
+        {/* Change display */}
+        {paid > 0 && (
+          <div style={{ background: change >= 0 ? 'var(--green-light)' : 'var(--red-light)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontSize: 13, fontWeight: 600 }}>
+              {change >= 0 ? 'Change' : 'Short by'}
+            </span>
+            <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontWeight: 700, fontSize: 18 }}>
+              P{Math.abs(change).toFixed(2)}
+            </span>
+          </div>
+        )}
+
+        {needsRef && !refNo.trim() && paid >= total && (
+          <p style={{ color: 'var(--brown-600)', fontSize: 12, margin: 0 }}>
+            Reference number is required for {method} payments.
+          </p>
+        )}
+
+        {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>}
+
+        {/* Action buttons */}
+        <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+          <Button variant="outline" onClick={onClose} style={{ flex: '0 0 auto' }}>Cancel</Button>
+          <Button variant="success" size="lg" fullWidth disabled={loading || !canConfirm} onClick={handlePay}>
+            {loading ? 'Processing...' : 'Confirm and Print Receipt'}
+          </Button>
+        </div>
       </div>
+
+      {showDeduct && (
+        <DeductionModal
+          total={baseTotal}
+          onClose={() => setShowDeduct(false)}
+          onApply={d => { setDeduction(d); setAmountPaid(''); setShowDeduct(false) }}
+        />
+      )}
     </Modal>
   )
 }
@@ -287,24 +418,16 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false }) 
         </div>
       )}
 
-      {/* ── Action Buttons ── */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-        {/* Pay Now — only for active unpaid orders */}
         {!order.payment && order.status !== 'CANCELLED' && order.status !== 'COMPLETED' && (
           <Button variant="success" fullWidth onClick={() => setShowPay(true)}>Pay Now</Button>
         )}
-
-        {/* Reprint — completed & paid */}
         {order.status === 'COMPLETED' && order.payment && (
           <Button variant="outline" fullWidth onClick={handleReprint}>Reprint Receipt</Button>
         )}
-
-        {/* Cancel — active orders only, with confirmation */}
         {isCancellable && (
           <Button variant="danger" fullWidth onClick={() => setShowCancel(true)}>Cancel Order</Button>
         )}
-
-        {/* Reopen — cancelled/completed orders, requires password */}
         {isReopenable && (
           <Button variant="outline" fullWidth onClick={() => setShowReopen(true)}>🔓 Reopen Order</Button>
         )}
@@ -318,12 +441,10 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false }) 
         <PaymentModal order={order} onClose={() => setShowPay(false)}
           onPaid={() => { setShowPay(false); onRefresh(); onClose() }} />
       )}
-
       {showCancel && (
         <CancelModal order={order} onClose={() => setShowCancel(false)}
           onCancelled={() => { setShowCancel(false); onRefresh(); onClose() }} />
       )}
-
       {showReopen && (
         <ReopenModal order={order} onClose={() => setShowReopen(false)}
           onReopened={() => { setShowReopen(false); setShowPay(true) }} />
@@ -335,10 +456,10 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false }) 
 export default function OrdersPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [orders,       setOrders]       = useState([])
-  const [filter,       setFilter]       = useState('COMPLETED')
-  const [loading,      setLoading]      = useState(false)
-  const [selectedId,   setSelectedId]   = useState(null)
+  const [orders,         setOrders]         = useState([])
+  const [filter,         setFilter]         = useState('COMPLETED')
+  const [loading,        setLoading]        = useState(false)
+  const [selectedId,     setSelectedId]     = useState(null)
   const [autoPayOrderId, setAutoPayOrderId] = useState(null)
 
   const load = useCallback(async () => {
@@ -352,7 +473,6 @@ export default function OrdersPage() {
   }, [filter])
 
   useEffect(() => { load() }, [load])
-
   useEffect(() => {
     const id = setInterval(load, 15000)
     return () => clearInterval(id)
@@ -362,7 +482,6 @@ export default function OrdersPage() {
     const openOrderId = location.state?.openOrderId
     const autoPay     = location.state?.autoPay
     if (!openOrderId) return
-
     setSelectedId(openOrderId)
     setAutoPayOrderId(autoPay ? openOrderId : null)
     navigate(location.pathname, { replace: true, state: {} })
