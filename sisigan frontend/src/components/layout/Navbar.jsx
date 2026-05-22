@@ -37,7 +37,7 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      height: '70px', background: 'var(--brown-800)',
+      height: '70px', background: `linear-gradient(180deg,var(--brown-600),var(--brown-700))`,
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 24px', boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
       position: 'sticky', top: 0, zIndex: 100,
