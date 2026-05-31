@@ -175,10 +175,173 @@ async function toggleAvailability(id) {
   });
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ADDED — Recipe management functions
+
+// Fetches all ingredients assigned to a menu item's recipe, including
+async function getRecipeForMenuItem(menuItemId) {
+  const item = await prisma.menuItem.findUnique({ where: { id: Number(menuItemId) } });
+  if (!item) throw { statusCode: 404, message: 'Menu item not found.' };
+ 
+  return prisma.menuItemRecipeIngredient.findMany({
+    where: { menuItemId: Number(menuItemId) },
+    include: {
+      ingredient: { select: { id: true, name: true, unit: true, category: true } },
+    },
+    orderBy: { ingredient: { name: 'asc' } },
+  });
+}
+
+// Adds one ingredient to a menu item's recipe, or updates the quantity if
+// that ingredient is already in the recipe (upsert — safe to call repeatedly).
+async function upsertRecipeIngredient(menuItemId, { ingredientId, quantity }) {
+  const item = await prisma.menuItem.findUnique({ where: { id: Number(menuItemId) } });
+  if (!item) throw { statusCode: 404, message: 'Menu item not found.' };
+ 
+  const ingredient = await prisma.ingredient.findUnique({ where: { id: Number(ingredientId) } });
+  if (!ingredient) throw { statusCode: 404, message: 'Ingredient not found.' };
+ 
+  const qty = Number(quantity);
+  if (isNaN(qty) || qty <= 0) throw { statusCode: 400, message: 'Quantity must be greater than 0.' };
+ 
+  return prisma.menuItemRecipeIngredient.upsert({
+    where: {
+      menuItemId_ingredientId: {
+        menuItemId:   Number(menuItemId),
+        ingredientId: Number(ingredientId),
+      },
+    },
+    update: { quantity: qty },
+    create: {
+      menuItemId:   Number(menuItemId),
+      ingredientId: Number(ingredientId),
+      quantity:     qty,
+    },
+    include: {
+      ingredient: { select: { id: true, name: true, unit: true, category: true } },
+    },
+  });
+}
+
+// Removes one ingredient from a menu item's recipe.
+async function deleteRecipeIngredient(menuItemId, ingredientId) {
+  const existing = await prisma.menuItemRecipeIngredient.findUnique({
+    where: {
+      menuItemId_ingredientId: {
+        menuItemId:   Number(menuItemId),
+        ingredientId: Number(ingredientId),
+      },
+    },
+  });
+  if (!existing) throw { statusCode: 404, message: 'Recipe ingredient not found.' };
+ 
+  return prisma.menuItemRecipeIngredient.delete({
+    where: {
+      menuItemId_ingredientId: {
+        menuItemId:   Number(menuItemId),
+        ingredientId: Number(ingredientId),
+      },
+    },
+  });
+}
+
+// Bulk-replaces the entire recipe for a menu item in one atomic DB transaction.
+async function setRecipeIngredients(menuItemId, ingredients) {
+  const item = await prisma.menuItem.findUnique({ where: { id: Number(menuItemId) } });
+  if (!item) throw { statusCode: 404, message: 'Menu item not found.' };
+ 
+  return prisma.$transaction(async (tx) => {
+    // Delete all existing recipe rows for this menu item
+    await tx.menuItemRecipeIngredient.deleteMany({
+      where: { menuItemId: Number(menuItemId) },
+    });
+ 
+    if (!ingredients || !ingredients.length) return [];
+ 
+    // Insert all new rows
+    const rows = await Promise.all(
+      ingredients.map((ing) =>
+        tx.menuItemRecipeIngredient.create({
+          data: {
+            menuItemId:   Number(menuItemId),
+            ingredientId: Number(ing.ingredientId),
+            quantity:     Number(ing.quantity),
+          },
+          include: {
+            ingredient: { select: { id: true, name: true, unit: true, category: true } },
+          },
+        })
+      )
+    );
+    return rows;
+  });
+}
+
+// Checks the current inventory stock for every ingredient in a menu item's
+// recipe at a specific branch. Returns a per-ingredient status so the frontend
+// can show ⛔ Out of stock or ⚠️ Low stock badges on POS cards and cart warnings.
+async function checkMenuItemStock(menuItemId, branchId) {
+  // Fetch the recipe for this menu item
+  const recipes = await prisma.menuItemRecipeIngredient.findMany({
+    where: { menuItemId: Number(menuItemId) },
+    include: { ingredient: { select: { id: true, name: true, unit: true } } },
+  });
+ 
+  // No recipe = no deduction needed, always orderable
+  if (!recipes.length) {
+    return { hasRecipe: false, canOrder: true, ingredients: [] };
+  }
+ 
+  // Fetch inventory rows for all required ingredients at this branch
+  const ingredientIds = recipes.map((r) => r.ingredientId);
+  const inventoryRows = await prisma.inventoryItem.findMany({
+    where: {
+      branchId:     Number(branchId),
+      ingredientId: { in: ingredientIds },
+      isActive:     true,
+    },
+    select: { ingredientId: true, quantity: true, minThreshold: true },
+  });
+ 
+  const inventoryMap = new Map(inventoryRows.map((r) => [r.ingredientId, r]));
+ 
+  let canOrder = true;
+  const ingredients = recipes.map((r) => {
+    const inv          = inventoryMap.get(r.ingredientId);
+    const currentStock = inv ? Number(inv.quantity)     : 0;
+    const required     = Number(r.quantity);
+    const minThreshold = inv ? Number(inv.minThreshold) : 0;
+ 
+    const status =
+      currentStock < required     ? 'OUT_OF_STOCK' :
+      currentStock <= minThreshold ? 'LOW_STOCK'    : 'OK';
+ 
+    if (status === 'OUT_OF_STOCK') canOrder = false;
+ 
+    return {
+      ingredientId: r.ingredientId,
+      name:         r.ingredient.name,
+      unit:         r.ingredient.unit,
+      required,
+      currentStock,
+      status,
+    };
+  });
+ 
+  return { hasRecipe: true, canOrder, ingredients };
+}
+
+
+
 module.exports = {
   getMenuWithCategories,
   getAllMenuItems,
   createMenuItem,
   updateMenuItem,
   toggleAvailability,
+  getRecipeForMenuItem,
+  upsertRecipeIngredient,
+  deleteRecipeIngredient,
+  setRecipeIngredients,
+  checkMenuItemStock,
 };

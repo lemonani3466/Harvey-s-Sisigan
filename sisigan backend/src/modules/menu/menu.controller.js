@@ -75,10 +75,91 @@ async function toggleItem(req, res, next) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ADDED — Recipe management controllers
+
+// Returns all ingredients in a menu item's recipe with name, unit, and category.
+async function getRecipe(req, res, next) {
+  try {
+    const data = await menuService.getRecipeForMenuItem(req.params.id);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Adds one ingredient to the recipe, or updates its quantity if it already exists.
+async function upsertRecipeIngredient(req, res, next) {
+  try {
+    const { ingredientId, quantity } = req.body;
+    if (!ingredientId || quantity === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: 'ingredientId and quantity are required.',
+      });
+    }
+    const data = await menuService.upsertRecipeIngredient(
+      req.params.id,
+      { ingredientId, quantity }
+    );
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Removes one ingredient from a menu item's recipe.
+async function deleteRecipeIngredient(req, res, next) {
+  try {
+    await menuService.deleteRecipeIngredient(req.params.id, req.params.ingredientId);
+    res.json({ success: true, message: 'Ingredient removed from recipe.' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Passing an empty array clears the recipe entirely.
+async function setRecipe(req, res, next) {
+  try {
+    const { ingredients } = req.body;
+    if (!Array.isArray(ingredients)) {
+      return res.status(400).json({
+        success: false,
+        message: 'ingredients must be an array.',
+      });
+    }
+    const data = await menuService.setRecipeIngredients(req.params.id, ingredients);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+// Checks the current inventory stock for every ingredient in this menu item's
+async function checkStock(req, res, next) {
+  try {
+    // branchId can come from query string or fall back to the user's own branch
+    const branchId = req.query.branchId ? Number(req.query.branchId) : req.user?.branchId;
+    if (!branchId) {
+      return res.status(400).json({ success: false, message: 'branchId is required.' });
+    }
+    const data = await menuService.checkMenuItemStock(req.params.id, branchId);
+    res.json({ success: true, data });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 module.exports = {
   getMenuByCategory,
   getAllItems,
   createItem,
   updateItem,
-  toggleItem
+  toggleItem,
+  getRecipe,
+  upsertRecipeIngredient,
+  deleteRecipeIngredient,
+  setRecipe,
+  checkStock,
 };

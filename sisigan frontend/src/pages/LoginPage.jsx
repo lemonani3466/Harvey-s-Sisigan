@@ -198,7 +198,7 @@ export default function LoginPage() {
               }
             />
 
-            {/* CHANGE: more subtle forgot password */}
+            {/*forgot password */}
             <div
               style={{
                 textAlign: 'right'
@@ -217,7 +217,6 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            {/* CHANGE: stronger CTA */}
             <Button
               variant="primary"
               size="lg"

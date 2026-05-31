@@ -41,6 +41,11 @@ export const menuApi = {
   create:     (data)       => request('/menu',            { method: 'POST',  body: JSON.stringify(data) }),
   update:     (id, data)   => request(`/menu/${id}`,      { method: 'PATCH', body: JSON.stringify(data) }),
   toggle:     (id)         => request(`/menu/${id}/toggle`, { method: 'PATCH' }),
+  getRecipe: (id) => request(`/menu/${id}/recipe`),
+  addRecipeIngredient: (id, data) => request(`/menu/${id}/recipe`, { method: 'POST', body: JSON.stringify(data) }),
+  removeRecipeIngredient: (id, ingId) => request(`/menu/${id}/recipe/${ingId}`, { method: 'DELETE' }),
+  setRecipe: (id, data) => request(`/menu/${id}/recipe`, { method: 'PUT', body: JSON.stringify(data) }),
+  checkStock: (id, branchId) => request(`/menu/${id}/stock-check?branchId=${branchId}`),
 }
 
 // ── Branches ──────────────────────────────────────────────

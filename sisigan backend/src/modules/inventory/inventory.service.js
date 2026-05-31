@@ -221,6 +221,7 @@ async function deductInventoryForOrder({ tx, branchId, orderId, items }) {
 
   const recipes = await db.menuItemRecipeIngredient.findMany({
     where: { menuItemId: { in: menuItemIds } },
+    include: { ingredient: { select: { id: true, name: true } } },
   });
 
   if (!recipes.length) return;
@@ -231,14 +232,17 @@ async function deductInventoryForOrder({ tx, branchId, orderId, items }) {
     recipeByMenu.get(r.menuItemId).push(r);
   }
 
-  const requiredByIngredient = new Map();
+  const requiredByIngredient = new Map(); // ingredientId -> { total, name }
   for (const item of items) {
     const qtyOrdered = Number(item.quantity);
     const itemRecipes = recipeByMenu.get(Number(item.menuItemId)) || [];
 
     for (const r of itemRecipes) {
-      const prev = requiredByIngredient.get(r.ingredientId) || 0;
-      requiredByIngredient.set(r.ingredientId, prev + Number(r.quantity) * qtyOrdered);
+      const prev = requiredByIngredient.get(r.ingredientId) || { total: 0, name: r.ingredient.name };
+      requiredByIngredient.set(r.ingredientId, {
+        total: prev.total + Number(r.quantity) * qtyOrdered,
+        name: r.ingredient.name,
+      });
     }
   }
 
@@ -255,28 +259,31 @@ async function deductInventoryForOrder({ tx, branchId, orderId, items }) {
 
   const inventoryByIngredient = new Map(inventoryRows.map((row) => [row.ingredientId, row]));
 
+  // Validate stock for all ingredients before touching any
   for (const ingredientId of ingredientIds) {
     const row = inventoryByIngredient.get(ingredientId);
+    const { total: needed, name } = requiredByIngredient.get(ingredientId);
+
     if (!row) {
       throw {
         statusCode: 400,
-        message: `No inventory stock configured for ingredient #${ingredientId} in this branch.`,
+        message: `No inventory stock found for "${name}" in this branch. Please add stock before ordering.`,
       };
     }
 
-    const needed = requiredByIngredient.get(ingredientId);
     if (Number(row.quantity) < needed) {
       throw {
         statusCode: 400,
-        message: `Insufficient stock for ingredient #${ingredientId}. Needed ${needed}, available ${Number(row.quantity)}.`,
+        message: `Insufficient stock for "${name}". Need ${needed}, only ${Number(row.quantity)} available.`,
       };
     }
   }
 
+  // All checks passed — now deduct
   for (const ingredientId of ingredientIds) {
     const row = inventoryByIngredient.get(ingredientId);
     const before = Number(row.quantity);
-    const deduction = requiredByIngredient.get(ingredientId);
+    const deduction = requiredByIngredient.get(ingredientId).total;
     const after = before - deduction;
 
     await db.inventoryItem.update({

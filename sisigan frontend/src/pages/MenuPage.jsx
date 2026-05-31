@@ -1,6 +1,6 @@
 // src/pages/MenuPage.jsx
 import { useState, useEffect, useRef } from 'react'
-import { menuApi } from '../api/client'
+import { menuApi, inventoryApi } from '../api/client'
 import { Button, Input, Modal, Badge, EmptyState, Card } from '../components/ui'
 import { useAuth } from '../context/AuthContext'
 
@@ -199,14 +199,177 @@ function EditItemModal({ item, categories, role, onClose, onSaved }) {
   )
 }
 
+// ── Recipe Manager Modal ─────────────────────────────────────────────
+function RecipeManagerModal({ item, onClose }) {
+  const [recipe, setRecipe] = useState([])
+  const [ingredients, setIngredients] = useState([])
+  const [selectedIngId, setSelectedIngId] = useState('')
+  const [quantity, setQuantity] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [removing, setRemoving] = useState(null)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
+
+  useEffect(() => {
+    setLoading(true)
+    Promise.all([
+      menuApi.getRecipe(item.id),
+      inventoryApi.list(),
+    ]).then(([recipeRes, invRes]) => {
+      setRecipe(recipeRes.data || [])
+      // Deduplicate ingredients by name (across branches)
+      const seen = new Map()
+      for (const inv of (invRes.data || [])) {
+        if (!seen.has(inv.ingredient.id)) seen.set(inv.ingredient.id, inv.ingredient)
+      }
+      setIngredients([...seen.values()])
+      if (seen.size > 0) setSelectedIngId(String([...seen.values()][0].id))
+    }).catch(e => setError(e.message)).finally(() => setLoading(false))
+  }, [item.id])
+
+  async function addIngredient() {
+    if (!selectedIngId || !quantity || Number(quantity) <= 0) {
+      setError('Select an ingredient and enter a valid quantity > 0.')
+      return
+    }
+    setSaving(true); setError(''); setSuccess('')
+    try {
+      const res = await menuApi.addRecipeIngredient(item.id, {
+        ingredientId: Number(selectedIngId),
+        quantity: Number(quantity),
+      })
+      setRecipe(prev => {
+        const existing = prev.find(r => r.ingredientId === res.data.ingredientId)
+        if (existing) return prev.map(r => r.ingredientId === res.data.ingredientId ? res.data : r)
+        return [...prev, res.data]
+      })
+      setQuantity('')
+      setSuccess('Ingredient added to recipe!')
+      setTimeout(() => setSuccess(''), 2500)
+    } catch (e) { setError(e.message) }
+    finally { setSaving(false) }
+  }
+
+  async function removeIngredient(ingredientId) {
+    setRemoving(ingredientId); setError(''); setSuccess('')
+    try {
+      await menuApi.removeRecipeIngredient(item.id, ingredientId)
+      setRecipe(prev => prev.filter(r => r.ingredientId !== ingredientId))
+    } catch (e) { setError(e.message) }
+    finally { setRemoving(null) }
+  }
+
+  const selectStyle = {
+    width: '100%', padding: '9px 12px', border: '1.5px solid var(--border)',
+    borderRadius: 'var(--radius-md)', fontSize: 13, background: '#fff', outline: 'none',
+  }
+
+  return (
+    <Modal title={`Recipe: ${item.name}`} onClose={onClose} width={520}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        {error && (
+          <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626' }}>
+            ⚠️ {error}
+          </div>
+        )}
+        {success && (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#16a34a' }}>
+            ✅ {success}
+          </div>
+        )}
+
+        {/* Add ingredient form */}
+        <div style={{ background: 'var(--brown-50)', borderRadius: 10, padding: 14, border: '1.5px solid var(--border)' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>
+            Add Ingredient
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
+            <div style={{ flex: 2 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 5 }}>Ingredient</label>
+              <select value={selectedIngId} onChange={e => setSelectedIngId(e.target.value)} style={selectStyle}>
+                {ingredients.map(ing => (
+                  <option key={ing.id} value={ing.id}>{ing.name} ({ing.unit})</option>
+                ))}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 5 }}>Qty per order</label>
+              <input
+                type="number" min="0.001" step="0.001" value={quantity}
+                onChange={e => setQuantity(e.target.value)}
+                placeholder="e.g. 1"
+                style={{ ...selectStyle, textAlign: 'center' }}
+              />
+            </div>
+            <Button variant="primary" onClick={addIngredient} disabled={saving || loading}>
+              {saving ? '…' : '+ Add'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Current recipe */}
+        <div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+            Current Recipe {recipe.length > 0 && `(${recipe.length} ingredient${recipe.length !== 1 ? 's' : ''})`}
+          </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: 13 }}>Loading…</div>
+          ) : recipe.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '20px', background: 'var(--cream)', border: '1.5px dashed var(--border)', borderRadius: 10, color: 'var(--text-faint)', fontSize: 13 }}>
+              No recipe set. Add ingredients above to enable auto-deduction.
+            </div>
+          ) : (
+            <div style={{ border: '1.5px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 80px', padding: '8px 14px', background: 'var(--brown-50)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                <span>Ingredient</span><span style={{ textAlign: 'right' }}>Qty / Order</span><span></span>
+              </div>
+              {recipe.map((r, i) => (
+                <div key={r.ingredientId} style={{
+                  display: 'grid', gridTemplateColumns: '1fr 100px 80px',
+                  padding: '10px 14px', alignItems: 'center',
+                  borderTop: i > 0 ? '1px solid var(--border-light)' : 'none',
+                  background: '#fff',
+                }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--text-dark)' }}>{r.ingredient.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{r.ingredient.unit} · {r.ingredient.category}</div>
+                  </div>
+                  <div style={{ textAlign: 'right', fontWeight: 700, fontSize: 14, color: 'var(--brown-700)' }}>
+                    {Number(r.quantity).toFixed(Number(r.quantity) % 1 === 0 ? 0 : 2)}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => removeIngredient(r.ingredientId)}
+                      disabled={removing === r.ingredientId}
+                      style={{ padding: '3px 10px', fontSize: 11, fontWeight: 700, border: '1.5px solid #fca5a5', borderRadius: 6, background: '#fef2f2', color: '#dc2626', cursor: 'pointer' }}
+                    >
+                      {removing === r.ingredientId ? '…' : '✕ Remove'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div style={{ fontSize: 11, color: 'var(--text-faint)', lineHeight: 1.6 }}>
+          💡 Ingredients listed here will be automatically deducted from inventory every time this item is ordered. If any ingredient is out of stock, the item will be blocked from the POS.
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 export default function MenuPage() {
   const { user } = useAuth()
-  const [menu,      setMenu]      = useState([])
-  const [activeTab, setActiveTab] = useState(null)
-  const [showAdd,   setShowAdd]   = useState(false)
-  const [editItem,  setEditItem]  = useState(null)
-  const [toggling,  setToggling]  = useState(null)
-  const [search,    setSearch]    = useState('')
+  const [menu,       setMenu]      = useState([])
+  const [activeTab,  setActiveTab] = useState(null)
+  const [showAdd,    setShowAdd]   = useState(false)
+  const [editItem,   setEditItem]  = useState(null)
+  const [recipeItem, setRecipeItem]= useState(null)
+  const [toggling,   setToggling]  = useState(null)
+  const [search,     setSearch]    = useState('')
 
   const canEdit = user?.role === 'OWNER' || user?.role === 'MANAGER'
 
@@ -290,7 +453,7 @@ export default function MenuPage() {
       ) : (
         <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
           <div style={{
-            display: 'grid', gridTemplateColumns: canEdit ? '1fr 100px 160px 130px' : '1fr 100px 160px 100px',
+            display: 'grid', gridTemplateColumns: canEdit ? '1fr 100px 160px 190px' : '1fr 100px 160px 100px',
             padding: '10px 16px', background: 'var(--brown-50)', borderBottom: '1px solid var(--border)',
             fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5,
           }}>
@@ -299,7 +462,7 @@ export default function MenuPage() {
 
           {currentItems.map((item, i) => (
             <div key={item.id} style={{
-              display: 'grid', gridTemplateColumns: canEdit ? '1fr 100px 160px 130px' : '1fr 100px 160px 100px',
+              display: 'grid', gridTemplateColumns: canEdit ? '1fr 100px 160px 190px' : '1fr 100px 160px 100px',
               padding: '12px 16px', alignItems: 'center',
               borderBottom: i < currentItems.length - 1 ? '1px solid var(--border-light)' : 'none',
               background: !item.isAvailable ? 'rgba(220,38,38,0.04)' : undefined,
@@ -330,6 +493,12 @@ export default function MenuPage() {
                       ✏️ Edit
                     </button>
                     <button
+                      onClick={() => setRecipeItem(item)}
+                      style={{ padding: '4px 10px', border: '1.5px solid #6d28d9', borderRadius: 'var(--radius-sm)', background: '#f5f3ff', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: '#6d28d9', transition: 'all 0.15s' }}
+                    >
+                      🍲 Recipe
+                    </button>
+                    <button
                       onClick={() => handleToggle(item.id)} disabled={toggling === item.id}
                       style={{ padding: '4px 10px', border: `1.5px solid ${item.isAvailable ? 'var(--border)' : 'var(--green)'}`, borderRadius: 'var(--radius-sm)', background: item.isAvailable ? '#fff' : 'var(--green-light)', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: item.isAvailable ? 'var(--text-muted)' : 'var(--green-dark)', transition: 'all 0.15s' }}
                     >
@@ -353,6 +522,12 @@ export default function MenuPage() {
           onSaved={() => { setEditItem(null); load() }}
         />
       )}
+      {recipeItem && (
+        <RecipeManagerModal
+          item={recipeItem}
+          onClose={() => setRecipeItem(null)}
+        />
+      )}
     </div>
   )
-}
+  }
