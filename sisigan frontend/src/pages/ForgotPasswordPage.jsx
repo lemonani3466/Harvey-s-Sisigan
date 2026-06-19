@@ -1,5 +1,5 @@
 // src/pages/ForgotPasswordPage.jsx
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { Button, Input } from '../components/ui'
 import logo from '../assets/LOGO/logo.jpg'
@@ -14,6 +14,22 @@ export default function ForgotPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+
+  const [isMobile, setIsMobile] = useState(
+    window.innerWidth < 768
+  )
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768)
+    }
+
+    window.addEventListener('resize', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [])
 
   // STEP 1: Request password reset
   async function handleRequestReset() {
@@ -117,77 +133,110 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--brown-800)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: 20
-    }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        overflowX: 'hidden',
+        background: `linear-gradient(135deg,var(--brown-600),var(--brown-500))`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? 12 : 24
+      }}
+    >
 
       {/* Container */}
-      <div style={{
-        display: 'flex',
-        width: 900,
-        maxWidth: '95%',
-        borderRadius: 'var(--radius-xl)',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-xl)'
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          width: '100%',
+          maxWidth: isMobile ? 450 : 950,
+          minHeight: isMobile ? 'auto' : 600,
+          overflow: 'hidden',
+          borderRadius: 30,
+          boxShadow: '0 30px 80px rgba(0,0,0,.22)',
+          background: '#b3510a',
+          margin: '0 auto'
+        }}
+      >
 
         {/* LEFT PANEL (LOGO) */}
-        <div style={{
-          flex: 1,
-          background: 'var(--brown-600)',
-          color: '#fff',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: 40,
-          textAlign: 'center'
-        }}>
+        {!isMobile && (
+          <div
+            style={{
+              flex: 1,
+              minWidth: 0,
+              background: `linear-gradient(180deg,var(--brown-500),var(--brown-600))`,
+              color: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 60,
+              textAlign: 'center'
+            }}
+          >
+            <img
+              src={logo}
+              alt="logo"
+              style={{
+                width: 150,
+                height: 150,
+                objectFit: 'cover',
+                borderRadius: 20,
+                boxShadow: '0 12px 40px rgba(0,0,0,.25)',
+                border: '3px solid rgba(255,255,255,.12)',
+                marginBottom: 30
+              }}
+            />
 
-          <img
-            src={logo}
-            alt="logo"
-            style={{ width: 160, marginBottom: 20 }}
-          />
+            <h1
+              style={{
+                fontFamily: 'Poppins, sans-serif',
+                fontSize: 38,
+                fontWeight: 800,
+                lineHeight: 1.1,
+                marginBottom: 10
+              }}
+            >
+              Harvey's Special
+              <br />
+              Crispy Sisig
+            </h1>
 
-          <h2 style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700
-          }}>
-            Harvey's Special Crispy Sisig
-          </h2>
-
-          <p style={{
-            opacity: 0.8,
-            fontSize: 13,
-            marginTop: 20
-          }}>
-            Reset Your Password
-          </p>
-
-        </div>
+            <p
+              style={{
+                opacity: .8,
+                fontSize: 14,
+                letterSpacing: .5
+              }}
+            >
+              Forgot Password
+            </p>
+          </div>
+        )}
 
         {/* RIGHT PANEL (FORM) */}
         <div style={{
           flex: 1,
           background: 'var(--cream)',
-          padding: '50px 40px',
+          padding: isMobile ? '30px 20px' : '70px 55px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center'
         }}>
 
-          <h2 style={{
-            fontSize: 24,
-            marginBottom: 8,
-            color: 'var(--brown-800)'
-          }}>
-            Forgot Password
+          <h2
+            style={{
+              fontSize: isMobile ? 24 : 34,
+              marginBottom: 8,
+              color: '#cd6f04',
+              fontWeight: 700
+            }}
+          >
+            FORGOT PASSWORD
           </h2>
 
           <p style={{
