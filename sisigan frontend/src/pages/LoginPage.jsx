@@ -58,11 +58,11 @@ export default function LoginPage() {
   return (
 
     <div
-      style={{
+      style={{  
         minHeight: '100vh',
         width: '100%',
         overflowX: 'hidden',
-        background: `linear-gradient(135deg,var(--brown-600),var(--brown-500))`,
+        background: 'linear-gradient(135deg, #d97706 0%, #d78b34 55%, #ffac4c 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -70,7 +70,7 @@ export default function LoginPage() {
       }}
     >
 
-      {/* MAIN LOGIN CARD */}
+      {/* MAIN LOGIN CONTAINER */}
       <div
         style={{
           display: 'flex',
@@ -82,9 +82,8 @@ export default function LoginPage() {
           overflow: 'hidden',
           borderRadius: 30,
           margin: '0 auto',
-          boxShadow:
-            '0 30px 80px rgba(0,0,0,.22)',
-          background: '#b3510a'
+          boxShadow: '0 25px 70px rgba(0, 0, 0, 0.18)',
+          background: '#FFF9F3'
         }}
       >
         {/* =======================================LEFT SIDE — BRAND SECTION======================================= */}
@@ -93,7 +92,7 @@ export default function LoginPage() {
             style={{
               flex: 1,
               minWidth: 0,
-              background: `linear-gradient(180deg,var(--brown-500),var(--brown-600))`,
+              background: 'linear-gradient(160deg, #d1690f 0%, #D97706 55%, #F0A500 100%)',
               color: '#fff',
               display: 'flex',
               flexDirection: 'column',
@@ -113,9 +112,9 @@ export default function LoginPage() {
                 objectFit: 'cover',
                 borderRadius: 20,
                 boxShadow:
-                  '0 12px 40px rgba(0,0,0,.25)',
+                  '0 12px 40px rgba(0,0,0,.18)',
                 border:
-                  '3px solid rgba(255,255,255,.12)',
+                  '4px solid rgba(255,255,255,.28)',
                 marginBottom: 30
               }}
             />
@@ -134,7 +133,7 @@ export default function LoginPage() {
             </h1>
             <p
               style={{
-                opacity: .8, fontSize: 14, letterSpacing: .5
+                opacity: .8, fontSize: 14, letterSpacing: -.8, textShadow: '0 2px 6px rgba(0,0,0,.18)'
               }}
             >
               Point of Sale System
@@ -160,7 +159,7 @@ export default function LoginPage() {
           style={{
             flex: 1,
             minWidth: 0,
-            background: 'var(--cream)',
+            background:'#FFFDF8',
             padding: isMobile ? '30px 20px' : '70px 55px',
             display: 'flex',
             flexDirection: 'column',

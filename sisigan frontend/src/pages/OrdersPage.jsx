@@ -259,7 +259,7 @@ function PaymentModal({ order, onClose, onPaid }) {
               fontWeight: 700, fontSize: 13, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}
-          >🏷️ Add Deduction</button>
+          >🏷️ Add Discount</button>
         )}
 
         {/* Payment method */}

@@ -138,7 +138,7 @@ export default function ForgotPasswordPage() {
         minHeight: '100vh',
         width: '100%',
         overflowX: 'hidden',
-        background: `linear-gradient(135deg,var(--brown-600),var(--brown-500))`,
+        background: 'linear-gradient(135deg, #d97706 0%, #d78b34 55%, #ffac4c 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -146,7 +146,7 @@ export default function ForgotPasswordPage() {
       }}
     >
 
-      {/* Container */}
+      {/* Main Container */}
       <div
         style={{
           display: 'flex',
@@ -156,7 +156,7 @@ export default function ForgotPasswordPage() {
           minHeight: isMobile ? 'auto' : 600,
           overflow: 'hidden',
           borderRadius: 30,
-          boxShadow: '0 30px 80px rgba(0,0,0,.22)',
+          boxShadow: '0 25px 70px rgba(0,0,0,.18)',
           background: '#b3510a',
           margin: '0 auto'
         }}
@@ -168,7 +168,7 @@ export default function ForgotPasswordPage() {
             style={{
               flex: 1,
               minWidth: 0,
-              background: `linear-gradient(180deg,var(--brown-500),var(--brown-600))`,
+              background: 'linear-gradient(160deg, #d1690f 0%, #D97706 55%, #F0A500 100%)',
               color: '#fff',
               display: 'flex',
               flexDirection: 'column',
@@ -186,8 +186,8 @@ export default function ForgotPasswordPage() {
                 height: 150,
                 objectFit: 'cover',
                 borderRadius: 20,
-                boxShadow: '0 12px 40px rgba(0,0,0,.25)',
-                border: '3px solid rgba(255,255,255,.12)',
+                boxShadow: '0 18px 40px rgba(0,0,0,.18)',
+                border:'4px solid rgba(255,255,255,.28)',
                 marginBottom: 30
               }}
             />
