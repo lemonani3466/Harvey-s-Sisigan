@@ -12,9 +12,9 @@ import {
 const COLORS = ['#b45309', '#d97706', '#f59e0b', '#92400e', '#78350f', '#fbbf24', '#a16207', '#ca8a04']
 
 const PERIODS = [
-  { value: 'today',  label: 'Today' },
-  { value: 'week',   label: 'This Week' },
-  { value: 'month',  label: 'This Month' },
+  { value: 'today', label: 'Today' },
+  { value: 'week', label: 'This Week' },
+  { value: 'month', label: 'This Month' },
   { value: 'custom', label: 'Custom' },
 ]
 
@@ -33,6 +33,13 @@ const secondaryBtnStyle = {
   border: '1.5px solid var(--border)', background: 'transparent',
   color: 'var(--brown-700)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
 }
+//   style for the small "reset" ghost button used in CustomRangePicker
+const resetBtnStyle = {
+  width: '100%', padding: '7px 0', borderRadius: 'var(--radius-full)',
+  border: '1.5px dashed var(--border)', background: 'transparent',
+  color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+  marginTop: 8,
+}
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 function fmt(n) {
@@ -40,11 +47,18 @@ function fmt(n) {
 }
 
 function getPeriodLabel(period, customStart, customEnd) {
-  if (period === 'today')  return 'Today'
-  if (period === 'week')   return 'This Week'
-  if (period === 'month')  return 'This Month'
+  if (period === 'today') return 'Today'
+  if (period === 'week') return 'This Week'
+  if (period === 'month') return 'This Month'
   if (period === 'custom' && customStart && customEnd) return `${customStart} to ${customEnd}`
   return 'Custom'
+}
+
+//   helper to get today's date as YYYY-MM-DD in local time (used to default the Sales Report range)
+function todayISO() {
+  const d = new Date()
+  const tzOffset = d.getTimezoneOffset() * 60000
+  return new Date(d - tzOffset).toISOString().slice(0, 10)
 }
 
 // ── Excel download ─────────────────────────────────────────────────────────────
@@ -54,12 +68,12 @@ function downloadExcel(data, periodLabel, branchLabel) {
 
   // Sheet 1: Summary
   const summaryRows = [
-    { Metric: 'Period',              Value: periodLabel },
-    { Metric: 'Branch',              Value: branchLabel },
-    { Metric: 'Total Sales (PHP)',   Value: Number(s.totalSales  || 0) },
-    { Metric: 'Completed Orders',    Value: Number(s.totalOrders || 0) },
-    { Metric: 'All Orders',          Value: Number(s.allOrdersCount || 0) },
-    { Metric: 'Cancelled Orders',    Value: Number(s.cancelledCount || 0) },
+    { Metric: 'Period', Value: periodLabel },
+    { Metric: 'Branch', Value: branchLabel },
+    { Metric: 'Total Sales (PHP)', Value: Number(s.totalSales || 0) },
+    { Metric: 'Completed Orders', Value: Number(s.totalOrders || 0) },
+    { Metric: 'All Orders', Value: Number(s.allOrdersCount || 0) },
+    { Metric: 'Cancelled Orders', Value: Number(s.cancelledCount || 0) },
     { Metric: 'Avg Order Value (PHP)', Value: Number(s.avgOrderValue || 0) },
   ]
   const wsSummary = XLSX.utils.json_to_sheet(summaryRows)
@@ -69,9 +83,9 @@ function downloadExcel(data, periodLabel, branchLabel) {
   // Sheet 2: Sales Trend
   if (data?.salesTrend?.length) {
     const trendRows = data.salesTrend.map(r => ({
-      Date:           r.date,
-      'Sales (PHP)':  Number(r.sales || 0),
-      Orders:         Number(r.orders || 0),
+      Date: r.date,
+      'Sales (PHP)': Number(r.sales || 0),
+      Orders: Number(r.orders || 0),
     }))
     const wsTrend = XLSX.utils.json_to_sheet(trendRows)
     wsTrend['!cols'] = [{ wch: 14 }, { wch: 16 }, { wch: 10 }]
@@ -81,10 +95,10 @@ function downloadExcel(data, periodLabel, branchLabel) {
   // Sheet 3: Best Sellers
   if (data?.bestSellers?.length) {
     const sellerRows = data.bestSellers.map((item, i) => ({
-      Rank:                i + 1,
-      'Menu Item':         item.name,
-      'Qty Sold':          item.qty,
-      'Revenue (PHP)':     Number(item.revenue || 0),
+      Rank: i + 1,
+      'Menu Item': item.name,
+      'Qty Sold': item.qty,
+      'Revenue (PHP)': Number(item.revenue || 0),
     }))
     const wsSellers = XLSX.utils.json_to_sheet(sellerRows)
     wsSellers['!cols'] = [{ wch: 6 }, { wch: 32 }, { wch: 12 }, { wch: 18 }]
@@ -94,8 +108,8 @@ function downloadExcel(data, periodLabel, branchLabel) {
   // Sheet 4: Sales by Category
   if (data?.salesByCategory?.length) {
     const catRows = data.salesByCategory.map(c => ({
-      Category:       c.name,
-      'Sales (PHP)':  Number(c.value || 0),
+      Category: c.name,
+      'Sales (PHP)': Number(c.value || 0),
     }))
     const wsCat = XLSX.utils.json_to_sheet(catRows)
     wsCat['!cols'] = [{ wch: 20 }, { wch: 18 }]
@@ -105,9 +119,9 @@ function downloadExcel(data, periodLabel, branchLabel) {
   // Sheet 5: Payment Methods
   if (data?.paymentBreakdown?.length) {
     const payRows = data.paymentBreakdown.map(p => ({
-      Method:         p.method,
-      'Total (PHP)':  Number(p.total || 0),
-      Transactions:   p.count,
+      Method: p.method,
+      'Total (PHP)': Number(p.total || 0),
+      Transactions: p.count,
     }))
     const wsPay = XLSX.utils.json_to_sheet(payRows)
     wsPay['!cols'] = [{ wch: 18 }, { wch: 16 }, { wch: 14 }]
@@ -117,8 +131,8 @@ function downloadExcel(data, periodLabel, branchLabel) {
   // Sheet 6: Branch comparison (owner only)
   if (data?.salesByBranch?.length) {
     const branchRows = data.salesByBranch.map(b => ({
-      Branch:         b.name,
-      'Sales (PHP)':  Number(b.sales || 0),
+      Branch: b.name,
+      'Sales (PHP)': Number(b.sales || 0),
     }))
     const wsBranch = XLSX.utils.json_to_sheet(branchRows)
     wsBranch['!cols'] = [{ wch: 24 }, { wch: 16 }]
@@ -129,21 +143,81 @@ function downloadExcel(data, periodLabel, branchLabel) {
   XLSX.writeFile(wb, `dashboard_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
-// ── PDF download ───────────────────────────────────────────────────────────────
-function downloadPDF(data, periodLabel, branchLabel) {
+//   dedicated Excel export for the itemized Sales Report (all meals bought in the range)
+function downloadSalesReportExcel(data, periodLabel, branchLabel) {
   const s = data?.summary || {}
+  const wb = XLSX.utils.book_new()
 
-  const trendRows  = data?.salesTrend       || []
-  const sellers    = data?.bestSellers      || []
-  const categories = data?.salesByCategory  || []
-  const payments   = data?.paymentBreakdown || []
-  const branches   = data?.salesByBranch    || []
+  const summaryRows = [
+    { Metric: 'Period', Value: periodLabel },
+    { Metric: 'Branch', Value: branchLabel },
+    { Metric: 'Total Sales (PHP)', Value: Number(s.totalSales || 0) },
+    { Metric: 'Completed Orders', Value: Number(s.totalOrders || 0) },
+  ]
+  const wsSummary = XLSX.utils.json_to_sheet(summaryRows)
+  wsSummary['!cols'] = [{ wch: 26 }, { wch: 20 }]
+  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary')
 
-  const html = `<!DOCTYPE html>
+  const items = data?.bestSellers || []
+  const totalQty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
+
+  const rows = [
+    ["Sales Report"],
+    [],
+    ["Range", periodLabel],
+    ["Branch", branchLabel],
+    ["Generated", new Date().toLocaleString("en-PH")],
+    [],
+    ["TOTAL SALES", Number(s.totalSales || 0)],
+    ["TOTAL MEALS SOLD", totalQty],
+    [],
+    ["#", "MEAL / ITEM", "QTY SOLD", "REVENUE (PHP)"],
+  ]
+
+  // Add all meals
+  items.forEach((item, index) => {
+    rows.push([
+      index + 1,
+      item.name,
+      Number(item.qty || 0),
+      Number(item.revenue || 0),
+    ])
+  })
+
+  // Total row
+  rows.push([
+    "",
+    "Total",
+    totalQty,
+    Number(s.totalSales || 0),
+  ])
+
+  const wsItems = XLSX.utils.aoa_to_sheet(rows)
+
+  wsItems["!cols"] = [
+    { wch: 6 },
+    { wch: 35 },
+    { wch: 12 },
+    { wch: 18 },
+  ]
+
+  XLSX.utils.book_append_sheet(wb, wsItems, "Sales Report")
+
+  const slug = periodLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')
+  XLSX.writeFile(wb, `sales_report_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
+}
+
+//   separate HTML builder for the itemized "Sales Report" (all meals bought in range)
+function buildSalesReportHTML(data, periodLabel, branchLabel) {
+  const s = data?.summary || {}
+  const items = data?.bestSellers || []
+  const totalQty = items.reduce((sum, it) => sum + Number(it.qty || 0), 0)
+
+  return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>Dashboard Report – ${periodLabel}</title>
+  <title>Sales Report – ${periodLabel}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: Arial, sans-serif; font-size: 12px; color: #1c0a00; padding: 32px; }
@@ -158,11 +232,11 @@ function downloadPDF(data, periodLabel, branchLabel) {
     td { padding: 6px 10px; border-bottom: 1px solid #e5e7eb; }
     tr:nth-child(even) td { background: #fffbeb; }
     .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+    tfoot td { font-weight: 700; border-top: 2px solid #d97706; border-bottom: none; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
     .stat-box { background: #fef3c7; border: 1px solid #d97706; border-radius: 8px; padding: 12px 16px; }
     .stat-label { font-size: 10px; text-transform: uppercase; color: #92400e; font-weight: 700; margin-bottom: 4px; }
     .stat-val { font-size: 18px; font-weight: 700; color: #78350f; }
-    .stat-sub { font-size: 10px; color: #a16207; margin-top: 2px; }
     @media print {
       body { padding: 16px; }
       h2 { page-break-after: avoid; }
@@ -172,51 +246,30 @@ function downloadPDF(data, periodLabel, branchLabel) {
   </style>
 </head>
 <body>
-  <h1>Dashboard Report</h1>
+  <h1>Sales Report</h1>
   <div class="meta">
-    Period: <strong>${periodLabel}</strong> &nbsp;·&nbsp;
+    Range: <strong>${periodLabel}</strong> &nbsp;·&nbsp;
     Branch: <strong>${branchLabel}</strong> &nbsp;·&nbsp;
     Generated: ${new Date().toLocaleString('en-PH')}
   </div>
 
-  <h2>Summary</h2>
   <div class="summary-grid">
     <div class="stat-box">
       <div class="stat-label">Total Sales</div>
       <div class="stat-val">PHP ${Number(s.totalSales || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</div>
     </div>
     <div class="stat-box">
-      <div class="stat-label">Completed Orders</div>
-      <div class="stat-val">${Number(s.totalOrders || 0).toLocaleString()}</div>
-      <div class="stat-sub">Avg PHP ${Number(s.avgOrderValue || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })} / order</div>
-    </div>
-    <div class="stat-box">
-      <div class="stat-label">All Orders</div>
-      <div class="stat-val">${Number(s.allOrdersCount || 0).toLocaleString()}</div>
-      <div class="stat-sub">${Number(s.cancelledCount || 0)} cancelled</div>
+      <div class="stat-label">Total Meals Sold</div>
+      <div class="stat-val">${totalQty.toLocaleString()}</div>
     </div>
   </div>
 
-  ${trendRows.length ? `
-  <h2>Sales Trend</h2>
+  <h2>Meals Bought (${items.length} item${items.length !== 1 ? 's' : ''})</h2>
+  ${items.length ? `
   <table>
-    <thead><tr><th>Date</th><th class="num">Sales (PHP)</th><th class="num">Orders</th></tr></thead>
+    <thead><tr><th>#</th><th>Meal / Item</th><th class="num">Qty Sold</th><th class="num">Revenue (PHP)</th></tr></thead>
     <tbody>
-      ${trendRows.map(r => `
-        <tr>
-          <td>${r.date}</td>
-          <td class="num">${Number(r.sales || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
-          <td class="num">${r.orders || ''}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>` : ''}
-
-  ${sellers.length ? `
-  <h2>Best Sellers</h2>
-  <table>
-    <thead><tr><th>#</th><th>Item</th><th class="num">Qty</th><th class="num">Revenue (PHP)</th></tr></thead>
-    <tbody>
-      ${sellers.map((item, i) => `
+      ${items.map((item, i) => `
         <tr>
           <td>${i + 1}</td>
           <td>${item.name}</td>
@@ -224,61 +277,24 @@ function downloadPDF(data, periodLabel, branchLabel) {
           <td class="num">${Number(item.revenue || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
         </tr>`).join('')}
     </tbody>
-  </table>` : ''}
-
-  ${categories.length ? `
-  <h2>Sales by Category</h2>
-  <table>
-    <thead><tr><th>Category</th><th class="num">Sales (PHP)</th></tr></thead>
-    <tbody>
-      ${categories.map(c => `
-        <tr>
-          <td>${c.name}</td>
-          <td class="num">${Number(c.value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>` : ''}
-
-  ${payments.length ? `
-  <h2>Payment Methods</h2>
-  <table>
-    <thead><tr><th>Method</th><th class="num">Total (PHP)</th><th class="num">Transactions</th></tr></thead>
-    <tbody>
-      ${payments.map(p => `
-        <tr>
-          <td>${p.method}</td>
-          <td class="num">${Number(p.total || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
-          <td class="num">${p.count}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>` : ''}
-
-  ${branches.length ? `
-  <h2>Sales by Branch</h2>
-  <table>
-    <thead><tr><th>Branch</th><th class="num">Sales (PHP)</th></tr></thead>
-    <tbody>
-      ${branches.map(b => `
-        <tr>
-          <td>${b.name}</td>
-          <td class="num">${Number(b.sales || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>` : ''}
+    <tfoot>
+      <tr>
+        <td></td>
+        <td>Total</td>
+        <td class="num">${totalQty}</td>
+        <td class="num">${Number(s.totalSales || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 })}</td>
+      </tr>
+    </tfoot>
+  </table>` : `<p style="color:#78716c;">No meals were sold in this date range.</p>`}
 </body>
 </html>`
-
-  const win = window.open('', '_blank')
-  win.document.write(html)
-  win.document.close()
-  win.focus()
-  setTimeout(() => win.print(), 400)
 }
 
 // ── Custom Range Picker (matches ForecastPage style) ───────────────────────────
-function CustomRangePicker({ startDate, endDate, onChange, onClose }) {
+//   added an `onReset` prop + Reset button so the picked custom range can be cleared
+function CustomRangePicker({ startDate, endDate, onChange, onClose, onReset }) {
   const [localStart, setLocalStart] = useState(startDate || '')
-  const [localEnd,   setLocalEnd]   = useState(endDate   || '')
+  const [localEnd, setLocalEnd] = useState(endDate || '')
   const ref = useRef(null)
 
   useEffect(() => {
@@ -293,6 +309,13 @@ function CustomRangePicker({ startDate, endDate, onChange, onClose }) {
     if (!localStart || !localEnd || localStart > localEnd) return
     onChange(localStart, localEnd)
     onClose()
+  }
+
+  //   clears both the local inputs and the parent's stored custom range
+  function handleReset() {
+    setLocalStart('')
+    setLocalEnd('')
+    onReset()
   }
 
   const dayCount = useMemo(() => {
@@ -348,71 +371,240 @@ function CustomRangePicker({ startDate, endDate, onChange, onClose }) {
           Apply
         </button>
       </div>
+
+      {/*   Reset button — clears the currently applied custom range */}
+      {(startDate || endDate) && (
+        <button onClick={handleReset} style={resetBtnStyle}>
+          ✕ Reset Range
+        </button>
+      )}
     </div>
   )
 }
 
-// ── Export Dropdown ────────────────────────────────────────────────────────────
-function ExportDropdown({ onExcelDownload, onPDFDownload, disabled }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef(null)
+// Print Preview Modal — shows the generated report HTML inside an iframe
+// so the user can review it before printing/downloading, instead of jumping
+// straight into the browser's print dialog.
+function PrintPreviewModal({ html, title, onClose, onDownloadExcel }) {
+  const iframeRef = useRef(null)
 
-  useEffect(() => {
-    function handler(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [])
-
-  const options = [
-    { icon: '📊', label: 'Download Excel (.xlsx)', action: () => { onExcelDownload(); setOpen(false) } },
-    { icon: '📄', label: 'Download PDF (Print)',    action: () => { onPDFDownload();  setOpen(false) } },
-  ]
+  function handlePrint() {
+    const win = iframeRef.current?.contentWindow
+    if (win) win.print()
+  }
 
   return (
-    <div ref={ref} style={{ position: 'relative' }}>
-      <button
-        onClick={() => setOpen(o => !o)}
-        disabled={disabled}
-        style={{
-          padding: '7px 14px', borderRadius: 'var(--radius-full)',
-          border: '1.5px solid var(--border)',
-          background: open ? 'var(--brown-100)' : '#fff',
-          color: 'var(--brown-800)', fontWeight: 700, fontSize: 12,
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
-          display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
-        }}
-      >
-        Download {open ? '▲' : '▼'}
-      </button>
-
-      {open && (
+    <div style={{
+      position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+      padding: 24,
+    }}>
+      <div style={{
+        background: '#fff', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 860,
+        height: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+      }}>
+        {/* Modal header */}
         <div style={{
-          position: 'absolute', top: '110%', right: 0, zIndex: 200,
-          background: 'var(--cream)', border: '1.5px solid var(--border)',
-          borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(120,53,15,0.12)',
-          minWidth: 190, overflow: 'hidden',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          padding: '14px 20px', borderBottom: '1.5px solid var(--border)', background: 'var(--cream)',
         }}>
-          {options.map(({ icon, label, action }) => (
-            <button key={label} onClick={action} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              width: '100%', padding: '11px 16px', border: 'none',
-              background: 'transparent', color: 'var(--brown-800)',
-              fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              textAlign: 'left', transition: 'background 0.1s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.background = 'var(--brown-50)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              <span style={{ fontSize: 16 }}>{icon}</span>
-              {label}
-            </button>
-          ))}
+          <strong style={{ fontSize: 14, color: 'var(--brown-800)' }}>🖨️ Print Preview — {title}</strong>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {onDownloadExcel && (
+              <button onClick={onDownloadExcel} style={{
+                padding: '6px 12px', borderRadius: 'var(--radius-full)',
+                border: '1.5px solid var(--border)', background: '#fff',
+                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              }}>📊 Excel</button>
+            )}
+            <button onClick={handlePrint} style={{
+              padding: '6px 14px', borderRadius: 'var(--radius-full)', border: 'none',
+              background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+            }}>Print / Save as PDF</button>
+            <button onClick={onClose} style={{
+              padding: '6px 12px', borderRadius: 'var(--radius-full)',
+              border: '1.5px solid var(--border)', background: 'transparent',
+              color: 'var(--brown-700)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+            }}>Close</button>
+          </div>
         </div>
-      )}
+
+        {/* Preview body */}
+        <iframe ref={iframeRef} title="report-preview" srcDoc={html}
+          style={{ flex: 1, border: 'none', width: '100%', background: '#fff' }} />
+      </div>
     </div>
+  )
+}
+
+//   Sales Report Modal — lets the user pick a date range (default = today,
+// real-time), view every meal/item bought in that range, then print-preview,
+// print/download as PDF, or export to Excel.
+function SalesReportModal({ branchId, branches, branchLabel, isOwner, onClose }) {
+  const today = todayISO()
+  const [start, setStart] = useState(today)
+  const [end, setEnd] = useState(today)
+  const [reportData, setReportData] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [showPreview, setShowPreview] = useState(false)
+
+  const reportBranchLabel = useMemo(() => {
+    return branchLabel || 'All Branches'
+  }, [branchLabel])
+
+  const rangeLabel = start === end ? start : `${start} to ${end}`
+
+  const fetchReport = useCallback(async () => {
+    if (!start || !end || start > end) return
+    setLoading(true)
+    try {
+      const params = { period: 'custom', from: start, to: end }
+      if (branchId) params.branchId = branchId
+      const res = await dashboardApi.get(params)
+      setReportData(res.data)
+    } finally {
+      setLoading(false)
+    }
+  }, [start, end, branchId])
+
+  useEffect(() => { fetchReport() }, [fetchReport])
+
+  //   resets the report's own date range back to today (real-time)
+  function handleResetRange() {
+    setStart(today)
+    setEnd(today)
+  }
+
+  const items = reportData?.bestSellers || []
+  const totalQty = items.reduce((sum, it) => sum + Number(it.qty || 0), 0)
+  const isValidRange = start && end && start <= end
+
+  return (
+    <>
+      <div style={{
+        position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 900,
+        padding: 24,
+      }}>
+        <div style={{
+          background: 'var(--cream)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 760,
+          maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '16px 20px', borderBottom: '1.5px solid var(--border)',
+          }}>
+            <div>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 17, color: 'var(--brown-800)' }}>
+                Sales Report
+              </h2>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{branchLabel}</p>
+            </div>
+            <button onClick={onClose} style={{
+              border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)',
+            }}>✕</button>
+          </div>
+
+          {/* Date range controls — defaults to real-time today, fully adjustable */}
+          <div style={{
+            display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap',
+            padding: '14px 20px', borderBottom: '1.5px solid var(--border)',
+          }}>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+              From
+              <input type="date" value={start} max={end}
+                onChange={e => setStart(e.target.value)} style={dateInputStyle} />
+            </label>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+              To
+              <input type="date" value={end} min={start} max={today}
+                onChange={e => setEnd(e.target.value)} style={dateInputStyle} />
+            </label>
+            <button onClick={handleResetRange} style={{
+              padding: '7px 14px', borderRadius: 'var(--radius-full)',
+              border: '1.5px dashed var(--border)', background: 'transparent',
+              color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+            }}>↺ Reset to Today</button>
+
+            <div style={{ flex: 1 }} />
+
+            <button onClick={() => setShowPreview(true)} disabled={!reportData}
+              style={{
+                padding: '7px 14px', borderRadius: 'var(--radius-full)', border: 'none',
+                background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 12,
+                cursor: reportData ? 'pointer' : 'not-allowed', opacity: reportData ? 1 : 0.5,
+              }}>🖨️ Preview Report</button>
+            <button onClick={() => downloadSalesReportExcel(reportData, rangeLabel, branchLabel)} disabled={!reportData}
+              style={{
+                padding: '7px 14px', borderRadius: 'var(--radius-full)',
+                border: '1.5px solid var(--border)', background: '#fff',
+                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12,
+                cursor: reportData ? 'pointer' : 'not-allowed', opacity: reportData ? 1 : 0.5,
+              }}>📊 Excel</button>
+          </div>
+
+          {!isValidRange && (
+            <div style={{ padding: '10px 20px', fontSize: 12, color: '#dc2626' }}>
+              "To" date must be on or after "From" date.
+            </div>
+          )}
+
+          {/* Itemized meals table */}
+          <div style={{ overflowY: 'auto', padding: '16px 20px' }}>
+            {loading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading report…</div>
+            ) : items.length ? (
+              <>
+                <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
+                  <StatCard label="Total Sales" value={fmt(reportData?.summary?.totalSales || 0)} />
+                  <StatCard label="Total Meals Sold" value={totalQty} />
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ background: 'var(--brown-50)' }}>
+                      {['#', 'Meal / Item', 'Qty Sold', 'Revenue'].map(h => (
+                        <th key={h} style={{
+                          padding: '9px 12px',
+                          textAlign: h === '#' || h === 'Qty Sold' || h === 'Revenue' ? 'center' : 'left',
+                          fontWeight: 700, color: 'var(--text-muted)',
+                          borderBottom: '1px solid var(--border)',
+                          fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5,
+                        }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.map((item, i) => (
+                      <tr key={item.id || item.name} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                        <td style={{ padding: '9px 12px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>{i + 1}</td>
+                        <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
+                        <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : (
+              <EmptyState icon="📑" title="No meals sold in this date range" />
+            )}
+          </div>
+        </div>
+      </div>
+
+      Print preview opens on top of the report modal
+      {showPreview && reportData && (
+        <PrintPreviewModal
+          title={`Sales Report (${rangeLabel})`}
+          html={buildSalesReportHTML(reportData, rangeLabel, branchLabel)}
+          onClose={() => setShowPreview(false)}
+          onDownloadExcel={() => downloadSalesReportExcel(reportData, rangeLabel, branchLabel)}
+        />
+      )}
+    </>
   )
 }
 
@@ -474,16 +666,19 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const isOwner = user?.role === 'OWNER'
 
-  const [data,      setData]      = useState(null)
-  const [branches,  setBranches]  = useState([])
-  const [loading,   setLoading]   = useState(true)
-  const [period,    setPeriod]    = useState('today')
-  const [branchId,  setBranchId]  = useState('')
+  const [data, setData] = useState(null)
+  const [branches, setBranches] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [period, setPeriod] = useState('today')
+  const [branchId, setBranchId] = useState('')
 
   // Custom range state (mirrors ForecastPage)
   const [showRangePicker, setShowRangePicker] = useState(false)
-  const [customStart,     setCustomStart]     = useState('')
-  const [customEnd,       setCustomEnd]       = useState('')
+  const [customStart, setCustomStart] = useState('')
+  const [customEnd, setCustomEnd] = useState('')
+
+  // state for the print-preview modal (main dashboard export) and the sales report modal
+  const [showSalesReport, setShowSalesReport] = useState(false)
 
   useEffect(() => {
     if (isOwner) {
@@ -495,9 +690,9 @@ export default function DashboardPage() {
     setLoading(true)
     try {
       const params = { period }
-      if (branchId)                        params.branchId = branchId
+      if (branchId) params.branchId = branchId
       if (period === 'custom' && customStart) params.from = customStart
-      if (period === 'custom' && customEnd)   params.to   = customEnd
+      if (period === 'custom' && customEnd) params.to = customEnd
       const res = await dashboardApi.get(params)
       setData(res.data)
     } finally {
@@ -511,9 +706,19 @@ export default function DashboardPage() {
   const periodLabel = getPeriodLabel(period, customStart, customEnd)
 
   const branchLabel = useMemo(() => {
-    if (!branchId) return 'All Branches'
-    return branches.find(b => String(b.id) === String(branchId))?.name || branchId
-  }, [branchId, branches])
+    // Cashier always belongs to one branch
+    if (!isOwner) {
+      return user?.branch?.name || "Unknown Branch"
+    }
+
+    // Owner
+    if (!branchId) return "All Branches"
+
+    return (
+      branches.find(b => String(b.id) === String(branchId))?.name ||
+      "All Branches"
+    )
+  }, [isOwner, user, branchId, branches])
 
   const customRangeLabel = useMemo(() => {
     if (period !== 'custom' || !customStart || !customEnd) return null
@@ -529,6 +734,14 @@ export default function DashboardPage() {
       setPeriod(value)
       setShowRangePicker(false)
     }
+  }
+
+  //   resets the custom range entirely and falls back to "Today"
+  function handleResetCustomRange() {
+    setCustomStart('')
+    setCustomEnd('')
+    setPeriod('today')
+    setShowRangePicker(false)
   }
 
   if (loading && !data) return (
@@ -586,13 +799,14 @@ export default function DashboardPage() {
               </span>
             )}
 
-            {/* Date range dropdown */}
+            {/* Date range dropdown —   now passes onReset so user can clear the range */}
             {showRangePicker && (
               <CustomRangePicker
                 startDate={customStart}
                 endDate={customEnd}
                 onChange={(s, e) => { setCustomStart(s); setCustomEnd(e) }}
                 onClose={() => setShowRangePicker(false)}
+                onReset={handleResetCustomRange}
               />
             )}
           </div>
@@ -606,12 +820,12 @@ export default function DashboardPage() {
             </select>
           )}
 
-          {/* Export dropdown */}
-          <ExportDropdown
-            disabled={!data}
-            onExcelDownload={() => downloadExcel(data, periodLabel, branchLabel)}
-            onPDFDownload={() => downloadPDF(data, periodLabel, branchLabel)}
-          />
+          {/*   new "Sales Report" button — opens the itemized meals-sold modal */}
+          <button onClick={() => setShowSalesReport(true)} style={{
+            padding: '7px 14px', borderRadius: 'var(--radius-full)',
+            border: '1.5px solid var(--border)', background: '#fff',
+            color: 'var(--brown-800)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+          }}>Sales Report</button>
 
           <Button variant="outline" size="sm" onClick={load}>↻</Button>
         </div>
@@ -630,9 +844,9 @@ export default function DashboardPage() {
 
       {/* ── Stat Cards ────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
-        <StatCard icon="💰" label="Total Sales"      value={fmt(s.totalSales || 0)}     color="var(--brown-800)" />
-        <StatCard icon="🧾" label="Completed Orders" value={s.totalOrders || 0}          sub={`Avg ${fmt(s.avgOrderValue || 0)} / order`} />
-        <StatCard icon="📦" label="All Orders"       value={s.allOrdersCount || 0}       sub={`${s.cancelledCount || 0} cancelled`} />
+        <StatCard icon="💰" label="Total Sales" value={fmt(s.totalSales || 0)} color="var(--brown-800)" />
+        <StatCard icon="🧾" label="Completed Orders" value={s.totalOrders || 0} sub={`Avg ${fmt(s.avgOrderValue || 0)} / order`} />
+        <StatCard icon="📦" label="All Orders" value={s.allOrdersCount || 0} sub={`${s.cancelledCount || 0} cancelled`} />
       </div>
 
       {/* ── Charts row 1 ──────────────────────────────────── */}
@@ -762,6 +976,17 @@ export default function DashboardPage() {
             </table>
           </div>
         </Section>
+      )}
+
+      {/*   Sales Report modal — itemized meals bought, adjustable date range, default today */}
+      {showSalesReport && (
+        <SalesReportModal
+          branchId={branchId}
+          branches={branches}
+          branchLabel={branchLabel}
+          isOwner={isOwner}
+          onClose={() => setShowSalesReport(false)}
+        />
       )}
     </div>
   )

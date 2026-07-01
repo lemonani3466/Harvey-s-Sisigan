@@ -252,7 +252,7 @@ function RecipeManagerModal({ item, onClose }) {
   }
 
   async function removeIngredient(ingredientId) {
-    setRemoving(ingredientId); setError(''); setSuccess('')
+    setRemoving(ingredientId); setError(''); setSuccess('Ingredient removed from recipe!'); setTimeout(() => setSuccess(''), 2500)
     try {
       await menuApi.removeRecipeIngredient(item.id, ingredientId)
       setRecipe(prev => prev.filter(r => r.ingredientId !== ingredientId))

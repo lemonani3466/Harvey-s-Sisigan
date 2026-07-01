@@ -111,7 +111,7 @@ async function upsertRecipeIngredient(req, res, next) {
 // Removes one ingredient from a menu item's recipe.
 async function deleteRecipeIngredient(req, res, next) {
   try {
-    await menuService.deleteRecipeIngredient(req.params.id, req.params.ingredientId);
+    await menuService.deleteRecipeIngredient(Number(req.params.id), Number(req.params.ingId));
     res.json({ success: true, message: 'Ingredient removed from recipe.' });
   } catch (err) {
     next(err);
