@@ -18,6 +18,18 @@ async function generateOrderNumber(branchId) {
   return `BR${branchId}-${String(count + 1).padStart(5, '0')}`;
 }
 
+// ADDED — server-side source of truth for valid discount types and their
+// percentages. Mirrors the PH_DISCOUNTS map on the frontend (OrdersPage.jsx).
+// Keeping this on the backend too means the server never trusts a raw
+// discountAmount sent by the client — it recalculates the deduction itself
+// from the order's total and the discount type, so the number can't be
+// tampered with client-side.
+const DISCOUNT_TYPES = {
+  SENIOR:  { label: 'Senior Citizen', percentage: 20 },
+  PWD:     { label: 'PWD',            percentage: 20 },
+  STUDENT: { label: 'Student',        percentage: 10 },
+};
+
 // ─────────────────────────────────────────
 // CREATE ORDER
 // ─────────────────────────────────────────
@@ -262,8 +274,15 @@ async function cancelOrder(orderId, { userRole, userBranchId }) {
 /**
  * Process payment for a READY or PENDING order
  * Atomically creates Payment + sets order to COMPLETED
+ *
+ * CHANGED — now accepts discountType (e.g. 'SENIOR', 'PWD', 'STUDENT').
+ * The percentage discount is looked up server-side from DISCOUNT_TYPES
+ * (never trusted from the client) and used to compute the actual amount
+ * due, which amountPaid is validated against. The resulting discount
+ * label/percentage/amount are persisted on the Payment record so reprints
+ * and the sales report can show them later.
  */
-async function processPayment({ orderId, method, amountPaid, referenceNo }, { userRole, userBranchId }) {
+async function processPayment({ orderId, method, amountPaid, referenceNo, discountType }, { userRole, userBranchId }) {
   const order = await prisma.order.findUnique({
     where: { id: Number(orderId) },
     include: { payment: true },
@@ -279,8 +298,29 @@ async function processPayment({ orderId, method, amountPaid, referenceNo }, { us
     throw { statusCode: 400, message: 'Order is already completed and paid.' };
   }
 
-  const paid  = Number(amountPaid);
-  const total = Number(order.totalAmount);
+  const paid          = Number(amountPaid);
+  const originalTotal = Number(order.totalAmount);
+
+  // ADDED — validate discountType (if provided) and compute the deduction
+  // server-side. This is the fix: previously `total` below was always
+  // `order.totalAmount`, ignoring any discount the cashier applied.
+  let discount = null;
+  if (discountType) {
+    const discountConfig = DISCOUNT_TYPES[discountType];
+    if (!discountConfig) {
+      throw { statusCode: 400, message: `Invalid discount type: ${discountType}` };
+    }
+    const deducted = Math.round((discountConfig.percentage / 100) * originalTotal * 100) / 100;
+    discount = {
+      type: discountType,
+      label: discountConfig.label,
+      percentage: discountConfig.percentage,
+      amount: deducted,
+    };
+  }
+
+  // CHANGED — total due now factors in the discount, if any
+  const total = discount ? Math.max(0, originalTotal - discount.amount) : originalTotal;
 
   if (paid < total) {
     throw {
@@ -297,7 +337,18 @@ async function processPayment({ orderId, method, amountPaid, referenceNo }, { us
   }
   ops.push(
     prisma.payment.create({
-      data: { orderId: Number(orderId), method, amountPaid: paid, change, referenceNo: referenceNo || null },
+      data: {
+        orderId: Number(orderId),
+        method,
+        amountPaid: paid,
+        change,
+        referenceNo: referenceNo || null,
+        // ADDED — persist discount fields (all null when no discount applied)
+        discountType: discount?.type || null,
+        discountLabel: discount?.label || null,
+        discountPercentage: discount?.percentage || null,
+        discountAmount: discount?.amount || null,
+      },
     }),
     prisma.order.update({
       where: { id: Number(orderId) },

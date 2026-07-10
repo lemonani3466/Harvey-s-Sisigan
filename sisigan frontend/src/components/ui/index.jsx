@@ -108,7 +108,7 @@ export function Modal({ title, onClose, children, width = 440 }) {
   return (
     <div
       className="animate-fade"
-      onClick={e => e.target === e.currentTarget && onClose()}
+      // onClick={e => e.target === e.currentTarget && onClose()}
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(28, 10, 0, 0.55)',

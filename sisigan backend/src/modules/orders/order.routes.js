@@ -5,14 +5,14 @@ const { body, query } = require('express-validator');
 const orderController = require('./order.controller');
 const authMiddleware = require('../../middleware/auth.middleware');
 const roleMiddleware = require('../../middleware/role.middleware');
-
+ 
 const router = express.Router();
-
+ 
 // All order routes require authentication
 router.use(authMiddleware);
-
+ 
 // ── Validation Rules ──────────────────────────────────
-
+ 
 const createOrderValidation = [
   body('items')
     .isArray({ min: 1 })
@@ -36,13 +36,16 @@ const createOrderValidation = [
     .trim()
     .isLength({ max: 100 }),
 ];
-
+ 
 const statusValidation = [
   body('status')
     .isIn(['PENDING', 'PREPARING', 'READY', 'COMPLETED', 'CANCELLED'])
     .withMessage('Invalid status value.'),
 ];
-
+ 
+// CHANGED — added optional discountType validation. Only these three values
+// are accepted; the actual percentage/amount is computed server-side in
+// order.service.js, never trusted from the request.
 const paymentValidation = [
   body('method')
     .isIn(['CASH', 'GCASH', 'MAYA', 'CARD'])
@@ -54,26 +57,30 @@ const paymentValidation = [
     .optional({ nullable: true })
     .isString()
     .trim(),
+  body('discountType')
+    .optional({ nullable: true })
+    .isIn(['SENIOR', 'PWD', 'STUDENT'])
+    .withMessage('Discount type must be SENIOR, PWD, or STUDENT.'),
 ];
-
+ 
 // ── Routes ────────────────────────────────────────────
-
+ 
 // POST   /api/orders             - Create new order (any staff)
 router.post('/', createOrderValidation, orderController.createOrder);
-
+ 
 // GET    /api/orders             - List orders (filtered by branch for non-admin)
 router.get('/', orderController.getOrders);
-
+ 
 // GET    /api/orders/:id         - Get single order detail
 router.get('/:id', orderController.getOrderById);
-
+ 
 // PATCH  /api/orders/:id/status  - Update order status (cashier/manager)
 router.patch('/:id/status', statusValidation, orderController.updateOrderStatus);
-
+ 
 // DELETE /api/orders/:id         - Cancel order (owner/manager only)
 router.delete('/:id', orderController.cancelOrder);
-
+ 
 // POST   /api/orders/:id/payment - Process payment (cashier+)
 router.post('/:id/payment', paymentValidation, orderController.processPayment);
-
+ 
 module.exports = router;

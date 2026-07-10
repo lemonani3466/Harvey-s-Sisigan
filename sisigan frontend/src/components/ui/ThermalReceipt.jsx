@@ -1,12 +1,23 @@
 // src/components/ui/ThermalReceipt.jsx
 // Thermal receipt generator — opens a print window sized for 80mm thermal paper
-// Call printReceipt(order, payment, branchName) from anywhere
+// Call printReceipt(order, payment, branchName, discount) from anywhere
+//
+// CHANGED — added an optional 4th param `discount`, shape:
+//   { label: string, percentage: number, deducted: number }
+// When present, the receipt now shows:
+//   Subtotal (original total)
+//   Discount line (label, percentage, amount deducted)
+//   TOTAL (after discount) — this is what's actually compared against amountPaid
+// When absent, the receipt renders exactly as before (no discount rows).
 
-export function printReceipt(order, payment, branchName = 'Sisigan Restaurant') {
+export function printReceipt(order, payment, branchName = 'Sisigan Restaurant', discount = null) {
   const items = order.items || []
-  const total = Number(order.totalAmount)
-  const paid  = Number(payment.amountPaid)
-  const change = Number(payment.change)
+  // CHANGED — order.totalAmount is treated as the ORIGINAL (pre-discount) total,
+  // matching how OrdersPage.jsx computes baseTotal / total in PaymentModal.
+  const subtotal   = Number(order.totalAmount)
+  const discounted = discount ? Math.max(0, subtotal - Number(discount.deducted)) : subtotal
+  const paid       = Number(payment.amountPaid)
+  const change     = Number(payment.change)
   const now = new Date(payment.processedAt || new Date())
 
   const dateStr = now.toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })
@@ -21,18 +32,30 @@ export function printReceipt(order, payment, branchName = 'Sisigan Restaurant') 
   const itemLines = items.map(item => {
     const name     = item.menuItem?.name || item.name || ''
     const qty      = item.quantity || item.qty || 1
-    const subtotal = `₱${Number(item.subtotal || qty * Number(item.unitPrice || item.price)).toFixed(2)}`
+    const itemSubtotal = `₱${Number(item.subtotal || qty * Number(item.unitPrice || item.price)).toFixed(2)}`
     const qtyPrice = `${qty} x ₱${Number(item.unitPrice || item.price).toFixed(2)}`
 
     return `
       <div class="item-name">${name}</div>
-      <div class="item-row">${padLine(qtyPrice, subtotal)}</div>
+      <div class="item-row">${padLine(qtyPrice, itemSubtotal)}</div>
     `
   }).join('')
 
   const refLine = payment.referenceNo
     ? `<div class="line">Ref No: ${payment.referenceNo}</div>`
     : ''
+
+  // ADDED — discount rows, only rendered when a discount was applied
+  const subtotalRow = discount ? `
+  <div class="total-row">
+    <span>Subtotal</span>
+    <span>₱${subtotal.toFixed(2)}</span>
+  </div>
+  <div class="total-row discount">
+    <span>${discount.label} (${discount.percentage}%)</span>
+    <span>- ₱${Number(discount.deducted).toFixed(2)}</span>
+  </div>
+  ` : ''
 
   const html = `
 <!DOCTYPE html>
@@ -103,6 +126,12 @@ export function printReceipt(order, payment, branchName = 'Sisigan Restaurant') 
       font-weight: bold;
       margin: 2px 0;
     }
+    /* ADDED — discount row style: lighter weight, not bold like totals */
+    .total-row.discount {
+      font-size: 12px;
+      font-weight: normal;
+      color: #b91c1c;
+    }
     .total-row.grand {
       font-size: 15px;
       border-top: 1px solid #000;
@@ -167,9 +196,11 @@ export function printReceipt(order, payment, branchName = 'Sisigan Restaurant') 
   <div class="divider"></div>
 
   <!-- TOTALS -->
+  <!-- ADDED — Subtotal + Discount rows only appear when a discount was applied -->
+  ${subtotalRow}
   <div class="total-row grand">
     <span>TOTAL</span>
-    <span>₱${total.toFixed(2)}</span>
+    <span>₱${discounted.toFixed(2)}</span>
   </div>
   <div class="total-row">
     <span>${payment.method}</span>
