@@ -1,7 +1,13 @@
 """
-Harvey's Sisigan — Analytics & Continuous-Learning Forecast Service  v5.0.0
+Harvey's Sisigan — Analytics & Continuous-Learning Forecast Service  v5.1.0
 ===========================================================================
 FastAPI microservice.  Endpoint: http://localhost:8000
+
+What's new in v5.1:
+  - /api/trending-items-forecast: ranks items by recent sales GROWTH
+    (not just volume), forecasts the top N (1-5), and returns projected
+    total demand per item over the horizon — feeds the ingredient
+    recommendation feature in the Node backend / dashboard.
 
 What's new in v5:
   - Pulls LIVE data directly from MySQL (orders + order_items + menu_items)
@@ -122,7 +128,7 @@ _cache: dict = {
 app = FastAPI(
     title="Harvey's Sisigan Analytics API",
     description="Live DB + Continuous-Learning Forecast Service",
-    version="5.0.0",
+    version="5.1.0",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -310,6 +316,42 @@ def rolling_forecast_ml(model, last_known: list, last_date, last_t: int, days: i
     return preds
 
 
+def compute_trend_score(df: pd.DataFrame, item: str, window: int = 14) -> dict:
+    """
+    "Trend" here means recent momentum, not raw popularity:
+    % change between the most recent `window` days average and the
+    `window` days average right before that. Positive = trending up.
+
+    Falls back to a smaller window if there isn't enough history yet,
+    so short-lived items still get a (less confident) score instead of
+    crashing the endpoint.
+    """
+    series = df[item].values
+    w = window
+    if len(series) < w * 2:
+        w = max(3, len(series) // 2)
+
+    recent = series[-w:]
+    prior  = series[-w * 2:-w] if len(series) >= w * 2 else series[:w]
+
+    recent_avg = float(np.mean(recent)) if len(recent) else 0.0
+    prior_avg  = float(np.mean(prior)) if len(prior) else 0.0
+
+    if prior_avg <= 0:
+        # No baseline to compare against — treat any recent sales as
+        # a fresh trend rather than dividing by zero.
+        growth = 0.0 if recent_avg <= 0 else 100.0
+    else:
+        growth = round((recent_avg - prior_avg) / prior_avg * 100, 1)
+
+    return {
+        "recentAvgDaily": round(recent_avg, 2),
+        "priorAvgDaily":  round(prior_avg, 2),
+        "growthPct":      growth,
+        "trendWindowDays": w,
+    }
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # TRAINING  (called on startup + every RETRAIN_HOURS)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -420,7 +462,7 @@ def startup():
 
 @app.get("/")
 def root():
-    return {"status": "Harvey's Analytics Service running", "version": "5.0.0"}
+    return {"status": "Harvey's Analytics Service running", "version": "5.1.0"}
 
 
 @app.get("/api/model-info")
@@ -671,6 +713,92 @@ def get_item_forecast(
         } for dt, pred in preds],
         "modelMetrics": {"mae": mae, "rmse": rmse},
         "model":        "Gradient Boosting (lag-7/14/21, no day-type features)",
+    }
+
+
+# ─── /api/trending-items-forecast ──────────────────────────────────────────────
+
+@app.get("/api/trending-items-forecast")
+def get_trending_items_forecast(
+    top_n: int = Query(3, ge=1, le=5, description="How many trending items to forecast (1-5)"),
+    days:  int = Query(30, ge=7, le=90),
+    min_avg_daily: float = Query(
+        0.3, ge=0,
+        description="Ignore items selling below this avg units/day — filters out "
+                     "one-off noise items from artificially topping the trend list"
+    ),
+):
+    """
+    Rank menu items by recent sales GROWTH (not raw volume), forecast the
+    top N, and return each item's projected total demand over the horizon.
+
+    Trend = % change between the last 14-day average and the 14 days
+    before that. An item selling steadily at a high volume with 0% growth
+    ranks below a smaller item that's clearly accelerating.
+
+    Response feeds directly into the Node backend's ingredient
+    recommendation endpoint: pass each item's `totalForecastQty` as the
+    `forecastQty` for that item name.
+    """
+    df = load_data()
+
+    candidates = []
+    for item in ITEM_COLS:
+        if item not in df.columns:
+            continue
+        avg_daily = float(df[item].mean())
+        if avg_daily < min_avg_daily:
+            continue  # too sparse to trust a trend calculation on
+        trend = compute_trend_score(df, item)
+        candidates.append({"item": item, "avgDaily": round(avg_daily, 2), **trend})
+
+    # Highest growth % first = most "trending up"
+    candidates.sort(key=lambda c: c["growthPct"], reverse=True)
+    top_candidates = candidates[:top_n]
+
+    results = []
+    for c in top_candidates:
+        item = c["item"]
+        frame = build_ml_frame(df[item], df["Date"])
+
+        if len(frame) < 30:
+            # Not enough history for a reliable model — still report the
+            # trend so the item shows up, just without a forecast number.
+            results.append({
+                **c, "forecast": None, "totalForecastQty": None,
+                "note": "Not enough sales history to forecast this item reliably yet",
+            })
+            continue
+
+        X, y = frame[ML_FEATURES].values, frame["y"].values
+        m = GradientBoostingRegressor(
+            n_estimators=200, max_depth=4, learning_rate=0.12,
+            subsample=0.75, min_samples_leaf=2, random_state=42,
+        )
+        m.fit(X, y)
+        sigma = float((y - m.predict(X)).std())
+
+        _today = pd.Timestamp.today().normalize()
+        _gap   = (_today - df["Date"].max()).days
+        preds = rolling_forecast_ml(
+            m, list(df[item].values[-21:]),
+            _today - timedelta(days=1),
+            int(frame["t"].max()) + _gap, days,
+        )
+        forecast = [{
+            "date":      str(dt.date()),
+            "predicted": round(pred, 1),
+            "lower":     round(max(0.0, pred - 1.96 * sigma), 1),
+            "upper":     round(pred + 1.96 * sigma, 1),
+        } for dt, pred in preds]
+
+        total_qty = round(sum(p["predicted"] for p in forecast), 1)
+        results.append({**c, "forecast": forecast, "totalForecastQty": total_qty})
+
+    return {
+        "topItems":     results,
+        "forecastDays": days,
+        "rankedBy":     "sales growth % (recent 14-day avg vs prior 14-day avg)",
     }
 
 

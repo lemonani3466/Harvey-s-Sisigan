@@ -1,5 +1,6 @@
 // src/modules/branches/branch.service.js
 const prisma = require('../../config/db');
+const { seedBranchInventory } = require('../inventory/inventory.service');
 
 async function listBranches() {
   return prisma.branch.findMany({
@@ -14,8 +15,17 @@ async function createBranch({ name, address, city, contactNo }) {
   const existing = await prisma.branch.findFirst({ where: { name } });
   if (existing) throw { statusCode: 409, message: 'A branch with that name already exists.' };
 
-  return prisma.branch.create({
-    data: { name, address, city, contactNo: contactNo || null },
+  // Branch creation + inventory seeding happen in one transaction: if seeding
+  // fails partway through, the branch insert rolls back too, so you never end
+  // up with a branch that's missing some of the master ingredient list.
+  return prisma.$transaction(async (tx) => {
+    const branch = await tx.branch.create({
+      data: { name, address, city, contactNo: contactNo || null },
+    });
+
+    await seedBranchInventory(branch.id, tx);
+
+    return branch;
   });
 }
 
