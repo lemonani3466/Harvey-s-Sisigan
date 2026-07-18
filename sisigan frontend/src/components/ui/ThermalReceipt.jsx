@@ -46,7 +46,8 @@ export function printReceipt(order, payment, branchName = 'Sisigan Restaurant', 
     : ''
 
   // ADDED — discount rows, only rendered when a discount was applied
-  const subtotalRow = discount ? `
+  // In ThermalReceipt.jsx, replace the subtotalRow variable:
+const subtotalRow = discount ? `
   <div class="total-row">
     <span>Subtotal</span>
     <span>₱${subtotal.toFixed(2)}</span>
@@ -55,8 +56,12 @@ export function printReceipt(order, payment, branchName = 'Sisigan Restaurant', 
     <span>${discount.label} (${discount.percentage}%)</span>
     <span>- ₱${Number(discount.deducted).toFixed(2)}</span>
   </div>
-  ` : ''
-
+` : `
+  <div class="total-row discount" style="font-size:11px;color:#555;">
+    <span>Discount</span>
+    <span>Normal</span>
+  </div>
+`
   const html = `
 <!DOCTYPE html>
 <html>
