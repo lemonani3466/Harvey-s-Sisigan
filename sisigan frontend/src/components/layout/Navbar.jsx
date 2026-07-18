@@ -34,10 +34,10 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      height: 'var(--nav-height)', background: '#fff',
+      height: 'var(--nav-height)',
+      background: 'linear-gradient(180deg,var(--brown-500),var(--brown-600))',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '0 28px', boxShadow: '0 2px 14px rgba(120,53,15,0.08)',
-      borderBottom: '1px solid var(--border-light)',
+      padding: '0 28px', boxShadow: '0 2px 14px rgba(28,10,0,0.25)',
       position: 'sticky', top: 0, zIndex: 100,
     }}>
       {/* ── Logo section ───────────────────────────────── */}
@@ -48,19 +48,19 @@ export default function Navbar() {
           style={{
             height: 46, width: 46, objectFit: 'cover',
             borderRadius: 'var(--radius-md)',
-            boxShadow: '0 2px 8px rgba(120,53,15,0.15)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
           }}
         />
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
           <span style={{
-            fontFamily: 'Georgia', color: 'var(--brown-800)',
+            fontFamily: 'Georgia', color: '#fff',
             fontSize: 19, fontWeight: 700, whiteSpace: 'nowrap',
           }}>
             Harvey's Special Crispy Sisig
           </span>
           <span style={{
             display: 'inline-flex', alignSelf: 'flex-start', marginTop: 4,
-            background: 'var(--brown-100)', color: 'var(--brown-700)',
+            background: 'rgba(255,255,255,0.18)', color: '#fff',
             fontSize: 11, fontWeight: 700, padding: '3px 12px',
             borderRadius: 'var(--radius-full)', letterSpacing: 0.3,
           }}>
@@ -79,22 +79,22 @@ export default function Navbar() {
               display: 'flex', alignItems: 'center', gap: 9,
               padding: '11px 20px', borderRadius: 'var(--radius-full)',
               textDecoration: 'none', fontSize: 14, fontWeight: 600,
-              background: isActive ? 'var(--gradient-primary)' : 'transparent',
-              color: isActive ? '#fff' : 'var(--brown-700)',
-              boxShadow: isActive ? '0 4px 14px rgba(180,83,9,0.35)' : 'none',
+              background: isActive ? 'rgba(255,255,255,0.22)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.72)',
+              boxShadow: isActive ? '0 2px 10px rgba(0,0,0,0.15)' : 'none',
               transition: 'background 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 180ms ease',
               whiteSpace: 'nowrap',
             })}
             onMouseEnter={e => {
-              if (!e.currentTarget.classList.contains('active')) {
-                e.currentTarget.style.background = e.currentTarget.getAttribute('aria-current') === 'page'
-                  ? undefined
-                  : 'var(--brown-50)'
+              if (e.currentTarget.getAttribute('aria-current') !== 'page') {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
+                e.currentTarget.style.color = '#fff'
               }
             }}
             onMouseLeave={e => {
               if (e.currentTarget.getAttribute('aria-current') !== 'page') {
                 e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'rgba(255,255,255,0.72)'
               }
             }}
           >
@@ -109,16 +109,16 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
             width: 38, height: 38, borderRadius: '50%',
-            background: 'var(--brown-100)', color: 'var(--brown-700)',
+            background: 'rgba(255,255,255,0.18)', color: '#fff',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 16, fontWeight: 700, flexShrink: 0,
           }}>
             👤
           </div>
           <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-            <div style={{ color: 'var(--text-dark)', fontSize: 13.5, fontWeight: 700 }}>{user?.name}</div>
+            <div style={{ color: '#fff', fontSize: 13.5, fontWeight: 700 }}>{user?.name}</div>
             <div style={{
-              color: 'var(--brown-600)', fontSize: 10.5, fontWeight: 700,
+              color: 'rgba(255,255,255,0.75)', fontSize: 10.5, fontWeight: 700,
               textTransform: 'uppercase', letterSpacing: 0.6,
             }}>
               {user?.role}
@@ -129,21 +129,19 @@ export default function Navbar() {
         <button
           onClick={handleLogout}
           style={{
-            background: '#fff', border: '1.5px solid var(--border)',
-            color: 'var(--brown-700)', padding: '9px 18px',
+            background: 'rgba(255,255,255,0.12)', border: '1.5px solid rgba(255,255,255,0.3)',
+            color: '#fff', padding: '9px 18px',
             borderRadius: 'var(--radius-full)',
             fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             transition: 'all 200ms ease',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.background = '#fef2f2'
-            e.currentTarget.style.borderColor = '#fca5a5'
-            e.currentTarget.style.color = 'var(--red-dark)'
+            e.currentTarget.style.background = 'rgba(220,38,38,0.85)'
+            e.currentTarget.style.borderColor = 'rgba(220,38,38,0.85)'
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.background = '#fff'
-            e.currentTarget.style.borderColor = 'var(--border)'
-            e.currentTarget.style.color = 'var(--brown-700)'
+            e.currentTarget.style.background = 'rgba(255,255,255,0.12)'
+            e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)'
           }}
         >
           Sign Out
