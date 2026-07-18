@@ -20,25 +20,27 @@ const PERIODS = [
 
 // ── Shared styles ──────────────────────────────────────────────────────────────
 const dateInputStyle = {
-  display: 'block', marginTop: 4, width: '100%', padding: '7px 10px',
-  border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13,
+  display: 'block', marginTop: 5, width: '100%', padding: '9px 12px',
+  border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13.5,
   color: 'var(--brown-800)', background: '#fff', boxSizing: 'border-box', cursor: 'pointer',
 }
 const primaryBtnStyle = {
-  flex: 1, padding: '8px 0', borderRadius: 'var(--radius-full)', border: 'none',
-  background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  flex: 1, padding: '10px 0', borderRadius: 'var(--radius-full)', border: 'none',
+  background: 'var(--gradient-primary)', color: '#fff', fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+  boxShadow: '0 4px 14px rgba(180,83,9,0.28)', transition: 'all 180ms ease',
 }
 const secondaryBtnStyle = {
-  flex: 1, padding: '8px 0', borderRadius: 'var(--radius-full)',
-  border: '1.5px solid var(--border)', background: 'transparent',
-  color: 'var(--brown-700)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  flex: 1, padding: '10px 0', borderRadius: 'var(--radius-full)',
+  border: '1.5px solid var(--border)', background: '#fff',
+  color: 'var(--brown-700)', fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+  transition: 'all 180ms ease',
 }
 //   style for the small "reset" ghost button used in CustomRangePicker
 const resetBtnStyle = {
-  width: '100%', padding: '7px 0', borderRadius: 'var(--radius-full)',
+  width: '100%', padding: '9px 0', borderRadius: 'var(--radius-full)',
   border: '1.5px dashed var(--border)', background: 'transparent',
-  color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
-  marginTop: 8,
+  color: 'var(--text-muted)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+  marginTop: 10, transition: 'all 180ms ease',
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
@@ -329,20 +331,20 @@ function CustomRangePicker({ startDate, endDate, onChange, onClose, onReset }) {
     <div ref={ref} style={{
       position: 'absolute', top: '110%', right: 0, zIndex: 100,
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 32px rgba(120,53,15,0.12)',
-      padding: 18, minWidth: 280,
+      borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+      padding: 20, minWidth: 290,
     }}>
-      <div style={{ marginBottom: 10, fontWeight: 700, fontSize: 13, color: 'var(--brown-800)' }}>
+      <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 13.5, color: 'var(--brown-800)' }}>
         Select Date Range
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
           Start Date
           <input type="date" value={localStart} max={localEnd || undefined}
             onChange={e => setLocalStart(e.target.value)} style={dateInputStyle} />
         </label>
-        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
           End Date
           <input type="date" value={localEnd} min={localStart || undefined}
             onChange={e => setLocalEnd(e.target.value)} style={dateInputStyle} />
@@ -351,23 +353,23 @@ function CustomRangePicker({ startDate, endDate, onChange, onClose, onReset }) {
 
       {isValid && (
         <div style={{
-          margin: '10px 0', padding: '7px 10px', background: 'var(--brown-50)',
-          borderRadius: 8, fontSize: 12, color: 'var(--brown-700)', fontWeight: 600,
+          margin: '12px 0', padding: '9px 12px', background: 'var(--brown-50)',
+          borderRadius: 'var(--radius-md)', fontSize: 12.5, color: 'var(--brown-700)', fontWeight: 600,
         }}>
           {dayCount === 0 ? 'Same day' : `${dayCount} day${dayCount !== 1 ? 's' : ''} selected`}
         </div>
       )}
 
       {localStart && localEnd && localStart > localEnd && (
-        <div style={{ margin: '8px 0', fontSize: 12, color: '#dc2626' }}>
+        <div style={{ margin: '10px 0', fontSize: 12.5, color: '#dc2626' }}>
           End date must be after start date.
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
         <button onClick={onClose} style={secondaryBtnStyle}>Cancel</button>
         <button onClick={handleApply} disabled={!isValid}
-          style={{ ...primaryBtnStyle, opacity: isValid ? 1 : 0.45, cursor: isValid ? 'pointer' : 'not-allowed' }}>
+          style={{ ...primaryBtnStyle, opacity: isValid ? 1 : 0.45, cursor: isValid ? 'pointer' : 'not-allowed', boxShadow: isValid ? primaryBtnStyle.boxShadow : 'none' }}>
           Apply
         </button>
       </div>
@@ -395,37 +397,38 @@ function PrintPreviewModal({ html, title, onClose, onDownloadExcel }) {
 
   return (
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.45)',
+      position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.55)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
       padding: 24,
     }}>
       <div style={{
-        background: '#fff', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 860,
+        background: '#fff', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 900,
         height: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+        boxShadow: 'var(--shadow-xl)',
       }}>
         {/* Modal header */}
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '14px 20px', borderBottom: '1.5px solid var(--border)', background: 'var(--cream)',
+          padding: '16px 22px', borderBottom: '1.5px solid var(--border)', background: 'var(--cream)',
         }}>
-          <strong style={{ fontSize: 14, color: 'var(--brown-800)' }}>🖨️ Print Preview — {title}</strong>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <strong style={{ fontSize: 15, color: 'var(--brown-800)', fontFamily: 'var(--font-display)' }}>🖨️ Print Preview — {title}</strong>
+          <div style={{ display: 'flex', gap: 10 }}>
             {onDownloadExcel && (
               <button onClick={onDownloadExcel} style={{
-                padding: '6px 12px', borderRadius: 'var(--radius-full)',
+                padding: '8px 16px', borderRadius: 'var(--radius-full)',
                 border: '1.5px solid var(--border)', background: '#fff',
-                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
               }}>📊 Excel</button>
             )}
             <button onClick={handlePrint} style={{
-              padding: '6px 14px', borderRadius: 'var(--radius-full)', border: 'none',
-              background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              padding: '8px 18px', borderRadius: 'var(--radius-full)', border: 'none',
+              background: 'var(--gradient-primary)', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(180,83,9,0.28)',
             }}>Print / Save as PDF</button>
             <button onClick={onClose} style={{
-              padding: '6px 12px', borderRadius: 'var(--radius-full)',
+              padding: '8px 16px', borderRadius: 'var(--radius-full)',
               border: '1.5px solid var(--border)', background: 'transparent',
-              color: 'var(--brown-700)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+              color: 'var(--brown-700)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
             }}>Close</button>
           </div>
         </div>
@@ -483,91 +486,93 @@ function SalesReportModal({ branchId, branches, branchLabel, isOwner, onClose })
   return (
     <>
       <div style={{
-        position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.45)',
+        position: 'fixed', inset: 0, background: 'rgba(28,10,0,0.55)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 900,
         padding: 24,
       }}>
         <div style={{
-          background: 'var(--cream)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 760,
+          background: 'var(--cream)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: 780,
           maxHeight: '88vh', display: 'flex', flexDirection: 'column', overflow: 'hidden',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          boxShadow: 'var(--shadow-xl)',
         }}>
           {/* Header */}
           <div style={{
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '16px 20px', borderBottom: '1.5px solid var(--border)',
+            padding: '18px 22px', borderBottom: '1.5px solid var(--border)',
           }}>
             <div>
-              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 17, color: 'var(--brown-800)' }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--brown-800)' }}>
                 Sales Report
               </h2>
-              <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>{branchLabel}</p>
+              <p style={{ fontSize: 12.5, color: 'var(--text-muted)', marginTop: 3 }}>{branchLabel}</p>
             </div>
             <button onClick={onClose} style={{
-              border: 'none', background: 'transparent', fontSize: 20, cursor: 'pointer', color: 'var(--text-muted)',
+              border: 'none', background: 'var(--brown-50)', fontSize: 16, cursor: 'pointer', color: 'var(--text-muted)',
+              borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>✕</button>
           </div>
 
           {/* Date range controls — defaults to real-time today, fully adjustable */}
           <div style={{
-            display: 'flex', gap: 10, alignItems: 'flex-end', flexWrap: 'wrap',
-            padding: '14px 20px', borderBottom: '1.5px solid var(--border)',
+            display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap',
+            padding: '16px 22px', borderBottom: '1.5px solid var(--border)',
           }}>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
               From
               <input type="date" value={start} max={end}
                 onChange={e => setStart(e.target.value)} style={dateInputStyle} />
             </label>
-            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+            <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
               To
               <input type="date" value={end} min={start} max={today}
                 onChange={e => setEnd(e.target.value)} style={dateInputStyle} />
             </label>
             <button onClick={handleResetRange} style={{
-              padding: '7px 14px', borderRadius: 'var(--radius-full)',
+              padding: '9px 16px', borderRadius: 'var(--radius-full)',
               border: '1.5px dashed var(--border)', background: 'transparent',
-              color: 'var(--text-muted)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+              color: 'var(--text-muted)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
             }}>↺ Reset to Today</button>
 
             <div style={{ flex: 1 }} />
 
             <button onClick={() => setShowPreview(true)} disabled={!reportData}
               style={{
-                padding: '7px 14px', borderRadius: 'var(--radius-full)', border: 'none',
-                background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 12,
-                cursor: reportData ? 'pointer' : 'not-allowed', opacity: reportData ? 1 : 0.5,
+                padding: '9px 18px', borderRadius: 'var(--radius-full)', border: 'none',
+                background: reportData ? 'var(--gradient-primary)' : '#e5e7eb', color: '#fff', fontWeight: 700, fontSize: 12.5,
+                cursor: reportData ? 'pointer' : 'not-allowed',
+                boxShadow: reportData ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
               }}>🖨️ Preview Report</button>
             <button onClick={() => downloadSalesReportExcel(reportData, rangeLabel, branchLabel)} disabled={!reportData}
               style={{
-                padding: '7px 14px', borderRadius: 'var(--radius-full)',
+                padding: '9px 18px', borderRadius: 'var(--radius-full)',
                 border: '1.5px solid var(--border)', background: '#fff',
-                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12,
+                color: 'var(--brown-800)', fontWeight: 700, fontSize: 12.5,
                 cursor: reportData ? 'pointer' : 'not-allowed', opacity: reportData ? 1 : 0.5,
               }}>📊 Excel</button>
           </div>
 
           {!isValidRange && (
-            <div style={{ padding: '10px 20px', fontSize: 12, color: '#dc2626' }}>
+            <div style={{ padding: '12px 22px', fontSize: 12.5, color: '#dc2626' }}>
               "To" date must be on or after "From" date.
             </div>
           )}
 
           {/* Itemized meals table */}
-          <div style={{ overflowY: 'auto', padding: '16px 20px' }}>
+          <div style={{ overflowY: 'auto', padding: '18px 22px' }}>
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>Loading report…</div>
+              <div style={{ textAlign: 'center', padding: 44, color: 'var(--text-muted)' }}>Loading report…</div>
             ) : items.length ? (
               <>
-                <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
+                <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
                   <StatCard label="Total Sales" value={fmt(reportData?.summary?.totalSales || 0)} />
                   <StatCard label="Total Meals Sold" value={totalQty} />
                 </div>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
                   <thead>
                     <tr style={{ background: 'var(--brown-50)' }}>
                       {['#', 'Meal / Item', 'Qty Sold', 'Revenue'].map(h => (
                         <th key={h} style={{
-                          padding: '9px 12px',
+                          padding: '11px 14px',
                           textAlign: h === '#' || h === 'Qty Sold' || h === 'Revenue' ? 'center' : 'left',
                           fontWeight: 700, color: 'var(--text-muted)',
                           borderBottom: '1px solid var(--border)',
@@ -579,10 +584,10 @@ function SalesReportModal({ branchId, branches, branchLabel, isOwner, onClose })
                   <tbody>
                     {items.map((item, i) => (
                       <tr key={item.id || item.name} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                        <td style={{ padding: '9px 12px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>{i + 1}</td>
-                        <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
-                        <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
-                        <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
+                        <td style={{ padding: '11px 14px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>{i + 1}</td>
+                        <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
+                        <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
+                        <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -595,7 +600,6 @@ function SalesReportModal({ branchId, branches, branchLabel, isOwner, onClose })
         </div>
       </div>
 
-      Print preview opens on top of the report modal
       {showPreview && reportData && (
         <PrintPreviewModal
           title={`Sales Report (${rangeLabel})`}
@@ -613,19 +617,20 @@ function StatCard({ label, value, sub, color = 'var(--brown-800)', icon }) {
   return (
     <div style={{
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', padding: '20px 22px', flex: 1, minWidth: 180,
+      borderRadius: 'var(--radius-lg)', padding: '24px 26px', flex: 1, minWidth: 200,
+      boxShadow: 'var(--shadow-sm)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
             {label}
           </div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700, color, lineHeight: 1 }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700, color, lineHeight: 1 }}>
             {value}
           </div>
-          {sub && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>{sub}</div>}
+          {sub && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 8 }}>{sub}</div>}
         </div>
-        {icon && <span style={{ fontSize: 28, opacity: 0.6 }}>{icon}</span>}
+        {icon && <span style={{ fontSize: 30, opacity: 0.6 }}>{icon}</span>}
       </div>
     </div>
   )
@@ -636,12 +641,17 @@ function Section({ title, children, style = {} }) {
   return (
     <div style={{
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', padding: 20, ...style,
+      borderRadius: 'var(--radius-lg)', padding: 24,
+      boxShadow: 'var(--shadow-sm)',
+      display: 'flex', flexDirection: 'column',
+      ...style,
     }}>
-      <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 15, marginBottom: 16 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 17, marginBottom: 18, fontWeight: 700 }}>
         {title}
       </h3>
-      {children}
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {children}
+      </div>
     </div>
   )
 }
@@ -650,8 +660,8 @@ function Section({ title, children, style = {} }) {
 function ChartTooltip({ active, payload, label, prefix = '₱' }) {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', fontSize: 13 }}>
-      {label && <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--brown-800)' }}>{label}</div>}
+    <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', fontSize: 13, boxShadow: 'var(--shadow-md)' }}>
+      {label && <div style={{ fontWeight: 700, marginBottom: 5, color: 'var(--brown-800)' }}>{label}</div>}
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || 'var(--brown-600)' }}>
           {p.name}: {prefix}{typeof p.value === 'number' ? p.value.toLocaleString('en-PH', { minimumFractionDigits: 2 }) : p.value}
@@ -745,39 +755,40 @@ export default function DashboardPage() {
   }
 
   if (loading && !data) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 12 }}>
-      <span style={{ fontSize: 32 }}>🍖</span>
-      <span style={{ color: 'var(--text-muted)' }}>Loading dashboard…</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh', flexDirection: 'column', gap: 14 }}>
+      <span style={{ fontSize: 36 }}>🍖</span>
+      <span style={{ color: 'var(--text-muted)', fontSize: 14.5 }}>Loading dashboard…</span>
     </div>
   )
 
   const s = data?.summary || {}
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
 
       {/* ── Header ────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28, flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--brown-800)', marginBottom: 2 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brown-800)', marginBottom: 4 }}>
             Dashboard
           </h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
             {isOwner ? 'All branches overview' : `${user?.branch?.name} overview`}
           </p>
         </div>
 
         {/* ── Controls ────────────────────────────────────── */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
 
           {/* Period buttons + custom range picker */}
-          <div style={{ display: 'flex', gap: 4, position: 'relative', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, position: 'relative', alignItems: 'center' }}>
             {PERIODS.map(p => (
               <button key={p.value} onClick={() => handlePeriodClick(p.value)} style={{
-                padding: '7px 14px', borderRadius: 'var(--radius-full)', border: 'none',
-                background: period === p.value ? 'var(--brown-600)' : 'var(--brown-100)',
+                padding: '10px 18px', borderRadius: 'var(--radius-full)', border: 'none',
+                background: period === p.value ? 'var(--gradient-primary)' : 'var(--brown-100)',
                 color: period === p.value ? '#fff' : 'var(--brown-800)',
-                fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+                fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 200ms ease',
+                boxShadow: period === p.value ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
               }}>
                 {p.label}
               </button>
@@ -789,9 +800,9 @@ export default function DashboardPage() {
                 onClick={() => setShowRangePicker(true)}
                 title="Click to change range"
                 style={{
-                  fontSize: 11, fontWeight: 700, color: 'var(--brown-600)',
+                  fontSize: 11.5, fontWeight: 700, color: 'var(--brown-600)',
                   background: 'var(--brown-50)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-full)', padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)', padding: '5px 12px',
                   cursor: 'pointer', whiteSpace: 'nowrap',
                 }}
               >
@@ -814,7 +825,7 @@ export default function DashboardPage() {
           {/* Branch filter — Owner only */}
           {isOwner && (
             <select value={branchId} onChange={e => setBranchId(e.target.value)}
-              style={{ padding: '7px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13, background: '#fff' }}>
+              style={{ padding: '9px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13.5, background: '#fff', cursor: 'pointer' }}>
               <option value="">All Branches</option>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
             </select>
@@ -822,9 +833,10 @@ export default function DashboardPage() {
 
           {/*   new "Sales Report" button — opens the itemized meals-sold modal */}
           <button onClick={() => setShowSalesReport(true)} style={{
-            padding: '7px 14px', borderRadius: 'var(--radius-full)',
+            padding: '9px 18px', borderRadius: 'var(--radius-full)',
             border: '1.5px solid var(--border)', background: '#fff',
-            color: 'var(--brown-800)', fontWeight: 700, fontSize: 12, cursor: 'pointer',
+            color: 'var(--brown-800)', fontWeight: 700, fontSize: 12.5, cursor: 'pointer',
+            transition: 'all 180ms ease',
           }}>Sales Report</button>
 
           <Button variant="outline" size="sm" onClick={load}>↻</Button>
@@ -834,26 +846,26 @@ export default function DashboardPage() {
       {/* Hint when custom is selected but no range set yet */}
       {period === 'custom' && (!customStart || !customEnd) && (
         <div style={{
-          marginBottom: 16, background: '#fffbeb', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)', padding: '10px 14px',
-          color: 'var(--brown-700)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+          marginBottom: 18, background: '#fffbeb', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)', padding: '12px 16px',
+          color: 'var(--brown-700)', fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8,
         }}>
           📅 Pick a start and end date to filter the dashboard.
         </div>
       )}
 
       {/* ── Stat Cards ────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <StatCard icon="💰" label="Total Sales" value={fmt(s.totalSales || 0)} color="var(--brown-800)" />
         <StatCard icon="🧾" label="Completed Orders" value={s.totalOrders || 0} sub={`Avg ${fmt(s.avgOrderValue || 0)} / order`} />
         <StatCard icon="📦" label="All Orders" value={s.allOrdersCount || 0} sub={`${s.cancelledCount || 0} cancelled`} />
       </div>
 
       {/* ── Charts row 1 ──────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-        <Section title="📈 Sales Trend">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
+        <Section title="📈 Sales Trend" style={{ height: 420 }}>
           {data?.salesTrend?.length ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={320}>
               <LineChart data={data.salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={d => d.slice(5)} />
@@ -865,12 +877,12 @@ export default function DashboardPage() {
           ) : <EmptyState icon="📈" title="No sales data for this period" />}
         </Section>
 
-        <Section title="🥧 Sales by Category">
+        <Section title="🥧 Sales by Category" style={{ height: 420 }}>
           {data?.salesByCategory?.length ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={320}>
               <PieChart>
                 <Pie data={data.salesByCategory} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" outerRadius={80}
+                  cx="50%" cy="50%" outerRadius={100}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}
                 >
@@ -885,10 +897,10 @@ export default function DashboardPage() {
       </div>
 
       {/* ── Charts row 2 ──────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
-        <Section title="🏆 Best Sellers (by quantity)">
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, marginBottom: 18 }}>
+        <Section title="🏆 Best Sellers (by quantity)" style={{ height: 360 }}>
           {data?.bestSellers?.length ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart data={data.bestSellers} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
@@ -900,22 +912,22 @@ export default function DashboardPage() {
           ) : <EmptyState icon="🏆" title="No sales data yet" />}
         </Section>
 
-        <Section title="💳 Payment Methods">
+        <Section title="💳 Payment Methods" style={{ height: 360 }}>
           {data?.paymentBreakdown?.length ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {data.paymentBreakdown.map((p, i) => {
                 const maxTotal = data.paymentBreakdown[0].total
                 const pct = Math.round((p.total / maxTotal) * 100)
                 return (
                   <div key={p.method}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, fontSize: 13 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 13.5 }}>
                       <span style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{p.method}</span>
                       <span style={{ color: 'var(--brown-700)', fontWeight: 700 }}>{fmt(p.total)}</span>
                     </div>
-                    <div style={{ background: 'var(--border)', borderRadius: 6, height: 8 }}>
-                      <div style={{ width: `${pct}%`, background: COLORS[i % COLORS.length], borderRadius: 6, height: 8, transition: 'width 0.5s' }} />
+                    <div style={{ background: 'var(--border)', borderRadius: 6, height: 9 }}>
+                      <div style={{ width: `${pct}%`, background: COLORS[i % COLORS.length], borderRadius: 6, height: 9, transition: 'width 0.5s' }} />
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>
+                    <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 4 }}>
                       {p.count} transaction{p.count !== 1 ? 's' : ''}
                     </div>
                   </div>
@@ -928,8 +940,8 @@ export default function DashboardPage() {
 
       {/* ── Branch Comparison (Owner only) ────────────────── */}
       {isOwner && data?.salesByBranch?.length > 0 && (
-        <Section title="🏪 Sales by Branch" style={{ marginBottom: 16 }}>
-          <ResponsiveContainer width="100%" height={200}>
+        <Section title="🏪 Sales by Branch" style={{ marginBottom: 18, height: 480 }}>
+          <ResponsiveContainer width="100%" height={380}>
             <BarChart data={data.salesByBranch}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="name" tick={{ fontSize: 12 }} />
@@ -947,12 +959,12 @@ export default function DashboardPage() {
       {data?.bestSellers?.length > 0 && (
         <Section title="📋 Best Sellers Detail">
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ background: 'var(--brown-50)' }}>
                   {['#', 'Item', 'Qty Sold', 'Revenue'].map(h => (
                     <th key={h} style={{
-                      padding: '9px 12px',
+                      padding: '11px 14px',
                       textAlign: h === '#' || h === 'Qty Sold' || h === 'Revenue' ? 'center' : 'left',
                       fontWeight: 700, color: 'var(--text-muted)',
                       borderBottom: '1px solid var(--border)',
@@ -964,12 +976,12 @@ export default function DashboardPage() {
               <tbody>
                 {data.bestSellers.map((item, i) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                     </td>
-                    <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
+                    <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmt(item.revenue)}</td>
                   </tr>
                 ))}
               </tbody>
