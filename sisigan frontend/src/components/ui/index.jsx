@@ -128,7 +128,7 @@ export function Modal({ title, onClose, children, width = 440 }) {
             <button onClick={onClose} style={{
               background: 'none', border: 'none', cursor: 'pointer',
               color: 'var(--text-muted)', fontSize: 20, lineHeight: 1, padding: 4,
-            }}>X</button>
+            }}>x</button>
           </div>
         )}
         {children}
