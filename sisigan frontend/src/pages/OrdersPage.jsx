@@ -221,7 +221,16 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span style={{ color: 'var(--brown-800)', fontSize: 13 }}>{order.orderNumber}</span>
-        <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 20, fontFamily: 'var(--font-display)' }}>P{baseTotal.toFixed(2)}</span>
+        <div style={{ textAlign: 'right' }}>
+          {discount && (
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
+              P{baseTotal.toFixed(2)}
+            </div>
+          )}
+          <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 20, fontFamily: 'var(--font-display)' }}>
+            P{total.toFixed(2)}
+          </span>
+        </div>
       </div>
 
       {discount ? (

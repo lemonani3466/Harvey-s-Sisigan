@@ -125,10 +125,12 @@ export function Modal({ title, onClose, children, width = 440 }) {
         {title && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 18, color: 'var(--brown-800)' }}>{title}</h2>
-            <button onClick={onClose} style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: 'var(--text-muted)', fontSize: 20, lineHeight: 1, padding: 4,
-            }}>x</button>
+            {onClose && (
+              <button onClick={onClose} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-muted)', fontSize: 20, lineHeight: 1, padding: 4,
+              }}>x</button>
+            )}
           </div>
         )}
         {children}
