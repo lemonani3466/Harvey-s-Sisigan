@@ -106,6 +106,8 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
     select: { name: true },
   });
 
+  const allSellers = Object.values(itemSalesMap).sort((a, b) => b.qty - a.qty)
+  const bestSellers = allSellers.slice(0, 10);
   const categoryMap = {};
   for (const c of allCategories) {
     categoryMap[c.name] = { name: c.name, value: 0, qty: 0 };
@@ -192,6 +194,7 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       cancelledCount,
     },
     bestSellers,
+    allSellers,
     salesByCategory,
     salesTrend,
     salesByBranch,
