@@ -95,9 +95,6 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       itemSalesMap[id].revenue += Number(item.subtotal);
     }
   }
-  const bestSellers = Object.values(itemSalesMap)
-    .sort((a, b) => b.qty - a.qty)
-    .slice(0, 10);
 
   // Seed every category at 0 first, so categories with no completed sales
   // in this period still show up in the chart instead of being silently

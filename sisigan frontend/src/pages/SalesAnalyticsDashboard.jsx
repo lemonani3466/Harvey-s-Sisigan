@@ -411,10 +411,8 @@ function ForecastSection() {
           <span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>Training model &amp; generating forecast…</span>
         </div>
       )}
-<<<<<<< HEAD
       
       
-=======
 
       {/* Error state */}
       {triggered && !loading && error && (
@@ -422,7 +420,6 @@ function ForecastSection() {
           ⚠️ Could not reach the Python service — make sure it's running on port 8000.
         </div>
       )}
->>>>>>> origin/POS-and-UI
 
       {/* Result */}
       {triggered && !loading && data && (
@@ -530,13 +527,8 @@ function ItemForecastSection() {
       )}
 
       {triggered && !loading && error && (
-<<<<<<< HEAD
         <div style={{ padding: 32, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
           
-=======
-        <div style={{ padding: 36, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
-          ⚠️ Could not reach the Python service — make sure it's running on port 8000.
->>>>>>> origin/POS-and-UI
         </div>
       )}
 

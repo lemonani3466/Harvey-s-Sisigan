@@ -34,15 +34,9 @@ function StatCard({ label, value, sub, tone = 'var(--brown-800)' }) {
 
 function Section({ title, right, children }) {
   return (
-<<<<<<< HEAD
     <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 15 }}>{title}</h3>
-=======
-    <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 24, boxShadow: 'var(--shadow-sm)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-        <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 17, fontWeight: 700 }}>{title}</h3>
->>>>>>> origin/POS-and-UI
         {right}
       </div>
       {children}
@@ -203,7 +197,6 @@ function AddQuantitySection({ inventory, isOwner, onSaved }) {
   }
 
   return (
-<<<<<<< HEAD
     <Section title="Add Quantity">
       <div style={{ display: 'grid', gridTemplateColumns: isOwner ? '2fr 1fr 1fr auto' : '2fr 1fr auto', gap: 10, alignItems: 'end' }}>
         <div>
@@ -214,40 +207,6 @@ function AddQuantitySection({ inventory, isOwner, onSaved }) {
               <option key={item.id} value={item.id}>
                 {item.ingredient?.name} {isOwner ? `— ${item.branch?.name}` : ''} (current: {Number(item.quantity).toFixed(3)} {item.ingredient?.unit})
               </option>
-=======
-    <Modal title={`Adjust Stock - ${item.ingredient?.name}`} onClose={onClose} width={440}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div style={{ padding: '12px 14px', background: 'var(--brown-50)', borderRadius: 'var(--radius-md)', fontSize: 13.5 }}>
-          Current: <strong>{currentQty.toFixed(3)} {item.ingredient?.unit}</strong>
-        </div>
-
-        <div>
-          <label style={lbl}>Action</label>
-          <div style={{ display: 'flex', gap: 10 }}>
-            {[
-              { key: 'ADD', label: 'Refill (+)' },
-              { key: 'DEDUCT', label: 'Deduct (-)' },
-              { key: 'SET', label: 'Set Exact' },
-            ].map((m) => (
-              <button
-                key={m.key}
-                onClick={() => setMode(m.key)}
-                style={{
-                  flex: 1,
-                  padding: '10px 6px',
-                  border: `1.5px solid ${mode === m.key ? 'var(--brown-600)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius-md)',
-                  background: mode === m.key ? 'var(--gradient-primary)' : '#fff',
-                  color: mode === m.key ? '#fff' : 'var(--brown-700)',
-                  fontSize: 12.5,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 180ms ease',
-                }}
-              >
-                {m.label}
-              </button>
->>>>>>> origin/POS-and-UI
             ))}
           </select>
         </div>
@@ -266,20 +225,9 @@ function AddQuantitySection({ inventory, isOwner, onSaved }) {
           placeholder="e.g. Received new stock"
         />
 
-<<<<<<< HEAD
         <Button variant="primary" disabled={saving || !itemId || !amount} onClick={submit}>
           {saving ? 'Adding...' : 'Add Stock'}
         </Button>
-=======
-        {error && <div style={{ color: 'var(--red)', fontSize: 13 }}>{error}</div>}
-
-        <div style={{ display: 'flex', gap: 12 }}>
-          <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" fullWidth disabled={saving || amount === ''} onClick={save}>
-            {saving ? 'Saving...' : 'Apply'}
-          </Button>
-        </div>
->>>>>>> origin/POS-and-UI
       </div>
 
       {error && <div style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{error}</div>}
@@ -406,7 +354,6 @@ export default function InventoryPage() {
         <StatCard label="Weekly Usage Events" value={report?.summary?.totalLogs || 0} sub="Based on audit logs" />
       </div>
 
-<<<<<<< HEAD
       <div style={{ marginBottom: 16 }}>
         <AddQuantitySection inventory={inventory} isOwner={isOwner} onSaved={load} />
       </div>
@@ -428,24 +375,13 @@ export default function InventoryPage() {
             <EmptyState icon="??" title="No ingredients yet" subtitle="Add ingredients to start tracking stock" />
           ) : filteredInventory.length === 0 ? (
             <EmptyState icon="??" title="No matches" subtitle={`No ingredients match "${searchTerm}"`} />
-=======
-      <div style={{ marginBottom: 18 }}>
-        <Section title="All Ingredients List">
-          {inventory.length === 0 ? (
-            <EmptyState icon="📦" title="No ingredients yet" subtitle="Add ingredients to start tracking stock" />
->>>>>>> origin/POS-and-UI
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
                 <thead>
                   <tr style={{ background: 'var(--brown-50)' }}>
-<<<<<<< HEAD
                     {['Ingredient', 'Category', 'Qty', 'Threshold', 'Price', 'Branch', 'Status'].map((h) => (
                       <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-=======
-                    {['Ingredient', 'Category', 'Qty', 'Threshold', 'Price', 'Branch', 'Status', 'Actions'].map((h) => (
-                      <th key={h} style={{ padding: '11px 14px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
->>>>>>> origin/POS-and-UI
                         {h}
                       </th>
                     ))}
@@ -455,7 +391,6 @@ export default function InventoryPage() {
                   {filteredInventory.map((item, idx) => {
                     const low = Number(item.quantity) <= Number(item.minThreshold)
                     return (
-<<<<<<< HEAD
                       <tr key={item.id} style={{ borderBottom: idx < filteredInventory.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                         <td style={{ padding: '9px 12px', fontWeight: 600 }}>{item.ingredient?.name}</td>
                         <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{item.ingredient?.category}</td>
@@ -468,45 +403,6 @@ export default function InventoryPage() {
                             {low ? 'LOW' : 'OK'}
                           </span>
                         </td>
-=======
-                      <tr key={item.id} style={{
-                        borderBottom: idx < inventory.length - 1 ? '1px solid var(--border-light)' : 'none',
-                        background: idx % 2 === 1 ? 'rgba(180,83,9,0.015)' : undefined,
-                      }}>
-                        <td style={{ padding: '11px 14px', fontWeight: 600 }}>{item.ingredient?.name}</td>
-                        <td style={{ padding: '11px 14px', color: 'var(--text-mid)' }}>{item.ingredient?.category}</td>
-                        <td style={{ padding: '11px 14px' }}>{Number(item.quantity).toFixed(3)} {item.ingredient?.unit}</td>
-                        <td style={{ padding: '11px 14px' }}>{Number(item.minThreshold).toFixed(3)} {item.ingredient?.unit}</td>
-                        <td style={{ padding: '11px 14px' }}>{item.price ? `₱${Number(item.price).toFixed(2)}` : '-'}</td>
-                        <td style={{ padding: '11px 14px', color: 'var(--text-mid)' }}>{item.branch?.name}</td>
-                        <td style={{ padding: '11px 14px' }}>
-                          <span style={{ fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 'var(--radius-full)', background: low ? 'var(--red-light)' : 'var(--green-light)', color: low ? 'var(--red-dark)' : 'var(--green-dark)' }}>
-                            {low ? 'LOW' : 'OK'}
-                          </span>
-                        </td>
-                        <td style={{ padding: '11px 14px' }}>
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'ADD' })}
-                              style={{ ...actionBtn, color: 'var(--green-dark)' }}
-                            >
-                              Refill
-                            </button>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'DEDUCT' })}
-                              style={{ ...actionBtn, color: 'var(--red-dark)' }}
-                            >
-                              Deduct
-                            </button>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'SET' })}
-                              style={actionBtn}
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </td>
->>>>>>> origin/POS-and-UI
                       </tr>
                     )
                   })}
@@ -621,15 +517,5 @@ const searchInputStyle = {
   borderRadius: 'var(--radius-md)',
   fontSize: 13,
   background: '#fff',
-<<<<<<< HEAD
   minWidth: 220,
-=======
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--radius-sm)',
-  cursor: 'pointer',
-  padding: '6px 10px',
-  fontSize: 12,
-  fontWeight: 700,
-  transition: 'all 180ms ease',
->>>>>>> origin/POS-and-UI
 }

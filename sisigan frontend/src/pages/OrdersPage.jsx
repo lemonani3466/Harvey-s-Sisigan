@@ -5,8 +5,8 @@ import { Badge, Button, Modal, EmptyState } from '../components/ui'
 import { printReceipt } from '../components/ui/ThermalReceipt'
 import { useAuth } from '../context/AuthContext'
 
-const STATUSES    = ['COMPLETED', 'CANCELLED']
-const PAGE_SIZE   = 20
+const STATUSES  = ['COMPLETED', 'CANCELLED']
+const PAGE_SIZE = 20
 
 const PH_DISCOUNTS = {
   SENIOR:  { label: 'Senior Citizen', percentage: 20, icon: '🧓' },
@@ -23,14 +23,8 @@ const inputStyle = {
   border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)',
   fontSize: 14.5, background: '#fff', outline: 'none',
 }
-<<<<<<< HEAD
-const MODAL_WIDTH = 440
-=======
 
 const MODAL_WIDTH = 460
-
-// ADDED — keeps short confirmation copy (Cancel/Reopen screens) centered
->>>>>>> origin/POS-and-UI
 const narrowStyle = { maxWidth: 320, margin: '0 auto' }
 
 // ── 3-Dot Menu ────────────────────────────────────────
@@ -52,10 +46,10 @@ function OrderRowMenu({ order, onPay, onReprint, onCancel, onReopen }) {
   const canReprint    = order.status === 'COMPLETED'  && order.payment
 
   const menuItems = [
-    canPay       && { label: '💳 Pay Now',         action: onPay },
-    canReprint   && { label: '🖨️ Reprint Receipt',  action: onReprint },
-    isCancellable && { label: '❌ Cancel Order',    action: onCancel },
-    isReopenable  && { label: '🔓 Reopen Order',    action: onReopen },
+    canPay        && { label: '💳 Pay Now',        action: onPay },
+    canReprint    && { label: '🖨️ Reprint Receipt', action: onReprint },
+    isCancellable && { label: '❌ Cancel Order',   action: onCancel },
+    isReopenable  && { label: '🔓 Reopen Order',   action: onReopen },
   ].filter(Boolean)
 
   return (
@@ -115,37 +109,19 @@ function DiscountView({ total, selected, setSelected, onApply, onBack }) {
           ))}
         </select>
       </div>
-<<<<<<< HEAD
-      <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '12px 14px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: 'var(--text-mid)', marginBottom: 6 }}>
-          <span>Original Total</span><span>₱{total.toFixed(2)}</span>
-=======
-
       <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '16px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: 'var(--text-mid)', marginBottom: 8 }}>
-          <span>Original Total</span>
-          <span>₱{total.toFixed(2)}</span>
->>>>>>> origin/POS-and-UI
+          <span>Original Total</span><span>₱{total.toFixed(2)}</span>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13.5, color: 'var(--red-dark)', marginBottom: 8 }}>
           <span>{discount.label} Discount ({discount.percentage}%)</span>
           <span>- ₱{deducted.toFixed(2)}</span>
         </div>
-<<<<<<< HEAD
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16, fontWeight: 700, color: 'var(--brown-800)', borderTop: '1px solid var(--border)', paddingTop: 8 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 700, color: 'var(--brown-800)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
           <span>New Total</span><span>₱{newTotal.toFixed(2)}</span>
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 10 }}>
-=======
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 17, fontWeight: 700, color: 'var(--brown-800)', borderTop: '1px solid var(--border)', paddingTop: 10 }}>
-          <span>New Total</span>
-          <span>₱{newTotal.toFixed(2)}</span>
-        </div>
-      </div>
-
       <div style={{ display: 'flex', gap: 12 }}>
->>>>>>> origin/POS-and-UI
         <Button variant="outline" fullWidth onClick={onBack}>Cancel</Button>
         <Button variant="primary" fullWidth onClick={() => onApply({ key: selected, label: discount.label, percentage: discount.percentage, deducted })}>Apply</Button>
       </div>
@@ -167,12 +143,6 @@ function CancelView({ order, onClose, onCancelled }) {
 
   return (
     <div>
-<<<<<<< HEAD
-      <div style={{ ...narrowStyle, textAlign: 'center', padding: '8px 0 20px' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-        <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 18, marginBottom: 8 }}>Cancel {order.orderNumber}?</h3>
-        <p style={{ fontSize: 13, color: 'var(--text-mid)', marginBottom: 0 }}>This will cancel the order. This action cannot be undone.</p>
-=======
       <div style={{ ...narrowStyle, textAlign: 'center', padding: '10px 0 24px' }}>
         <div style={{ fontSize: 44, marginBottom: 14 }}>⚠️</div>
         <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 19, marginBottom: 10 }}>
@@ -181,7 +151,6 @@ function CancelView({ order, onClose, onCancelled }) {
         <p style={{ fontSize: 13.5, color: 'var(--text-mid)', marginBottom: 0 }}>
           This will cancel the order. This action cannot be undone.
         </p>
->>>>>>> origin/POS-and-UI
       </div>
       {error && <p style={{ color: 'var(--red)', fontSize: 13, marginBottom: 14, textAlign: 'center' }}>{error}</p>}
       <div style={{ display: 'flex', gap: 12 }}>
@@ -219,12 +188,6 @@ function ReopenView({ order, onClose, onReopened }) {
 
   return (
     <div>
-<<<<<<< HEAD
-      <div style={{ ...narrowStyle, textAlign: 'center', padding: '8px 0 20px' }}>
-        <div style={{ fontSize: 40, marginBottom: 12 }}>🔓</div>
-        <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 18, marginBottom: 8 }}>Reopen {order.orderNumber}?</h3>
-        <p style={{ fontSize: 13, color: 'var(--text-mid)' }}>Enter your password to reopen this order.</p>
-=======
       <div style={{ ...narrowStyle, textAlign: 'center', padding: '10px 0 24px' }}>
         <div style={{ fontSize: 44, marginBottom: 14 }}>🔓</div>
         <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 19, marginBottom: 10 }}>
@@ -233,7 +196,6 @@ function ReopenView({ order, onClose, onReopened }) {
         <p style={{ fontSize: 13.5, color: 'var(--text-mid)' }}>
           Enter your password to reopen this order and move it back to Pending.
         </p>
->>>>>>> origin/POS-and-UI
       </div>
       <div style={{ ...narrowStyle, marginBottom: 18, textAlign: 'left' }}>
         <label style={labelStyle}>Your Password</label>
@@ -253,41 +215,27 @@ function ReopenView({ order, onClose, onReopened }) {
 }
 
 // ── Payment View ───────────────────────────────────────
-// Change 7: non-cash cannot exceed payable amount
-// Change 8: no X/close button (Modal's onClose is null for pay view)
 function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, setAmountPaid, refNo, setRefNo, discount, onRemoveDiscount, onOpenDiscount, loading, error, onBack, onPay }) {
-  const paid     = Number(amountPaid) || 0
-  const change   = paid - total
-  const needsRef = method !== 'CASH'
-
-  // Change 7: non-cash cannot exceed total
+  const paid            = Number(amountPaid) || 0
+  const change          = paid - total
+  const needsRef        = method !== 'CASH'
   const nonCashOverpaid = method !== 'CASH' && paid > total
-  const canConfirm = paid >= total && (!needsRef || refNo.trim().length > 0) && !nonCashOverpaid
+  const canConfirm      = paid >= total && (!needsRef || refNo.trim().length > 0) && !nonCashOverpaid
 
   return (
-<<<<<<< HEAD
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: 'var(--brown-800)', fontSize: 13 }}>{order.orderNumber}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span style={{ color: 'var(--brown-800)', fontSize: 13.5 }}>{order.orderNumber}</span>
         <div style={{ textAlign: 'right' }}>
           {discount && (
             <div style={{ fontSize: 11, color: 'var(--text-muted)', textDecoration: 'line-through' }}>
               P{baseTotal.toFixed(2)}
             </div>
           )}
-          <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 20, fontFamily: 'var(--font-display)' }}>
+          <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 22, fontFamily: 'var(--font-display)' }}>
             P{total.toFixed(2)}
           </span>
         </div>
-=======
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-      <div style={{ background: 'var(--brown-100)', borderRadius: 'var(--radius-md)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ color: 'var(--brown-800)', fontSize: 13.5 }}>{order.orderNumber}</span>
-        <span style={{ color: 'var(--brown-800)', fontWeight: 700, fontSize: 22, fontFamily: 'var(--font-display)' }}>
-          P{baseTotal.toFixed(2)}
-        </span>
->>>>>>> origin/POS-and-UI
       </div>
 
       {discount ? (
@@ -296,52 +244,31 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
             <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--red-dark)' }}>
               {PH_DISCOUNTS[discount.key]?.icon} {discount.label} ({discount.percentage}%)
             </div>
-<<<<<<< HEAD
-            <div style={{ fontSize: 11, color: 'var(--red-dark)' }}>- ₱{discount.deducted.toFixed(2)} → New total: ₱{total.toFixed(2)}</div>
-=======
             <div style={{ fontSize: 11.5, color: 'var(--red-dark)' }}>
               - ₱{discount.deducted.toFixed(2)} → New total: ₱{total.toFixed(2)}
             </div>
->>>>>>> origin/POS-and-UI
           </div>
           <button onClick={onRemoveDiscount} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red-dark)', fontWeight: 700, fontSize: 18, padding: '0 4px' }}>✕</button>
         </div>
       ) : (
-<<<<<<< HEAD
-        <button onClick={onOpenDiscount} style={{ width: '100%', padding: '7px 12px', border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)', background: '#fff', color: 'var(--brown-600)', fontWeight: 700, fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          🏷️ Add Discount
-        </button>
-=======
-        <button
-          onClick={onOpenDiscount}
-          style={{
-            width: '100%', padding: '10px 14px',
-            border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)',
-            background: '#fff', color: 'var(--brown-600)',
-            fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            transition: 'all 180ms ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--brown-50)'; e.currentTarget.style.borderColor = 'var(--brown-400)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--border)' }}
-        >🏷️ Add Discount</button>
->>>>>>> origin/POS-and-UI
+        <button onClick={onOpenDiscount} style={{
+          width: '100%', padding: '10px 14px',
+          border: '1.5px dashed var(--border)', borderRadius: 'var(--radius-md)',
+          background: '#fff', color: 'var(--brown-600)',
+          fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+        }}>🏷️ Add Discount</button>
       )}
 
       <div>
         <label style={labelStyle}>Payment Method</label>
         <div style={{ display: 'flex', gap: 10 }}>
           {['CASH', 'GCASH', 'MAYA', 'CARD'].map(m => (
-<<<<<<< HEAD
             <button key={m} onClick={() => { setMethod(m); setRefNo(''); setAmountPaid('') }} style={{
-              flex: 1, padding: '7px 4px',
-=======
-            <button key={m} onClick={() => { setMethod(m); setRefNo('') }} style={{
               flex: 1, padding: '10px 4px',
->>>>>>> origin/POS-and-UI
               border: `2px solid ${method === m ? 'var(--brown-600)' : 'var(--border)'}`,
               borderRadius: 'var(--radius-md)',
-              background: method === m ? 'var(--gradient-primary)' : '#fff',
+              background: method === m ? 'var(--brown-600)' : '#fff',
               color: method === m ? '#fff' : 'var(--brown-700)',
               fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 180ms ease',
             }}>{m}</button>
@@ -357,7 +284,6 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
           placeholder={`Minimum P${total.toFixed(2)}${method !== 'CASH' ? ` (max P${total.toFixed(2)})` : ''}`}
           style={{ ...inputStyle, borderColor: nonCashOverpaid ? 'var(--red)' : undefined }}
         />
-        {/* Change 7: validation message */}
         {nonCashOverpaid && (
           <p style={{ color: 'var(--red)', fontSize: 12, marginTop: 4 }}>
             {method} payments cannot exceed the payable amount of ₱{total.toFixed(2)}.
@@ -373,15 +299,9 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
         </div>
       )}
 
-<<<<<<< HEAD
       {paid > 0 && !nonCashOverpaid && (
-        <div style={{ background: change >= 0 ? 'var(--green-light)' : 'var(--red-light)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontSize: 13, fontWeight: 600 }}>
-=======
-      {paid > 0 && (
         <div style={{ background: change >= 0 ? 'var(--green-light)' : 'var(--red-light)', borderRadius: 'var(--radius-md)', padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontSize: 13.5, fontWeight: 600 }}>
->>>>>>> origin/POS-and-UI
             {change >= 0 ? 'Change' : 'Short by'}
           </span>
           <span style={{ color: change >= 0 ? 'var(--green-dark)' : 'var(--red-dark)', fontWeight: 700, fontSize: 19 }}>
@@ -396,13 +316,8 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
 
       {error && <p style={{ color: 'var(--red)', fontSize: 13, margin: 0 }}>{error}</p>}
 
-<<<<<<< HEAD
-      <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
-        <Button variant="outline" onClick={onBack} style={{ flex: '0 0 auto' }}>Cancel</Button>
-=======
       <div style={{ display: 'flex', gap: 12, paddingTop: 6 }}>
-        <Button variant="outline" onClick={onBack} style={{ flex: '0 0 auto' }}>Back</Button>
->>>>>>> origin/POS-and-UI
+        <Button variant="outline" onClick={onBack} style={{ flex: '0 0 auto' }}>Cancel</Button>
         <Button variant="success" size="lg" fullWidth disabled={loading || !canConfirm} onClick={onPay}>
           {loading ? 'Processing...' : 'Confirm and Print Receipt'}
         </Button>
@@ -412,7 +327,6 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
 }
 
 // ── View-Only Detail ───────────────────────────────────
-// Change 2: eye icon opens this — no action buttons
 function ViewOnlyDetail({ order }) {
   return (
     <div>
@@ -420,7 +334,6 @@ function ViewOnlyDetail({ order }) {
         <Badge status={order.status} />
         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{order.type?.replace('_', ' ')}</span>
       </div>
-
       <div style={{ borderTop: '1px solid var(--border)', marginBottom: 12 }}>
         {order.items?.map(item => (
           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
@@ -435,14 +348,12 @@ function ViewOnlyDetail({ order }) {
           </div>
         ))}
       </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0 16px' }}>
         <span style={{ fontWeight: 700, color: 'var(--text-mid)' }}>TOTAL</span>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)', fontWeight: 700 }}>
           P{Number(order.totalAmount).toFixed(2)}
         </span>
       </div>
-
       {order.payment && (
         <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 16 }}>
           <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 4, fontSize: 13 }}>Paid via {order.payment.method}</div>
@@ -454,7 +365,6 @@ function ViewOnlyDetail({ order }) {
           )}
         </div>
       )}
-
       <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-faint)', textAlign: 'right' }}>
         {order.cashier?.name} | {new Date(order.createdAt).toLocaleString('en-PH')}
       </div>
@@ -473,7 +383,6 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
         <Badge status={order.status} />
         <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{order.type?.replace('_', ' ')}</span>
       </div>
-
       <div style={{ borderTop: '1px solid var(--border)', marginBottom: 14 }}>
         {order.items?.map(item => (
           <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
@@ -488,24 +397,13 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
           </div>
         ))}
       </div>
-
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 0 18px' }}>
         <span style={{ fontWeight: 700, color: 'var(--text-mid)' }}>TOTAL</span>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--brown-800)', fontWeight: 700 }}>
           P{Number(order.totalAmount).toFixed(2)}
         </span>
       </div>
-
       {order.payment && (
-<<<<<<< HEAD
-        <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 16 }}>
-          <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 4, fontSize: 13 }}>Paid via {order.payment.method}</div>
-          <div style={{ color: 'var(--green-dark)', fontSize: 13 }}>
-            Paid: P{Number(order.payment.amountPaid).toFixed(2)} | Change: P{Number(order.payment.change).toFixed(2)}
-          </div>
-          {order.payment.referenceNo && (
-            <div style={{ color: 'var(--green-dark)', fontSize: 12, marginTop: 2 }}>Ref: {order.payment.referenceNo}</div>
-=======
         <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 18 }}>
           <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 5, fontSize: 13.5 }}>
             Paid via {order.payment.method}
@@ -514,14 +412,10 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
             Paid: P{Number(order.payment.amountPaid).toFixed(2)} | Change: P{Number(order.payment.change).toFixed(2)}
           </div>
           {order.payment.referenceNo && (
-            <div style={{ color: 'var(--green-dark)', fontSize: 12.5, marginTop: 3 }}>
-              Ref: {order.payment.referenceNo}
-            </div>
->>>>>>> origin/POS-and-UI
+            <div style={{ color: 'var(--green-dark)', fontSize: 12.5, marginTop: 3 }}>Ref: {order.payment.referenceNo}</div>
           )}
         </div>
       )}
-
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
         {!order.payment && order.status !== 'CANCELLED' && order.status !== 'COMPLETED' && (
           <Button variant="success" fullWidth onClick={onPayNow}>Pay Now</Button>
@@ -532,7 +426,6 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
         {isCancellable && <Button variant="danger" fullWidth onClick={onCancelOrder}>Cancel Order</Button>}
         {isReopenable  && <Button variant="outline" fullWidth onClick={onReopenOrder}>🔓 Reopen Order</Button>}
       </div>
-
       <div style={{ marginTop: 18, fontSize: 11.5, color: 'var(--text-faint)', textAlign: 'right' }}>
         {order.cashier?.name} | {new Date(order.createdAt).toLocaleString('en-PH')}
       </div>
@@ -541,7 +434,6 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
 }
 
 // ── Order Detail Modal ─────────────────────────────────
-// Change 8: onClose is null when view === 'pay' to hide the X button
 function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false, initialView = 'detail', viewOnly = false }) {
   const { user } = useAuth()
   const [order, setOrder] = useState(null)
@@ -584,14 +476,12 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false, in
       const payload = { method, amountPaid: Number(amountPaid) || 0 }
       if (method !== 'CASH' && refNo.trim()) payload.referenceNo = refNo.trim()
       if (discount) { payload.discountType = discount.key; payload.discountAmount = discount.deducted }
-
       const result = await ordersApi.pay(order.id, payload)
-      // Change 3: pass discount to printReceipt
       printReceipt(
         { ...order, cashier: { name: user?.name }, branch: user?.branch },
         result.data.payment,
         user?.branch?.name,
-        discount  // null = will show "Discount: Normal" in receipt
+        discount
       )
       resetPaymentForm(); onRefresh(); onClose()
     } catch (e) {
@@ -609,8 +499,9 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false, in
     )
   }
 
-  const baseTotal = Number(order.totalAmount)
-  const total     = discount ? Math.max(0, baseTotal - discount.deducted) : baseTotal
+  const baseTotal  = Number(order.totalAmount)
+  const total      = discount ? Math.max(0, baseTotal - discount.deducted) : baseTotal
+  const modalClose = view === 'pay' ? null : onClose
 
   const titles = {
     viewonly: `Order ${order.orderNumber} — View Only`,
@@ -621,13 +512,9 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false, in
     reopen:   'Reopen Order',
   }
 
-  // Change 8: hide X button when on payment view
-  const modalClose = view === 'pay' ? null : onClose
-
   return (
     <Modal title={titles[view]} onClose={modalClose} width={MODAL_WIDTH}>
       {view === 'viewonly' && <ViewOnlyDetail order={order} />}
-
       {view === 'detail' && (
         <DetailView
           order={order}
@@ -680,31 +567,29 @@ function OrderDetailModal({ orderId, onClose, onRefresh, autoOpenPay = false, in
 // ── Pagination ─────────────────────────────────────────
 function Pagination({ page, totalPages, onChange }) {
   if (totalPages <= 1) return null
-
   const pages = []
   for (let i = 1; i <= totalPages; i++) pages.push(i)
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '16px 0 4px' }}>
-      <button
-        onClick={() => onChange(page - 1)} disabled={page === 1}
-        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}
-      >← Prev</button>
-
+      <button onClick={() => onChange(page - 1)} disabled={page === 1}
+        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
+        ← Prev
+      </button>
       {pages.map(p => (
         <button key={p} onClick={() => onChange(p)} style={{
-          width: 34, height: 34, border: `1.5px solid ${p === page ? 'var(--brown-600)' : 'var(--border)'}`,
+          width: 34, height: 34,
+          border: `1.5px solid ${p === page ? 'var(--brown-600)' : 'var(--border)'}`,
           borderRadius: 'var(--radius-sm)',
           background: p === page ? 'var(--brown-600)' : '#fff',
           color: p === page ? '#fff' : 'var(--brown-700)',
           fontWeight: 700, fontSize: 13, cursor: 'pointer',
         }}>{p}</button>
       ))}
-
-      <button
-        onClick={() => onChange(page + 1)} disabled={page === totalPages}
-        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}
-      >Next →</button>
+      <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
+        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
+        Next →
+      </button>
     </div>
   )
 }
@@ -729,19 +614,16 @@ function OrderRow({ order, onView, onAction }) {
     >
       <OrderRowMenu
         order={order}
-        onPay={()     => onAction(order.id, 'pay')}
-        onReprint={()  => onAction(order.id, 'reprint')}
-        onCancel={()   => onAction(order.id, 'cancel')}
-        onReopen={()   => onAction(order.id, 'reopen')}
+        onPay={()    => onAction(order.id, 'pay')}
+        onReprint={() => onAction(order.id, 'reprint')}
+        onCancel={()  => onAction(order.id, 'cancel')}
+        onReopen={()  => onAction(order.id, 'reopen')}
       />
-
-      {/* Change 2: eye opens view-only */}
       <button
         onClick={() => onView(order.id)}
         style={{ width: 32, height: 32, border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brown-600)', flexShrink: 0 }}
         title="View details (read-only)"
       >👁</button>
-
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {displayName}
@@ -751,16 +633,13 @@ function OrderRow({ order, onView, onAction }) {
           {order.items?.length > 2 ? ` +${order.items.length - 2} more` : ''}
         </div>
       </div>
-
       <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--brown-700)', fontSize: 14, flexShrink: 0 }}>
         ₱{Number(order.totalAmount).toFixed(2)}
       </div>
-
       <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'right', flexShrink: 0, minWidth: 140 }}>
         <div>{dateStr}</div>
         <div>{timeStr}</div>
       </div>
-
       <div style={{ flexShrink: 0 }}>
         <Badge status={order.status} />
       </div>
@@ -786,12 +665,10 @@ export default function OrdersPage() {
   const [dateTo,         setDateTo]         = useState('')
   const [page,           setPage]           = useState(1)
 
-  // Change 4: no manual refresh button — auto-polling only
   const load = useCallback(async () => {
     setLoading(true)
     try {
       const data = await ordersApi.list({ status: filter, limit: 500 })
-      // Sort newest first (Change 1)
       const sorted = (data.orders || []).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       setOrders(sorted)
     } finally {
@@ -816,7 +693,6 @@ export default function OrdersPage() {
     navigate(location.pathname, { replace: true, state: {} })
   }, [location.pathname, location.state, navigate])
 
-  // Reset page when filter/search/dates change
   useEffect(() => { setPage(1) }, [filter, search, dateFrom, dateTo])
 
   async function handleAction(orderId, action) {
@@ -839,7 +715,6 @@ export default function OrdersPage() {
     setSelectedId(orderId)
   }
 
-  // Client-side filtering
   const filtered = orders.filter(order => {
     const q = search.toLowerCase()
     const matchesSearch = !q ||
@@ -852,23 +727,19 @@ export default function OrdersPage() {
     return matchesSearch && matchesFrom && matchesTo
   })
 
-  // Change 1: pagination
-  const totalPages   = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated    = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-<<<<<<< HEAD
-    // Change 5: maximize width
     <div style={{ padding: '16px 20px', maxWidth: '100%', margin: '0 auto', height: 'calc(100vh - var(--nav-height))', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
 
-      {/* Header — Change 4: no Refresh button */}
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)' }}>Orders</h1>
       </div>
 
-      {/* Change 6: filters + status tabs in one toolbar row */}
+      {/* Toolbar: status tabs + search + date range */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
-        {/* Status tabs */}
         <div style={{ display: 'flex', gap: 6 }}>
           {STATUSES.map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{
@@ -877,71 +748,18 @@ export default function OrdersPage() {
               color:      filter === s ? '#fff' : 'var(--brown-800)',
               fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
             }}>{s}</button>
-=======
-    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brown-800)' }}>Orders</h1>
-        <Button variant="outline" size="sm" onClick={load}>Refresh</Button>
-      </div>
-
-      <div style={{ display: 'flex', gap: 10, marginBottom: 26, flexWrap: 'wrap' }}>
-        {STATUSES.map(s => (
-          <button key={s} onClick={() => setFilter(s)} style={{
-            padding: '10px 22px', borderRadius: 'var(--radius-full)', border: 'none',
-            background: filter === s ? 'var(--gradient-primary)' : 'var(--brown-100)',
-            color:      filter === s ? '#fff' : 'var(--brown-800)',
-            fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 200ms ease',
-            boxShadow: filter === s ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
-          }}>{s}</button>
-        ))}
-      </div>
-
-      {loading && orders.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-faint)' }}>Loading orders...</div>
-      ) : orders.length === 0 ? (
-        <EmptyState icon="📋" title={`No ${filter.toLowerCase()} orders`} subtitle="Orders will appear here" />
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
-          {orders.map(order => (
-            <Card key={order.id} onClick={() => setSelectedId(order.id)}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontWeight: 700, color: 'var(--brown-800)', fontSize: 15 }}>{order.orderNumber}</span>
-                <Badge status={order.status} />
-              </div>
-              <div style={{ fontSize: 12.5, color: 'var(--text-muted)', marginBottom: 10 }}>
-                {order.type?.replace('_', ' ')}
-                {order.payment ? ` | ${order.payment.method}` : ''}
-              </div>
-              <div style={{ fontSize: 13.5, color: 'var(--text-mid)', marginBottom: 10 }}>
-                {order.items?.slice(0, 2).map(i => i.menuItem?.name).join(', ')}
-                {order.items?.length > 2 ? ` +${order.items.length - 2} more` : ''}
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-700)', fontWeight: 700, fontSize: 17 }}>
-                  P{Number(order.totalAmount).toFixed(2)}
-                </span>
-                <span style={{ fontSize: 11.5, color: 'var(--text-faint)' }}>
-                  {new Date(order.createdAt).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' })}
-                  {' | '}
-                  {order.cashier?.name}
-                </span>
-              </div>
-            </Card>
->>>>>>> origin/POS-and-UI
           ))}
         </div>
 
-        {/* Search */}
         <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
           <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none' }}>🔍</span>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search orders…"
-            style={{ ...inputStyle, paddingLeft: 32, paddingTop: 8, paddingBottom: 8, boxSizing: 'border-box' }} />
+            style={{ ...inputStyle, paddingLeft: 32, paddingTop: 8, paddingBottom: 8, fontSize: 13, boxSizing: 'border-box' }} />
           {search && (
             <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}>✕</button>
           )}
         </div>
 
-        {/* Date range */}
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
           <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>From</span>
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
@@ -963,7 +781,7 @@ export default function OrdersPage() {
         </div>
       )}
 
-      {/* Change 5: list takes remaining height */}
+      {/* List */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {loading && orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-faint)' }}>Loading orders...</div>
@@ -972,7 +790,6 @@ export default function OrdersPage() {
         ) : (
           <>
             <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* List header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'var(--brown-50)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>
                 <div style={{ width: 74, flexShrink: 0 }}>Actions</div>
                 <div style={{ flex: 1 }}>Order</div>
@@ -980,8 +797,6 @@ export default function OrdersPage() {
                 <div style={{ flexShrink: 0, minWidth: 140, textAlign: 'right' }}>Date & Time</div>
                 <div style={{ flexShrink: 0, width: 80, textAlign: 'right' }}>Status</div>
               </div>
-
-              {/* Scrollable rows */}
               <div style={{ overflowY: 'auto', flex: 1 }}>
                 {paginated.map(order => (
                   <OrderRow
@@ -993,8 +808,6 @@ export default function OrdersPage() {
                 ))}
               </div>
             </div>
-
-            {/* Change 1: pagination controls */}
             <Pagination page={page} totalPages={totalPages} onChange={setPage} />
           </>
         )}

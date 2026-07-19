@@ -444,13 +444,8 @@ export default function UsersPage() {
   )
 }
 
-<<<<<<< HEAD
-const lbl = { fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }
-const actionBtn = { background: 'none', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }
-=======
 const lbl = { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }
 const actionBtn = {
   background: '#fff', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)',
   cursor: 'pointer', padding: '7px 11px', fontSize: 14, transition: 'all 180ms ease',
 }
->>>>>>> origin/POS-and-UI
