@@ -974,7 +974,7 @@ export default function POSPage() {
       {/* ── Sidebar (desktop / laptop) — fixed, only the order list scrolls ── */}
       <aside className="kiosk-sidebar">
         <div className="kiosk-sidebar-header">
-          <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 18, marginBottom: 12 }}>Your Order</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 18, marginBottom: 12 }}>Orders</h2>
           <div style={{ display: 'flex', gap: 6 }}>
             {['DINE_IN', 'TAKEOUT'].map(t => (
               <button key={t} onClick={() => setOrderType(t)} style={{
