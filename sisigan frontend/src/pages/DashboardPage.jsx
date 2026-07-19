@@ -145,63 +145,88 @@ function downloadExcel(data, periodLabel, branchLabel) {
 
 //   dedicated Excel export for the itemized Sales Report (all meals bought in the range)
 function downloadSalesReportExcel(data, periodLabel, branchLabel) {
-  const s = data?.summary || {}
-  const wb = XLSX.utils.book_new()
+  const s     = data?.summary || {}
+  const wb    = XLSX.utils.book_new()
 
-  const summaryRows = [
-    { Metric: 'Period', Value: periodLabel },
-    { Metric: 'Branch', Value: branchLabel },
-    { Metric: 'Total Sales (PHP)', Value: Number(s.totalSales || 0) },
-    { Metric: 'Completed Orders', Value: Number(s.totalOrders || 0) },
-  ]
-  const wsSummary = XLSX.utils.json_to_sheet(summaryRows)
-  wsSummary['!cols'] = [{ wch: 26 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary')
-
-  const items = data?.bestSellers || []
+  // All items sorted by qty descending (remove any top-10 limit)
+  const items = (data?.allSellers || data?.bestSellers || [])
   const totalQty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
 
   const rows = [
+    // 1. Establishment name
+    ["Harvey's Sisigan"],
+    [],
+    // 2. Report title + meta
     ["Sales Report"],
+    ["Range:", periodLabel],
+    ["Branch:", branchLabel],
+    ["Generated:", new Date().toLocaleString("en-PH")],
     [],
-    ["Range", periodLabel],
-    ["Branch", branchLabel],
-    ["Generated", new Date().toLocaleString("en-PH")],
+    ["TOTAL SALES (PHP)", Number(s.totalSales || 0)],
+    ["TOTAL MEALS SOLD",  totalQty],
     [],
-    ["TOTAL SALES", Number(s.totalSales || 0)],
-    ["TOTAL MEALS SOLD", totalQty],
-    [],
+    // 3. Table header
     ["#", "MEAL / ITEM", "QTY SOLD", "REVENUE (PHP)"],
   ]
 
-  // Add all meals
-  items.forEach((item, index) => {
-    rows.push([
-      index + 1,
-      item.name,
-      Number(item.qty || 0),
-      Number(item.revenue || 0),
-    ])
+  // 4. All items (no limit)
+  items.forEach((item, i) => {
+    rows.push([i + 1, item.name, Number(item.qty || 0), Number(item.revenue || 0)])
   })
 
-  // Total row
-  rows.push([
-    "",
-    "Total",
-    totalQty,
-    Number(s.totalSales || 0),
-  ])
+  // 5. Total row
+  rows.push(["", "TOTAL", totalQty, Number(s.totalSales || 0)])
 
   const wsItems = XLSX.utils.aoa_to_sheet(rows)
 
-  wsItems["!cols"] = [
-    { wch: 6 },
-    { wch: 35 },
-    { wch: 12 },
-    { wch: 18 },
-  ]
+  // ── Styling ──────────────────────────────────────────
+  // Column widths
+  wsItems['!cols'] = [{ wch: 6 }, { wch: 38 }, { wch: 14 }, { wch: 20 }]
 
-  XLSX.utils.book_append_sheet(wb, wsItems, "Sales Report")
+  // Merge A1:D1 for establishment name
+  wsItems['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }]
+
+  // Bold + large font for establishment name (A1)
+  if (wsItems['A1']) {
+    wsItems['A1'].s = {
+      font:      { bold: true, sz: 32, name: 'Arial' },
+      alignment: { horizontal: 'center', vertical: 'center' },
+    }
+  }
+
+  // Bold for "Sales Report" (A3)
+  if (wsItems['A3']) {
+    wsItems['A3'].s = { font: { bold: true, sz: 14 } }
+  }
+
+  // Bold for totals row labels (A8, A9)
+  ;['A8', 'A9'].forEach(cell => {
+    if (wsItems[cell]) wsItems[cell].s = { font: { bold: true } }
+  })
+
+  // Bold + background for table header row (row 11, index 10)
+  ;['A11', 'B11', 'C11', 'D11'].forEach(cell => {
+    if (wsItems[cell]) {
+      wsItems[cell].s = {
+        font:    { bold: true, color: { rgb: '78350F' } },
+        fill:    { fgColor: { rgb: 'FEF3C7' } },
+        border: {
+          bottom: { style: 'medium', color: { rgb: 'D97706' } },
+        },
+      }
+    }
+  })
+
+  // Bold + underline total row (last row)
+  const lastRow = rows.length
+  ;['B', 'C', 'D'].forEach(col => {
+    const cell = `${col}${lastRow}`
+    if (wsItems[cell]) {
+      wsItems[cell].s = { font: { bold: true } }
+    }
+  })
+
+  XLSX.utils.book_append_sheet(wb, wsItems, 'Sales Report')
 
   const slug = periodLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')
   XLSX.writeFile(wb, `sales_report_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
@@ -210,7 +235,7 @@ function downloadSalesReportExcel(data, periodLabel, branchLabel) {
 //   separate HTML builder for the itemized "Sales Report" (all meals bought in range)
 function buildSalesReportHTML(data, periodLabel, branchLabel) {
   const s = data?.summary || {}
-  const items = data?.bestSellers || []
+  const items = data?.allSellers || data?.bestSellers || []
   const totalQty = items.reduce((sum, it) => sum + Number(it.qty || 0), 0)
 
   return `<!DOCTYPE html>
@@ -476,7 +501,7 @@ function SalesReportModal({ branchId, branches, branchLabel, isOwner, onClose })
     setEnd(today)
   }
 
-  const items = reportData?.bestSellers || []
+  const items = reportData?.allSellers || reportData?.bestSellers || []
   const totalQty = items.reduce((sum, it) => sum + Number(it.qty || 0), 0)
   const isValidRange = start && end && start <= end
 

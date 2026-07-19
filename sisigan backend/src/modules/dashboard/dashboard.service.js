@@ -95,10 +95,8 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       itemSalesMap[id].revenue += Number(item.subtotal);
     }
   }
-  const bestSellers = Object.values(itemSalesMap)
-    .sort((a, b) => b.qty - a.qty)
-    .slice(0, 10);
-
+  const allSellers = Object.values(itemSalesMap).sort((a, b) => b.qty - a.qty)
+  const bestSellers = allSellers.slice(0, 10);
   const categoryMap = {};
   for (const order of completedOrders) {
     for (const item of order.items) {
@@ -152,6 +150,7 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       cancelledCount,
     },
     bestSellers,
+    allSellers,
     salesByCategory,
     salesTrend,
     salesByBranch,
