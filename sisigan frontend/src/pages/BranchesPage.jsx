@@ -31,8 +31,8 @@ function BranchModal({ editBranch, onClose, onSaved }) {
   }
 
   return (
-    <Modal title={isEdit ? '✏️ Edit Branch' : '🏪 New Branch'} onClose={onClose} width={420}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Modal title={isEdit ? '✏️ Edit Branch' : '🏪 New Branch'} onClose={onClose} width={440}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Input
           label="Branch Name *"
           value={form.name}
@@ -60,7 +60,7 @@ function BranchModal({ editBranch, onClose, onSaved }) {
 
         {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
           <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
           <Button variant="primary" fullWidth disabled={loading} onClick={save}>
             {loading ? 'Saving…' : isEdit ? 'Save Changes' : '+ Create Branch'}
@@ -101,13 +101,13 @@ export default function BranchesPage() {
   const inactive = branches.filter(b => !b.isActive)
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: '0 auto' }}>
+    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
 
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)' }}>Branches</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brown-800)' }}>Branches</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>
             {active.length} active · {inactive.length} inactive
           </p>
         </div>
@@ -115,7 +115,10 @@ export default function BranchesPage() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 24 }}>
+      <div style={{
+        display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+        gap: 16, marginBottom: 28,
+      }}>
         {[
           { label: 'Total Branches', value: branches.length,  icon: '🏪' },
           { label: 'Active',         value: active.length,    icon: '✅' },
@@ -123,16 +126,21 @@ export default function BranchesPage() {
           { label: 'Total Staff',    value: branches.reduce((s, b) => s + (b._count?.users || 0), 0), icon: '👥' },
         ].map(s => (
           <div key={s.label} style={{
-            flex: 1, background: 'var(--cream)', border: '1.5px solid var(--border)',
-            borderRadius: 'var(--radius-lg)', padding: '16px 20px',
-            display: 'flex', alignItems: 'center', gap: 14,
+            background: 'var(--cream)', border: '1.5px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', padding: '22px 24px',
+            display: 'flex', alignItems: 'center', gap: 16,
+            boxShadow: 'var(--shadow-sm)',
           }}>
-            <span style={{ fontSize: 28 }}>{s.icon}</span>
+            <div style={{
+              width: 52, height: 52, borderRadius: 'var(--radius-md)',
+              background: 'var(--brown-100)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0,
+            }}>{s.icon}</div>
             <div>
-              <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--brown-800)' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, fontFamily: 'var(--font-display)', color: 'var(--brown-800)' }}>
                 {s.value}
               </div>
-              <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
+              <div style={{ fontSize: 11.5, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>
                 {s.label}
               </div>
             </div>
@@ -146,35 +154,37 @@ export default function BranchesPage() {
       ) : branches.length === 0 ? (
         <EmptyState icon="🏪" title="No branches yet" subtitle="Create your first branch above" />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           {branches.map(branch => (
             <div key={branch.id} style={{
               background: 'var(--cream)',
               border: `1.5px solid ${branch.isActive ? 'var(--border)' : 'var(--border-light)'}`,
               borderRadius: 'var(--radius-lg)',
-              padding: '18px 22px',
-              display: 'flex', alignItems: 'center', gap: 16,
+              padding: '22px 26px',
+              display: 'flex', alignItems: 'center', gap: 20,
               opacity: branch.isActive ? 1 : 0.6,
+              boxShadow: 'var(--shadow-sm)',
+              flexWrap: 'wrap',
             }}>
 
               {/* Icon */}
               <div style={{
-                width: 48, height: 48, borderRadius: 'var(--radius-md)',
+                width: 56, height: 56, borderRadius: 'var(--radius-md)',
                 background: branch.isActive ? 'var(--brown-100)' : 'var(--border)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, flexShrink: 0,
+                fontSize: 28, flexShrink: 0,
               }}>
                 🏪
               </div>
 
               {/* Info */}
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--brown-800)', fontFamily: 'var(--font-display)' }}>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6, flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, fontSize: 18, color: 'var(--brown-800)', fontFamily: 'var(--font-display)' }}>
                     {branch.name}
                   </span>
                   <span style={{
-                    fontSize: 11, fontWeight: 700, padding: '2px 10px',
+                    fontSize: 11, fontWeight: 700, padding: '4px 12px',
                     borderRadius: 'var(--radius-full)',
                     background: branch.isActive ? 'var(--green-light)' : 'var(--red-light)',
                     color: branch.isActive ? 'var(--green-dark)' : 'var(--red-dark)',
@@ -182,38 +192,40 @@ export default function BranchesPage() {
                     {branch.isActive ? 'Active' : 'Inactive'}
                   </span>
                 </div>
-                <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>
                   📍 {branch.address}, {branch.city}
                 </div>
                 {branch.contactNo && (
-                  <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 2 }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 4 }}>
                     📞 {branch.contactNo}
                   </div>
                 )}
               </div>
 
               {/* Stats */}
-              <div style={{ display: 'flex', gap: 20, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 28, flexShrink: 0 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--brown-700)' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brown-700)' }}>
                     {branch._count?.users || 0}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Staff</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Staff</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--brown-700)' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--brown-700)' }}>
                     {branch._count?.orders || 0}
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Orders</div>
+                  <div style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 700 }}>Orders</div>
                 </div>
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                 <button
                   onClick={() => setEditBranch(branch)}
                   style={actionBtn}
                   title="Edit branch"
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--brown-50)'; e.currentTarget.style.borderColor = 'var(--brown-300)' }}
+                  onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = 'var(--border)' }}
                 >
                   ✏️
                 </button>
@@ -256,6 +268,7 @@ export default function BranchesPage() {
 
 const actionBtn = {
   background: '#fff', border: '1.5px solid var(--border)',
-  borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-  padding: '6px 10px', fontSize: 15,
+  borderRadius: 'var(--radius-md)', cursor: 'pointer',
+  padding: '9px 13px', fontSize: 16,
+  transition: 'all 180ms ease',
 }

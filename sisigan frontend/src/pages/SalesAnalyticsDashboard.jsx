@@ -14,25 +14,26 @@ const API = "http://localhost:8000/api";
 const NODE_API = "http://localhost:5000/api";
 
 const C = {
-  // Main brand colors
-  primary:   "#8B3A0E", // dark brown-orange (navbar/title/buttons)
-  secondary: "#D9A15B", // warm gold
-  forecast:  "#A65E2E", // medium brown accent
-  conf:      "#E8C9A7", // soft beige highlight
+  // Main brand colors — aligned to the app's orange/brown palette
+  primary:   "#b45309", // brown-600 (navbar/title/buttons)
+  secondary: "#d97706", // brown-500 (warm gold)
+  forecast:  "#9a3412", // brown-700 accent
+  conf:      "#fef3c7", // brown-100 soft highlight
 
   // UI colors
-  grid:      "#E7D7C8", // soft border/grid
-  text:      "#5A2A0C", // dark brown text
-  muted:     "#9B8A7A", // muted warm gray-brown
+  grid:      "#e5d0b0", // border
+  text:      "#1c1917", // text-dark
+  muted:     "#78716c", // text-muted
 
   // Backgrounds
-  cardBg:    "#FFFDFB", // almost white cream
-  pageBg:    "#F8F1E9", // warm beige background
+  cardBg:    "#fffdf9", // cream
+  pageBg:    "#fff8f0", // brown-50
 
   // Extra colors
-  success:   "#8C9A5B",
-  danger:    "#B94A48",
+  success:   "#15803d",
+  danger:    "#dc2626",
 
+  gradient:  "linear-gradient(135deg, #b45309 0%, #d97706 100%)",
 };
 
 const fmt = (n) => n?.toLocaleString() ?? "—";
@@ -83,12 +84,12 @@ function LoadingOverlay({ message }) {
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 999,
-      background: "rgba(249,250,251,0.93)",
+      background: "rgba(255,248,240,0.94)",
       display: "flex", flexDirection: "column",
       alignItems: "center", justifyContent: "center", gap: 20,
     }}>
       <div style={{
-        width: 52, height: 52,
+        width: 56, height: 56,
         border: `5px solid ${C.grid}`,
         borderTopColor: C.forecast,
         borderRadius: "50%",
@@ -104,9 +105,9 @@ function LoadingOverlay({ message }) {
 // ─── Inline spinner (inside cards) ───────────────────────────────────────────
 function Spinner() {
   return (
-    <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+    <div style={{ display: "flex", justifyContent: "center", padding: 44 }}>
       <div style={{
-        width: 32, height: 32,
+        width: 34, height: 34,
         border: `4px solid ${C.grid}`,
         borderTopColor: C.primary,
         borderRadius: "50%",
@@ -119,22 +120,23 @@ function Spinner() {
 function KPICard({ label, value, sub, color }) {
   return (
     <div style={{
-      background: C.cardBg, borderRadius: 12, padding: "20px 24px",
-      border: `1px solid ${C.grid}`,
-      boxShadow: "none",
+      background: C.cardBg, borderRadius: 16, padding: "22px 26px",
+      border: `1.5px solid ${C.grid}`,
+      boxShadow: "0 1px 4px rgba(120,53,15,0.06)",
+      flex: 1, minWidth: 200,
     }}>
       <div style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1 }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 800, color: color || C.text, marginTop: 4 }}>{value}</div>
-      {sub && <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>{sub}</div>}
+      <div style={{ fontSize: 28, fontWeight: 800, color: color || C.text, marginTop: 6 }}>{value}</div>
+      {sub && <div style={{ fontSize: 12.5, color: C.muted, marginTop: 6 }}>{sub}</div>}
     </div>
   );
 }
 
 function SectionHeader({ title, sub }) {
   return (
-    <div style={{ marginBottom: 16 }}>
+    <div style={{ marginBottom: 18 }}>
       <h2 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: C.text }}>{title}</h2>
-      {sub && <p style={{ margin: "4px 0 0", fontSize: 12, color: C.muted }}>{sub}</p>}
+      {sub && <p style={{ margin: "5px 0 0", fontSize: 12.5, color: C.muted }}>{sub}</p>}
     </div>
   );
 }
@@ -142,9 +144,10 @@ function SectionHeader({ title, sub }) {
 function Card({ children, style }) {
   return (
     <div style={{
-      background: C.cardBg, borderRadius: 12, padding: 24,
-      border: `1px solid ${C.grid}`,
-      boxShadow: "none",
+      background: C.cardBg, borderRadius: 16, padding: 26,
+      border: `1.5px solid ${C.grid}`,
+      boxShadow: "0 1px 4px rgba(120,53,15,0.06)",
+      ...style,
     }}>
       {children}
     </div>
@@ -157,8 +160,8 @@ function Select({ value, onChange, options }) {
       value={value}
       onChange={(e) => onChange(e.target.value)}
       style={{
-        padding: "6px 12px", borderRadius: 8,
-        border: `1px solid ${C.grid}`, fontSize: 13,
+        padding: "9px 14px", borderRadius: 10,
+        border: `1.5px solid ${C.grid}`, fontSize: 13,
         background: "#fff", color: C.text, cursor: "pointer",
       }}
     >
@@ -194,10 +197,10 @@ function OverviewSection() {
   if (loading) return <Spinner />;
   if (!data) return null;
   return (
-    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
       <KPICard label="Total Orders"       value={fmt(data.totalOrders)}    sub={`${data.dateRange.start} – ${data.dateRange.end}`} />
       <KPICard label="Avg Daily Orders"   value={fmt(data.avgDailyOrders)} sub="All days combined" />
-      <KPICard label="YoY Growth 2024→25" value={`${data.yoyGrowth > 0 ? "+" : ""}${data.yoyGrowth}%`} color={data.yoyGrowth >= 0 ? "#16a34a" : "#dc2626"} />
+      <KPICard label="YoY Growth 2024→25" value={`${data.yoyGrowth > 0 ? "+" : ""}${data.yoyGrowth}%`} color={data.yoyGrowth >= 0 ? "#15803d" : "#dc2626"} />
       <KPICard label="Weekend Multiplier" value={`${data.weekendMultiplier}×`} sub={`WE avg ${fmt(data.weekendAvg)} vs WD ${fmt(data.weekdayAvg)}`} color={C.secondary} />
       <KPICard label="Best Day"           value={fmt(data.bestDay.orders)} sub={`${data.bestDay.date} (${data.bestDay.dayOfWeek})`} color={C.primary} />
     </div>
@@ -214,12 +217,12 @@ function DailyTrendSection() {
 
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
         <SectionHeader title="Daily Orders Trend" sub="Each point = one day's total orders" />
         <Select value={year} onChange={setYear} options={["2022","2023","2024","2025","2026"]} />
       </div>
       {loading ? <Spinner /> : (
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="og" x1="0" y1="0" x2="0" y2="1">
@@ -231,7 +234,7 @@ function DailyTrendSection() {
             <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v?.slice(5)} />
             <YAxis tick={{ fontSize: 11 }} />
             <Tooltip formatter={(v) => [fmt(v), "Orders"]} />
-            <Area dataKey="orders" stroke={C.primary} fill="url(#og)" strokeWidth={1.5} dot={false} />
+            <Area dataKey="orders" stroke={C.primary} fill="url(#og)" strokeWidth={2} dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}
@@ -245,13 +248,13 @@ function WeeklySummarySection() {
   return (
     <Card>
       <SectionHeader title="Average Orders by Day of Week" sub="Historical averages" />
-      <ResponsiveContainer width="100%" height={240}>
+      <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data ?? []}>
           <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
           <XAxis dataKey="dayOfWeek" tick={{ fontSize: 12 }} tickFormatter={(v) => v.slice(0,3)} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip formatter={(v, n) => [fmt(v), n === "avg" ? "Avg Orders" : n]} />
-          <Bar dataKey="avg" name="Avg Orders" fill={C.primary} radius={[6,6,0,0]}
+          <Bar dataKey="avg" name="Avg Orders" fill={C.primary} radius={[8,8,0,0]}
             label={{ position: "top", fontSize: 11, fill: C.muted, formatter: (v) => Math.round(v) }} />
         </BarChart>
       </ResponsiveContainer>
@@ -267,28 +270,30 @@ function TopItemsSection() {
   );
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 12 }}>
         <SectionHeader title="Top 15 Menu Items" sub="Average daily units sold" />
         <div style={{ display: "flex", gap: 8 }}>
           {["All","Weekday","Weekend"].map((opt) => (
             <button key={opt} onClick={() => setFilter(opt)} style={{
-              padding: "6px 14px", borderRadius: 20, fontSize: 12, cursor: "pointer",
+              padding: "8px 18px", borderRadius: 999, fontSize: 12.5, cursor: "pointer",
               border: "none",
-              background: filter === opt ? C.primary : C.grid,
+              background: filter === opt ? C.gradient : C.conf,
               color:      filter === opt ? "#fff"    : C.text,
-              fontWeight: filter === opt ? 700       : 400,
+              fontWeight: 700,
+              boxShadow: filter === opt ? "0 4px 14px rgba(180,83,9,0.28)" : "none",
+              transition: "all 200ms ease",
             }}>{opt}</button>
           ))}
         </div>
       </div>
       {loading ? <Spinner /> : (
-        <ResponsiveContainer width="100%" height={320}>
+        <ResponsiveContainer width="100%" height={340}>
           <BarChart data={data ?? []} layout="vertical" margin={{ left: 20 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
             <XAxis type="number" tick={{ fontSize: 11 }} />
             <YAxis type="category" dataKey="item" width={180} tick={{ fontSize: 11 }} />
             <Tooltip formatter={(v) => [v, "Avg Daily"]} />
-            <Bar dataKey="avgDaily" fill={C.secondary} radius={[0,6,6,0]} />
+            <Bar dataKey="avgDaily" fill={C.secondary} radius={[0,8,8,0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -309,11 +314,11 @@ function MonthlySection() {
     });
     return row;
   });
-  const colors = [C.primary, C.secondary, "#16a34a", "#4a90d9", C.forecast];
+  const colors = [C.primary, C.secondary, "#15803d", "#4a90d9", C.forecast];
   return (
     <Card>
       <SectionHeader title="Monthly Sales by Year" sub="Year-over-year comparison" />
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={280}>
         <LineChart data={pivoted}>
           <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
@@ -322,7 +327,7 @@ function MonthlySection() {
           <Legend />
           {years.map((y, i) => (
             <Line key={y} type="monotone" dataKey={y}
-              stroke={colors[i % colors.length]} strokeWidth={2} dot={false} connectNulls />
+              stroke={colors[i % colors.length]} strokeWidth={2.5} dot={false} connectNulls />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -349,7 +354,7 @@ function ForecastSection() {
 
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 14 }}>
         <SectionHeader
           title="Demand Forecast — Total Orders"
           sub={data
@@ -366,12 +371,13 @@ function ForecastSection() {
             onClick={handleRun}
             disabled={loading}
             style={{
-              padding: "8px 20px", borderRadius: 8, border: "none",
-              background: loading ? C.grid : C.forecast,
+              padding: "10px 22px", borderRadius: 999, border: "none",
+              background: loading ? C.grid : C.gradient,
               color: loading ? C.muted : "#fff",
               fontWeight: 700, fontSize: 13,
               cursor: loading ? "not-allowed" : "pointer",
-              transition: "background .15s",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(180,83,9,0.28)",
+              transition: "all 200ms ease",
             }}
           >
             {loading ? "Running…" : "▶ Run Forecast"}
@@ -382,11 +388,11 @@ function ForecastSection() {
       {/* Idle state */}
       {!triggered && (
         <div style={{
-          height: 220, display: "flex", flexDirection: "column",
+          height: 230, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 12,
-          color: C.muted, borderRadius: 8, background: C.pageBg,
+          color: C.muted, borderRadius: 14, background: C.pageBg,
         }}>
-          <span style={{ fontSize: 40 }}>🔮</span>
+          <span style={{ fontSize: 42 }}>🔮</span>
           <span style={{ fontSize: 14 }}>Click <strong>Run Forecast</strong> to generate predictions</span>
         </div>
       )}
@@ -394,28 +400,38 @@ function ForecastSection() {
       {/* Loading state */}
       {triggered && loading && (
         <div style={{
-          height: 220, display: "flex", flexDirection: "column",
+          height: 230, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 16,
         }}>
           <div style={{
-            width: 44, height: 44,
+            width: 46, height: 46,
             border: `4px solid ${C.grid}`, borderTopColor: C.forecast,
             borderRadius: "50%", animation: "spin 0.75s linear infinite",
           }} />
           <span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>Training model &amp; generating forecast…</span>
         </div>
       )}
+<<<<<<< HEAD
       
       
+=======
+
+      {/* Error state */}
+      {triggered && !loading && error && (
+        <div style={{ padding: 36, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
+          ⚠️ Could not reach the Python service — make sure it's running on port 8000.
+        </div>
+      )}
+>>>>>>> origin/POS-and-UI
 
       {/* Result */}
       {triggered && !loading && data && (
         <>
-          <ResponsiveContainer width="100%" height={290}>
+          <ResponsiveContainer width="100%" height={310}>
             <AreaChart data={chartData}>
               <defs>
                 <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%"  stopColor={C.conf} stopOpacity={0.55} />
+                  <stop offset="5%"  stopColor={C.conf} stopOpacity={0.75} />
                   <stop offset="95%" stopColor={C.conf} stopOpacity={0.05} />
                 </linearGradient>
               </defs>
@@ -431,7 +447,7 @@ function ForecastSection() {
               <Line dataKey="predicted" stroke={C.forecast} strokeWidth={2.5} dot={false} name="Forecast" type="monotone" />
             </AreaChart>
           </ResponsiveContainer>
-          <p style={{ fontSize: 12, color: C.muted, marginTop: 10, marginBottom: 0 }}>
+          <p style={{ fontSize: 12.5, color: C.muted, marginTop: 12, marginBottom: 0 }}>
             Shaded band = 95% confidence interval. Weekends forecast higher (~{fmt(data?.forecast?.find(d => d.dayType === "Weekend")?.predicted ?? 0)} orders).
           </p>
         </>
@@ -454,7 +470,7 @@ function ItemForecastSection() {
 
   return (
     <Card>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, flexWrap: "wrap", gap: 14 }}>
         <SectionHeader
           title="Per-Item Demand Forecast"
           sub={data ? `MAE: ${data.modelMetrics?.mae} units/day` : "Select an item and horizon, then click Run"}
@@ -474,11 +490,13 @@ function ItemForecastSection() {
             onClick={handleRun}
             disabled={loading}
             style={{
-              padding: "8px 20px", borderRadius: 8, border: "none",
-              background: loading ? C.grid : C.secondary,
+              padding: "10px 22px", borderRadius: 999, border: "none",
+              background: loading ? C.grid : `linear-gradient(135deg, ${C.secondary} 0%, ${C.primary} 100%)`,
               color: loading ? C.muted : "#fff",
               fontWeight: 700, fontSize: 13,
               cursor: loading ? "not-allowed" : "pointer",
+              boxShadow: loading ? "none" : "0 4px 14px rgba(180,83,9,0.28)",
+              transition: "all 200ms ease",
             }}
           >
             {loading ? "Running…" : "▶ Run Forecast"}
@@ -488,22 +506,22 @@ function ItemForecastSection() {
 
       {!triggered && (
         <div style={{
-          height: 200, display: "flex", flexDirection: "column",
+          height: 210, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 10,
-          color: C.muted, borderRadius: 8, background: C.pageBg,
+          color: C.muted, borderRadius: 14, background: C.pageBg,
         }}>
-          <span style={{ fontSize: 36 }}>🍽️</span>
+          <span style={{ fontSize: 38 }}>🍽️</span>
           <span style={{ fontSize: 14 }}>Pick a menu item and click <strong>Run Forecast</strong></span>
         </div>
       )}
 
       {triggered && loading && (
         <div style={{
-          height: 200, display: "flex", flexDirection: "column",
+          height: 210, display: "flex", flexDirection: "column",
           alignItems: "center", justifyContent: "center", gap: 14,
         }}>
           <div style={{
-            width: 38, height: 38,
+            width: 40, height: 40,
             border: `4px solid ${C.grid}`, borderTopColor: C.secondary,
             borderRadius: "50%", animation: "spin 0.75s linear infinite",
           }} />
@@ -512,13 +530,18 @@ function ItemForecastSection() {
       )}
 
       {triggered && !loading && error && (
+<<<<<<< HEAD
         <div style={{ padding: 32, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
           
+=======
+        <div style={{ padding: 36, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
+          ⚠️ Could not reach the Python service — make sure it's running on port 8000.
+>>>>>>> origin/POS-and-UI
         </div>
       )}
 
       {triggered && !loading && data && (
-        <ResponsiveContainer width="100%" height={260}>
+        <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={data?.forecast ?? []}>
             <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
             <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
@@ -527,7 +550,7 @@ function ItemForecastSection() {
             <Area
               type="monotone" dataKey="predicted"
               stroke={C.secondary} fill={C.secondary}
-              fillOpacity={0.2} strokeWidth={2} dot={false}
+              fillOpacity={0.2} strokeWidth={2.5} dot={false}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -783,21 +806,23 @@ export default function SalesAnalyticsDashboard() {
   if (pageLoading) return <LoadingOverlay message="Loading Analytics…" />;
 
   return (
-    <div style={{ minHeight: "100vh", background: C.pageBg, fontFamily: "'Inter', sans-serif" }}>
+    <div style={{ minHeight: "100vh", background: C.pageBg, fontFamily: "'DM Sans', system-ui, sans-serif" }}>
 
-      {/* Tab bar — sits flush under the existing Navbar (top: 70px) */}
+      {/* Tab bar — pill-style, matches the redesigned Navbar */}
       <div style={{
         background: "#fff", borderBottom: `1px solid ${C.grid}`,
-        padding: "0 32px", display: "flex", gap: 4,
-        position: "sticky", top: 70, zIndex: 90,
+        padding: "16px 32px", display: "flex", gap: 8,
+        position: "sticky", top: "var(--nav-height, 78px)", zIndex: 90,
       }}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)} style={{
-            padding: "14px 20px", background: "none", border: "none",
-            borderBottom: `3px solid ${activeTab === t.id ? C.primary : "transparent"}`,
-            color:      activeTab === t.id ? C.primary : C.muted,
-            fontWeight: activeTab === t.id ? 700       : 400,
-            fontSize: 14, cursor: "pointer", transition: "all .15s",
+            padding: "11px 20px", borderRadius: 999,
+            border: "none",
+            background: activeTab === t.id ? C.gradient : C.conf,
+            color:      activeTab === t.id ? "#fff" : C.text,
+            fontWeight: 700,
+            fontSize: 14, cursor: "pointer", transition: "all 200ms ease",
+            boxShadow: activeTab === t.id ? "0 4px 14px rgba(180,83,9,0.28)" : "none",
           }}>
             {t.label}
           </button>
@@ -805,22 +830,22 @@ export default function SalesAnalyticsDashboard() {
       </div>
 
       {/* Page content */}
-      <div style={{ padding: "28px 32px", maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ width: "95%", maxWidth: 1800, margin: "0 auto", padding: "28px 0" }}>
         {activeTab === "overview" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
             <OverviewSection />
             <WeeklySummarySection />
           </div>
         )}
         {activeTab === "trends" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
             <DailyTrendSection />
             <MonthlySection />
           </div>
         )}
         {activeTab === "items" && <TopItemsSection />}
         {activeTab === "forecast" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 26 }}>
             <ForecastSection />
             <ItemForecastSection />
             <TrendingItemsSection />

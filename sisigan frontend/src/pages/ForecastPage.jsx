@@ -269,13 +269,13 @@ function ExportDropdown({ onExcelDownload, onPDFDownload, disabled }) {
         onClick={() => setOpen(o => !o)}
         disabled={disabled}
         style={{
-          padding: '7px 14px', borderRadius: 'var(--radius-full)',
+          padding: '9px 18px', borderRadius: 'var(--radius-full)',
           border: '1.5px solid var(--border)',
           background: open ? 'var(--brown-100)' : '#fff',
-          color: 'var(--brown-800)', fontWeight: 700, fontSize: 12,
+          color: 'var(--brown-800)', fontWeight: 700, fontSize: 12.5,
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.5 : 1,
-          display: 'flex', alignItems: 'center', gap: 6, transition: 'all 0.15s',
+          display: 'flex', alignItems: 'center', gap: 7, transition: 'all 180ms ease',
         }}
       >
         Download {open ? '▲' : '▼'}
@@ -285,24 +285,24 @@ function ExportDropdown({ onExcelDownload, onPDFDownload, disabled }) {
         <div style={{
           position: 'absolute', top: '110%', right: 0, zIndex: 200,
           background: 'var(--cream)', border: '1.5px solid var(--border)',
-          borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 24px rgba(120,53,15,0.12)',
-          minWidth: 190, overflow: 'hidden',
+          borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+          minWidth: 200, overflow: 'hidden',
         }}>
           {options.map(({ icon, label, action }) => (
             <button
               key={label}
               onClick={action}
               style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                width: '100%', padding: '11px 16px',
+                display: 'flex', alignItems: 'center', gap: 12,
+                width: '100%', padding: '13px 18px',
                 border: 'none', background: 'transparent',
-                color: 'var(--brown-800)', fontWeight: 600, fontSize: 13,
-                cursor: 'pointer', textAlign: 'left', transition: 'background 0.1s',
+                color: 'var(--brown-800)', fontWeight: 600, fontSize: 13.5,
+                cursor: 'pointer', textAlign: 'left', transition: 'background 150ms ease',
               }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--brown-50)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
             >
-              <span style={{ fontSize: 16 }}>{icon}</span>
+              <span style={{ fontSize: 17 }}>{icon}</span>
               {label}
             </button>
           ))}
@@ -344,19 +344,19 @@ function CustomRangePicker({ startDate, endDate, minDate, maxDate, onChange, onC
     <div ref={ref} style={{
       position: 'absolute', top: '110%', right: 0, zIndex: 100,
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 32px rgba(120,53,15,0.12)',
-      padding: 18, minWidth: 280,
+      borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)',
+      padding: 20, minWidth: 290,
     }}>
-      <div style={{ marginBottom: 10, fontWeight: 700, fontSize: 13, color: 'var(--brown-800)' }}>
+      <div style={{ marginBottom: 12, fontWeight: 700, fontSize: 13.5, color: 'var(--brown-800)' }}>
         Select Date Range
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
           Start Date
           <input type="date" value={localStart} min={minDate} max={localEnd || maxDate}
             onChange={e => setLocalStart(e.target.value)} style={dateInputStyle} />
         </label>
-        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>
+        <label style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>
           End Date
           <input type="date" value={localEnd} min={localStart || minDate} max={maxDate}
             onChange={e => setLocalEnd(e.target.value)} style={dateInputStyle} />
@@ -364,21 +364,21 @@ function CustomRangePicker({ startDate, endDate, minDate, maxDate, onChange, onC
       </div>
       {isValid && (
         <div style={{
-          margin: '10px 0', padding: '7px 10px', background: 'var(--brown-50)',
-          borderRadius: 8, fontSize: 12, color: 'var(--brown-700)', fontWeight: 600,
+          margin: '12px 0', padding: '9px 12px', background: 'var(--brown-50)',
+          borderRadius: 'var(--radius-md)', fontSize: 12.5, color: 'var(--brown-700)', fontWeight: 600,
         }}>
           {nightCount === 0 ? 'Same day' : `${nightCount} day${nightCount !== 1 ? 's' : ''} selected`}
         </div>
       )}
       {localStart && localEnd && localStart > localEnd && (
-        <div style={{ margin: '8px 0', fontSize: 12, color: '#dc2626' }}>
+        <div style={{ margin: '10px 0', fontSize: 12.5, color: '#dc2626' }}>
           End date must be after start date.
         </div>
       )}
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
         <button onClick={onClose} style={secondaryBtnStyle}>Cancel</button>
         <button onClick={handleApply} disabled={!isValid}
-          style={{ ...primaryBtnStyle, opacity: isValid ? 1 : 0.45, cursor: isValid ? 'pointer' : 'not-allowed' }}>
+          style={{ ...primaryBtnStyle, opacity: isValid ? 1 : 0.45, cursor: isValid ? 'pointer' : 'not-allowed', boxShadow: isValid ? primaryBtnStyle.boxShadow : 'none' }}>
           Apply
         </button>
       </div>
@@ -387,18 +387,20 @@ function CustomRangePicker({ startDate, endDate, minDate, maxDate, onChange, onC
 }
 
 const dateInputStyle = {
-  display: 'block', marginTop: 4, width: '100%', padding: '7px 10px',
-  border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 13,
+  display: 'block', marginTop: 5, width: '100%', padding: '9px 12px',
+  border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 13.5,
   color: 'var(--brown-800)', background: '#fff', boxSizing: 'border-box', cursor: 'pointer',
 }
 const primaryBtnStyle = {
-  flex: 1, padding: '8px 0', borderRadius: 'var(--radius-full)', border: 'none',
-  background: 'var(--brown-600)', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  flex: 1, padding: '10px 0', borderRadius: 'var(--radius-full)', border: 'none',
+  background: 'var(--gradient-primary)', color: '#fff', fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+  boxShadow: '0 4px 14px rgba(180,83,9,0.28)', transition: 'all 180ms ease',
 }
 const secondaryBtnStyle = {
-  flex: 1, padding: '8px 0', borderRadius: 'var(--radius-full)',
-  border: '1.5px solid var(--border)', background: 'transparent',
-  color: 'var(--brown-700)', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+  flex: 1, padding: '10px 0', borderRadius: 'var(--radius-full)',
+  border: '1.5px solid var(--border)', background: '#fff',
+  color: 'var(--brown-700)', fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
+  transition: 'all 180ms ease',
 }
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -406,21 +408,22 @@ function StatCard({ label, value, sub, color = 'var(--brown-800)', icon }) {
   return (
     <div style={{
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', padding: '20px 22px', flex: 1, minWidth: 180,
+      borderRadius: 'var(--radius-lg)', padding: '24px 26px', flex: 1, minWidth: 200,
+      boxShadow: 'var(--shadow-sm)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={{
             fontSize: 12, fontWeight: 700, color: 'var(--text-muted)',
-            textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6,
+            textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8,
           }}>{label}</div>
           <div style={{
-            fontFamily: 'var(--font-display)', fontSize: 28,
+            fontFamily: 'var(--font-display)', fontSize: 30,
             fontWeight: 700, color, lineHeight: 1,
           }}>{value}</div>
-          {sub && <div style={{ fontSize: 12, color: 'var(--text-faint)', marginTop: 6 }}>{sub}</div>}
+          {sub && <div style={{ fontSize: 12.5, color: 'var(--text-faint)', marginTop: 8 }}>{sub}</div>}
         </div>
-        {icon && <span style={{ fontSize: 28, opacity: 0.7 }}>{icon}</span>}
+        {icon && <span style={{ fontSize: 30, opacity: 0.7 }}>{icon}</span>}
       </div>
     </div>
   )
@@ -430,9 +433,10 @@ function Section({ title, children, style = {} }) {
   return (
     <div style={{
       background: 'var(--cream)', border: '1.5px solid var(--border)',
-      borderRadius: 'var(--radius-lg)', padding: 20, ...style,
+      borderRadius: 'var(--radius-lg)', padding: 24,
+      boxShadow: 'var(--shadow-sm)', ...style,
     }}>
-      <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 15, marginBottom: 16 }}>
+      <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 17, marginBottom: 18, fontWeight: 700 }}>
         {title}
       </h3>
       {children}
@@ -445,9 +449,10 @@ function ChartTooltip({ active, payload, label, prefix = '' }) {
   return (
     <div style={{
       background: '#fff', border: '1px solid var(--border)',
-      borderRadius: 8, padding: '8px 12px', fontSize: 13,
+      borderRadius: 10, padding: '10px 14px', fontSize: 13,
+      boxShadow: 'var(--shadow-md)',
     }}>
-      {label && <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--brown-800)' }}>{label}</div>}
+      {label && <div style={{ fontWeight: 700, marginBottom: 5, color: 'var(--brown-800)' }}>{label}</div>}
       {payload.map((p, i) => (
         <div key={i} style={{ color: p.color || 'var(--brown-600)' }}>
           {p.name}: {prefix}{typeof p.value === 'number'
@@ -572,45 +577,46 @@ export default function ForecastPage() {
     return (
       <div style={{
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        height: '60vh', flexDirection: 'column', gap: 12,
+        height: '60vh', flexDirection: 'column', gap: 14,
       }}>
-        <span style={{ fontSize: 32 }}>📈</span>
-        <span style={{ color: 'var(--text-muted)' }}>Loading forecast dashboard…</span>
+        <span style={{ fontSize: 36 }}>📈</span>
+        <span style={{ color: 'var(--text-muted)', fontSize: 14.5 }}>Loading forecast dashboard…</span>
       </div>
     )
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
       {/* ── Header ── */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        marginBottom: 24, flexWrap: 'wrap', gap: 12,
+        marginBottom: 28, flexWrap: 'wrap', gap: 14,
       }}>
         <div>
           <h1 style={{
-            fontFamily: 'var(--font-display)', fontSize: 24,
-            color: 'var(--brown-800)', marginBottom: 2,
+            fontFamily: 'var(--font-display)', fontSize: 26,
+            color: 'var(--brown-800)', marginBottom: 4,
           }}>
             Forecast Dashboard
           </h1>
-          <p style={{ color: 'var(--text-faint)', fontSize: 12 }}>
+          <p style={{ color: 'var(--text-faint)', fontSize: 12.5 }}>
             Last updated: {formatLastUpdated(lastUpdated)} · Auto-refresh every {AUTO_REFRESH_MS / 1000}s
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {/* Period selector */}
-          <div style={{ display: 'flex', gap: 4, position: 'relative', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, position: 'relative', alignItems: 'center' }}>
             {PERIODS.map(p => (
               <button
                 key={p.value}
                 onClick={() => handlePeriodClick(p.value)}
                 style={{
-                  padding: '7px 14px', borderRadius: 'var(--radius-full)', border: 'none',
-                  background: period === p.value ? 'var(--brown-600)' : 'var(--brown-100)',
+                  padding: '10px 18px', borderRadius: 'var(--radius-full)', border: 'none',
+                  background: period === p.value ? 'var(--gradient-primary)' : 'var(--brown-100)',
                   color: period === p.value ? '#fff' : 'var(--brown-800)',
-                  fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+                  fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 200ms ease',
+                  boxShadow: period === p.value ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
                 }}
               >
                 {p.label}
@@ -621,9 +627,9 @@ export default function ForecastPage() {
               <span
                 onClick={() => setShowRangePicker(true)}
                 style={{
-                  fontSize: 11, fontWeight: 700, color: 'var(--brown-600)',
+                  fontSize: 11.5, fontWeight: 700, color: 'var(--brown-600)',
                   background: 'var(--brown-50)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-full)', padding: '4px 10px',
+                  borderRadius: 'var(--radius-full)', padding: '5px 12px',
                   cursor: 'pointer', whiteSpace: 'nowrap',
                 }}
                 title="Click to change range"
@@ -658,9 +664,9 @@ export default function ForecastPage() {
       {/* ── Hints / Errors ── */}
       {period === 'custom' && (!customStart || !customEnd) && (
         <div style={{
-          marginBottom: 16, background: '#fffbeb', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)', padding: '10px 14px',
-          color: 'var(--brown-700)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8,
+          marginBottom: 18, background: '#fffbeb', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)', padding: '12px 16px',
+          color: 'var(--brown-700)', fontSize: 13.5, display: 'flex', alignItems: 'center', gap: 8,
         }}>
           📅 Pick a start and end date above to see the custom range forecast.
         </div>
@@ -668,26 +674,26 @@ export default function ForecastPage() {
 
       {error && (
         <div style={{
-          marginBottom: 16, background: '#fff7ed', border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)', padding: '10px 12px',
-          color: 'var(--brown-800)', fontSize: 13,
+          marginBottom: 18, background: '#fff7ed', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)', padding: '12px 14px',
+          color: 'var(--brown-800)', fontSize: 13.5,
         }}>
           {error}
         </div>
       )}
 
       {/* ── Stat Cards ── */}
-      <div style={{ display: 'flex', gap: 14, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <StatCard icon="💰" label="Forecast Sales" value={fmtPeso(summary.totalSales)} color="var(--brown-800)" />
         <StatCard icon="📦" label="Forecast Orders" value={summary.totalOrders || 0}
           sub={`${summary.avgOrders.toFixed(0)} avg / day`} />
       </div>
 
       {/* ── Charts ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18, marginBottom: 18 }}>
         <Section title="📈 Forecast Sales Trend">
           {salesTrend.length ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={salesTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="date" tick={{ fontSize: 11 }} />
@@ -702,10 +708,10 @@ export default function ForecastPage() {
 
         <Section title="🥧 Forecast by Category">
           {topCategories.length ? (
-            <ResponsiveContainer width="100%" height={220}>
+            <ResponsiveContainer width="100%" height={280}>
               <PieChart>
                 <Pie data={topCategories} dataKey="value" nameKey="name"
-                  cx="50%" cy="50%" outerRadius={80}
+                  cx="50%" cy="50%" outerRadius={100}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                   labelLine={false}>
                   {topCategories.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
@@ -718,10 +724,10 @@ export default function ForecastPage() {
         </Section>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 18, marginBottom: 18 }}>
         <Section title="🏆 Best Sellers Forecast (by quantity)">
           {bestSellers.length ? (
-            <ResponsiveContainer width="100%" height={240}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart data={bestSellers.slice(0, 6)} layout="vertical" margin={{ left: 10, right: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11 }} />
@@ -736,15 +742,15 @@ export default function ForecastPage() {
 
         <Section title="📋 Forecast Summary">
           {summary.totalOrders > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { label: 'Projected orders', value: summary.totalOrders },
                 { label: 'Projected sales', value: fmtPeso(summary.totalSales) },
                 { label: 'Average per day', value: `${summary.avgOrders.toFixed(0)} orders` },
               ].map(({ label, value }) => (
-                <div key={label} style={{ padding: '10px 12px', background: 'var(--brown-50)', borderRadius: 10 }}>
+                <div key={label} style={{ padding: '12px 14px', background: 'var(--brown-50)', borderRadius: 'var(--radius-md)' }}>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{label}</div>
-                  <div style={{ fontWeight: 700, color: 'var(--brown-800)', fontSize: 18 }}>{value}</div>
+                  <div style={{ fontWeight: 700, color: 'var(--brown-800)', fontSize: 19 }}>{value}</div>
                 </div>
               ))}
             </div>
@@ -756,12 +762,12 @@ export default function ForecastPage() {
       {bestSellers.length > 0 && (
         <Section title="📋 Forecast Best Sellers Detail">
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ background: 'var(--brown-50)' }}>
                   {['#', 'Item', 'Qty Forecast', 'Revenue'].map(h => (
                     <th key={h} style={{
-                      padding: '9px 12px',
+                      padding: '11px 14px',
                       textAlign: h === '#' || h === 'Qty Forecast' || h === 'Revenue' ? 'center' : 'left',
                       fontWeight: 700, color: 'var(--text-muted)',
                       borderBottom: '1px solid var(--border)',
@@ -773,12 +779,12 @@ export default function ForecastPage() {
               <tbody>
                 {bestSellers.map((item, i) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', color: 'var(--text-faint)', fontWeight: 700 }}>
                       {i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}
                     </td>
-                    <td style={{ padding: '9px 12px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
-                    <td style={{ padding: '9px 12px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmtPeso(item.revenue)}</td>
+                    <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text-dark)' }}>{item.name}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--brown-700)' }}>{item.qty}</td>
+                    <td style={{ padding: '11px 14px', textAlign: 'center', fontWeight: 700, color: 'var(--green)' }}>{fmtPeso(item.revenue)}</td>
                   </tr>
                 ))}
               </tbody>

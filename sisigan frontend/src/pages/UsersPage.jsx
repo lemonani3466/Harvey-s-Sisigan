@@ -15,7 +15,7 @@ function RoleBadge({ role }) {
   return (
     <span style={{
       background: s.bg, color: s.color,
-      padding: '2px 10px', borderRadius: 'var(--radius-full)',
+      padding: '4px 12px', borderRadius: 'var(--radius-full)',
       fontSize: 11, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase',
     }}>{role}</span>
   )
@@ -101,8 +101,8 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
   }
 
   return (
-    <Modal title={isEdit ? 'Edit Account' : 'Create Account'} onClose={onClose} width={420}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <Modal title={isEdit ? 'Edit Account' : 'Create Account'} onClose={onClose} width={440}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Input label="Full Name" value={form.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Juan dela Cruz" />
         <Input label="Email" type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@sisigan.ph" />
 
@@ -126,15 +126,15 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
 
         <div>
           <label style={lbl}>Role</label>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 10 }}>
             {assignableRoles.map(r => (
               <button key={r} onClick={() => set('role', r)} style={{
-                flex: 1, padding: '9px 4px',
+                flex: 1, padding: '11px 4px',
                 border: `2px solid ${form.role === r ? 'var(--brown-600)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-md)',
-                background: form.role === r ? 'var(--brown-600)' : '#fff',
+                background: form.role === r ? 'var(--gradient-primary)' : '#fff',
                 color: form.role === r ? '#fff' : 'var(--brown-700)',
-                fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+                fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 180ms ease',
               }}>{r}</button>
             ))}
           </div>
@@ -145,7 +145,7 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
           <div>
             <label style={lbl}>Branch</label>
             <select value={form.branchId} onChange={e => set('branchId', e.target.value)}
-              style={{ width: '100%', padding: '10px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14, background: '#fff', outline: 'none' }}>
+              style={{ width: '100%', padding: '12px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)', fontSize: 14.5, background: '#fff', outline: 'none', cursor: 'pointer' }}>
               {branches.map(b => <option key={b.id} value={b.id}>{b.name} — {b.city}</option>)}
             </select>
           </div>
@@ -153,7 +153,7 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
 
         {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
 
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 12 }}>
           <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
           <Button
             variant="primary"
@@ -186,18 +186,18 @@ function ResetPasswordModal({ user, onClose }) {
   }
 
   return (
-    <Modal title={`Reset Password — ${user.name}`} onClose={onClose} width={360}>
+    <Modal title={`Reset Password — ${user.name}`} onClose={onClose} width={380}>
       {done ? (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>✅</div>
-          <div style={{ fontWeight: 700, color: 'var(--green)', marginBottom: 16 }}>Password updated!</div>
+        <div style={{ textAlign: 'center', padding: '24px 0' }}>
+          <div style={{ fontSize: 44, marginBottom: 12 }}>✅</div>
+          <div style={{ fontWeight: 700, color: 'var(--green)', marginBottom: 18, fontSize: 15 }}>Password updated!</div>
           <Button variant="primary" fullWidth onClick={onClose}>Close</Button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Input label="New Password" type="password" value={pwd} onChange={e => setPwd(e.target.value)} placeholder="Minimum 6 characters" />
           {error && <p style={{ color: 'var(--red)', fontSize: 13 }}>{error}</p>}
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 12 }}>
             <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
             <Button variant="primary" fullWidth disabled={loading || pwd.length < 6} onClick={save}>
               {loading ? 'Updating…' : 'Reset Password'}
@@ -257,11 +257,11 @@ export default function UsersPage() {
   const fmtDateTime = (value) => new Date(value).toLocaleString('en-PH')
 
   return (
-    <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26, flexWrap: 'wrap', gap: 14 }}>
         <div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)' }}>Accounts</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 2 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brown-800)' }}>Accounts</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 4 }}>
             {me?.role === 'OWNER' ? 'Manage accounts across all branches' : `Manage accounts for ${me?.branch?.name}`}
           </p>
         </div>
@@ -269,13 +269,14 @@ export default function UsersPage() {
       </div>
 
       {/* Role filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, flexWrap: 'wrap' }}>
         {['ALL', 'OWNER', 'MANAGER', 'CASHIER'].map(r => (
           <button key={r} onClick={() => setFilterRole(r)} style={{
-            padding: '7px 16px', borderRadius: 'var(--radius-full)', border: 'none',
-            background: filterRole === r ? 'var(--brown-600)' : 'var(--brown-100)',
+            padding: '10px 20px', borderRadius: 'var(--radius-full)', border: 'none',
+            background: filterRole === r ? 'var(--gradient-primary)' : 'var(--brown-100)',
             color: filterRole === r ? '#fff' : 'var(--brown-800)',
-            fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+            fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 200ms ease',
+            boxShadow: filterRole === r ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
           }}>{r} {r !== 'ALL' ? `(${users.filter(u => u.role === r).length})` : `(${users.length})`}</button>
         ))}
       </div>
@@ -286,9 +287,14 @@ export default function UsersPage() {
       ) : filtered.length === 0 ? (
         <EmptyState icon="👤" title="No accounts found" />
       ) : (
-        <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
           {/* Table header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px 140px 110px 120px', padding: '10px 16px', background: 'var(--brown-50)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr 120px 160px 110px 130px',
+            padding: '14px 22px', background: 'var(--brown-50)', borderBottom: '1px solid var(--border)',
+            fontSize: 11.5, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5,
+            position: 'sticky', top: 0, zIndex: 1,
+          }}>
             <span>Name</span>
             <span>Email</span>
             <span>Role</span>
@@ -299,23 +305,24 @@ export default function UsersPage() {
 
           {filtered.map((u, i) => (
             <div key={u.id} style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr 120px 140px 110px 120px',
-              padding: '12px 16px', alignItems: 'center',
+              display: 'grid', gridTemplateColumns: '1fr 1fr 120px 160px 110px 130px',
+              padding: '16px 22px', alignItems: 'center',
               borderBottom: i < filtered.length - 1 ? '1px solid var(--border-light)' : 'none',
               opacity: !u.isActive ? 0.55 : 1,
-              background: u.id === me?.id ? 'rgba(180,83,9,0.03)' : undefined,
+              background: u.id === me?.id ? 'rgba(180,83,9,0.03)' : i % 2 === 1 ? 'rgba(180,83,9,0.015)' : undefined,
+              transition: 'background 150ms ease',
             }}>
               <div>
-                <div style={{ fontWeight: 600, color: 'var(--text-dark)', fontSize: 14 }}>
-                  {u.name} {u.id === me?.id && <span style={{ fontSize: 10, color: 'var(--brown-500)' }}>(you)</span>}
+                <div style={{ fontWeight: 600, color: 'var(--text-dark)', fontSize: 14.5 }}>
+                  {u.name} {u.id === me?.id && <span style={{ fontSize: 10.5, color: 'var(--brown-500)' }}>(you)</span>}
                 </div>
               </div>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.email}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>{u.email}</div>
               <div><RoleBadge role={u.role} /></div>
-              <div style={{ fontSize: 12, color: 'var(--text-mid)' }}>{u.branch?.name || '—'}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-mid)' }}>{u.branch?.name || '—'}</div>
               <div>
                 <span style={{
-                  fontSize: 11, fontWeight: 700, padding: '2px 10px',
+                  fontSize: 11, fontWeight: 700, padding: '4px 12px',
                   borderRadius: 'var(--radius-full)',
                   background: u.isActive ? 'var(--green-light)' : 'var(--red-light)',
                   color: u.isActive ? 'var(--green-dark)' : 'var(--red-dark)',
@@ -323,7 +330,7 @@ export default function UsersPage() {
                   {u.isActive ? 'Active' : 'Inactive'}
                 </span>
               </div>
-              <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                 {/* Manager can only act on Cashiers — hide buttons for Owner/Manager rows */}
                 {(me?.role === 'OWNER' || u.role === 'CASHIER') && (
                   <>
@@ -351,25 +358,25 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 20, background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
-        <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', background: 'var(--brown-50)' }}>
-          <h3 style={{ margin: 0, fontSize: 14, color: 'var(--brown-800)' }}>Login / Logout Audit Trail</h3>
-          <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--text-muted)' }}>
+      <div style={{ marginTop: 26, background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ padding: '16px 22px', borderBottom: '1px solid var(--border)', background: 'var(--brown-50)' }}>
+          <h3 style={{ margin: 0, fontSize: 15, color: 'var(--brown-800)', fontFamily: 'var(--font-display)' }}>Login / Logout Audit Trail</h3>
+          <p style={{ margin: '5px 0 0', fontSize: 12.5, color: 'var(--text-muted)' }}>
             Latest authentication activity for accounts in your scope.
           </p>
         </div>
 
         {authLogs.length === 0 ? (
-          <div style={{ padding: 24, color: 'var(--text-faint)', fontSize: 13 }}>
+          <div style={{ padding: 28, color: 'var(--text-faint)', fontSize: 13.5, textAlign: 'center' }}>
             No login or logout activity yet.
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13.5 }}>
               <thead>
                 <tr style={{ background: 'var(--brown-50)' }}>
                   {['When', 'Account', 'Role', 'Action', 'Branch'].map(h => (
-                    <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                    <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                       {h}
                     </th>
                   ))}
@@ -377,18 +384,21 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {authLogs.map((log, i) => (
-                  <tr key={log.id} style={{ borderBottom: i < authLogs.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
-                    <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{fmtDateTime(log.createdAt)}</td>
-                    <td style={{ padding: '9px 12px' }}>
+                  <tr key={log.id} style={{
+                    borderBottom: i < authLogs.length - 1 ? '1px solid var(--border-light)' : 'none',
+                    background: i % 2 === 1 ? 'rgba(180,83,9,0.015)' : undefined,
+                  }}>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-mid)' }}>{fmtDateTime(log.createdAt)}</td>
+                    <td style={{ padding: '12px 16px' }}>
                       <div style={{ fontWeight: 600, color: 'var(--text-dark)' }}>{log.user?.name || 'Unknown user'}</div>
                       <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{log.user?.email || '-'}</div>
                     </td>
-                    <td style={{ padding: '9px 12px' }}><RoleBadge role={log.role} /></td>
-                    <td style={{ padding: '9px 12px' }}>
+                    <td style={{ padding: '12px 16px' }}><RoleBadge role={log.role} /></td>
+                    <td style={{ padding: '12px 16px' }}>
                       <span style={{
                         fontSize: 11,
                         fontWeight: 700,
-                        padding: '2px 10px',
+                        padding: '4px 12px',
                         borderRadius: 'var(--radius-full)',
                         background: log.action === 'LOGIN' ? 'var(--green-light)' : 'var(--brown-100)',
                         color: log.action === 'LOGIN' ? 'var(--green-dark)' : 'var(--brown-800)',
@@ -396,7 +406,7 @@ export default function UsersPage() {
                         {log.action}
                       </span>
                     </td>
-                    <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{log.branch?.name || '-'}</td>
+                    <td style={{ padding: '12px 16px', color: 'var(--text-mid)' }}>{log.branch?.name || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -434,5 +444,13 @@ export default function UsersPage() {
   )
 }
 
+<<<<<<< HEAD
 const lbl = { fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }
 const actionBtn = { background: 'none', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: '4px 8px', fontSize: 14 }
+=======
+const lbl = { fontSize: 12, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }
+const actionBtn = {
+  background: '#fff', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)',
+  cursor: 'pointer', padding: '7px 11px', fontSize: 14, transition: 'all 180ms ease',
+}
+>>>>>>> origin/POS-and-UI
