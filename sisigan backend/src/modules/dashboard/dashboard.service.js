@@ -95,9 +95,24 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       itemSalesMap[id].revenue += Number(item.subtotal);
     }
   }
+  const bestSellers = Object.values(itemSalesMap)
+    .sort((a, b) => b.qty - a.qty)
+    .slice(0, 10);
+
+  // Seed every category at 0 first, so categories with no completed sales
+  // in this period still show up in the chart instead of being silently
+  // dropped. Completed orders below only ever add to these.
+  const allCategories = await prisma.category.findMany({
+    select: { name: true },
+  });
+
   const allSellers = Object.values(itemSalesMap).sort((a, b) => b.qty - a.qty)
   const bestSellers = allSellers.slice(0, 10);
   const categoryMap = {};
+  for (const c of allCategories) {
+    categoryMap[c.name] = { name: c.name, value: 0, qty: 0 };
+  }
+
   for (const order of completedOrders) {
     for (const item of order.items) {
       const catName = item.menuItem?.category?.name || 'Uncategorized';
@@ -106,7 +121,8 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
       categoryMap[catName].qty += item.quantity;
     }
   }
-  const salesByCategory = Object.values(categoryMap).sort((a, b) => b.value - a.value);
+  // Sort by value desc, alphabetical tiebreak (same convention as salesByBranch)
+  const salesByCategory = Object.values(categoryMap).sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
 
   const trendMap = {};
   for (const order of completedOrders) {
@@ -119,18 +135,45 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
 
   let salesByBranch = [];
   if (requestingUser.role === 'OWNER' && !scopedBranchId) {
+    // Seed every active branch at 0 first, so branches with no completed
+    // orders in this period still show up in the chart instead of being
+    // silently dropped. Completed orders below only ever add to these.
+    const allBranches = await prisma.branch.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+    });
+
     const branchMap = {};
+    for (const b of allBranches) {
+      branchMap[b.id] = { id: b.id, name: b.name, sales: 0, orders: 0 };
+    }
+
     for (const order of completedOrders) {
-      const bName = order.branch?.name || 'Unknown';
       const bId = order.branch?.id;
+      const bName = order.branch?.name || 'Unknown';
       if (!branchMap[bId]) branchMap[bId] = { id: bId, name: bName, sales: 0, orders: 0 };
       branchMap[bId].sales += Number(order.totalAmount);
       branchMap[bId].orders += 1;
     }
-    salesByBranch = Object.values(branchMap).sort((a, b) => b.sales - a.sales);
+
+    // Sort by sales desc, but keep it stable-ish for ties (alphabetical by name)
+    salesByBranch = Object.values(branchMap).sort((a, b) => b.sales - a.sales || a.name.localeCompare(b.name));
   }
 
+  // Seed every payment method at 0 first, so methods with no completed
+  // payments in this period still show up in the chart instead of being
+  // silently dropped. Completed orders below only ever add to these.
+  //
+  // NOTE: PaymentMethod is a Prisma enum, not a table, so it can't be
+  // queried with findMany. Confirm this list matches the `enum PaymentMethod`
+  // block in your schema.prisma and adjust if needed.
+  const ALL_PAYMENT_METHODS = ['CASH', 'GCASH', 'CARD'];
+
   const paymentMap = {};
+  for (const m of ALL_PAYMENT_METHODS) {
+    paymentMap[m] = { method: m, count: 0, total: 0 };
+  }
+
   for (const order of completedOrders) {
     if (!order.payment) continue;
     const m = order.payment.method;
@@ -138,7 +181,8 @@ async function getDashboard({ period = 'today', from, to, branchId }, requesting
     paymentMap[m].count += 1;
     paymentMap[m].total += Number(order.payment.amountPaid);
   }
-  const paymentBreakdown = Object.values(paymentMap).sort((a, b) => b.total - a.total);
+  // Sort by total desc, alphabetical tiebreak (same convention as salesByBranch/salesByCategory)
+  const paymentBreakdown = Object.values(paymentMap).sort((a, b) => b.total - a.total || a.method.localeCompare(b.method));
 
   return {
     period: { label: period, start, end },
@@ -209,4 +253,117 @@ async function getAuthLogs({ period = 'today', from, to, branchId, limit = 30 },
   });
 }
 
-module.exports = { getDashboard, getBranches, getAuthLogs };
+/**
+ * Given forecasted quantities for a set of menu items (from the Python
+ * analytics service's /api/trending-items-forecast), work out how much
+ * of each ingredient that demand will consume, and flag anything that
+ * won't have enough stock on hand.
+ *
+ * @param {Object} params
+ * @param {Array<{itemName: string, forecastQty: number}>} params.items
+ * @param {number} [params.branchId] - OWNER only; scopes stock to one branch.
+ *   If omitted, stock is summed across all branches (useful for an
+ *   org-wide view). MANAGER/CASHIER are always scoped to their own branch.
+ */
+async function getIngredientRecommendations({ items, branchId }, requestingUser) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return { recommendations: [] };
+  }
+
+  const scopedBranchId =
+    requestingUser.role === 'OWNER'
+      ? (branchId ? Number(branchId) : null)
+      : requestingUser.branchId;
+
+  // 1. Resolve the forecasted item names to their recipes
+  const menuItems = await prisma.menuItem.findMany({
+    where: { name: { in: items.map((i) => i.itemName) } },
+    include: { recipes: { include: { ingredient: true } } },
+  });
+
+  const forecastByName = Object.fromEntries(
+    items.map((i) => [i.itemName, Number(i.forecastQty) || 0])
+  );
+
+  // 2. Sum required quantity per ingredient across all forecasted items
+  //    e.g. if both Sisilog and CM1 use egg, their egg requirements combine.
+  const requiredMap = {}; // ingredientId -> { ingredient, requiredQty }
+  for (const mi of menuItems) {
+    const forecastQty = forecastByName[mi.name] || 0;
+    if (forecastQty <= 0) continue;
+
+    for (const recipe of mi.recipes) {
+      const key = recipe.ingredientId;
+      if (!requiredMap[key]) {
+        requiredMap[key] = { ingredient: recipe.ingredient, requiredQty: 0 };
+      }
+      requiredMap[key].requiredQty += Number(recipe.quantity) * forecastQty;
+    }
+  }
+
+  const ingredientIds = Object.keys(requiredMap).map(Number);
+  if (ingredientIds.length === 0) {
+    return {
+      recommendations: [],
+      note: 'No recipes found for the forecasted items — link ingredients under Menu > Recipes first.',
+    };
+  }
+
+  // 3. Pull current stock for just those ingredients
+  const stockItems = await prisma.inventoryItem.findMany({
+    where: {
+      ingredientId: { in: ingredientIds },
+      isActive: true,
+      ...(scopedBranchId && { branchId: scopedBranchId }),
+    },
+  });
+
+  const stockByIngredient = {};
+  for (const s of stockItems) {
+    if (!stockByIngredient[s.ingredientId]) {
+      stockByIngredient[s.ingredientId] = { quantity: 0, minThreshold: 0 };
+    }
+    // Summed across branches when no single branch is scoped
+    stockByIngredient[s.ingredientId].quantity += Number(s.quantity);
+    // Conservative: keep the highest minThreshold seen across branches
+    stockByIngredient[s.ingredientId].minThreshold = Math.max(
+      stockByIngredient[s.ingredientId].minThreshold,
+      Number(s.minThreshold)
+    );
+  }
+
+  // 4. Build the recommendation list
+  const recommendations = Object.entries(requiredMap).map(([ingId, { ingredient, requiredQty }]) => {
+    const stock = stockByIngredient[ingId] || { quantity: 0, minThreshold: 0 };
+
+    // Stock "available" for forecasted demand excludes the safety buffer
+    // (minThreshold) you already keep in reserve.
+    const availableAboveThreshold = Math.max(0, stock.quantity - stock.minThreshold);
+    const shortfall = Math.max(0, requiredQty - availableAboveThreshold);
+
+    let status = 'OK';
+    if (shortfall > 0 && stock.quantity <= stock.minThreshold) status = 'CRITICAL';
+    else if (shortfall > 0) status = 'LOW';
+
+    return {
+      ingredientId: Number(ingId),
+      name: ingredient.name,
+      unit: ingredient.unit,
+      currentStock: Number(stock.quantity.toFixed(3)),
+      minThreshold: Number(stock.minThreshold.toFixed(3)),
+      requiredForForecast: Number(requiredQty.toFixed(3)),
+      suggestedRestockQty: Number(shortfall.toFixed(3)),
+      status, // 'OK' | 'LOW' | 'CRITICAL'
+    };
+  });
+
+  // Worst first: CRITICAL, then LOW, then OK; biggest shortfall first within each
+  const statusRank = { CRITICAL: 0, LOW: 1, OK: 2 };
+  recommendations.sort(
+    (a, b) => statusRank[a.status] - statusRank[b.status] || b.suggestedRestockQty - a.suggestedRestockQty
+  );
+
+  return { recommendations };
+}
+
+module.exports = { getDashboard, getBranches, getAuthLogs, getIngredientRecommendations };

@@ -35,7 +35,7 @@ function StatCard({ label, value, sub, tone = 'var(--brown-800)' }) {
 function Section({ title, right, children }) {
   return (
     <div style={{ background: 'var(--cream)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 20 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
         <h3 style={{ fontFamily: 'var(--font-display)', color: 'var(--brown-800)', fontSize: 15 }}>{title}</h3>
         {right}
       </div>
@@ -147,37 +147,48 @@ function AddIngredientModal({ isOwner, branches, branchId, onClose, onSaved }) {
   )
 }
 
-function AdjustStockModal({ item, onClose, onSaved }) {
-  const [mode, setMode] = useState(item.presetMode || 'ADD') // ADD | DEDUCT | SET
+// Adds stock to one existing inventory item. Kept separate from the read-only
+// ingredients table below — this is the only place on the page that writes
+// quantity. It always ADDS to the current amount; it never lets you set an
+// exact value or deduct, since that's not this section's job.
+function AddQuantitySection({ inventory, isOwner, onSaved }) {
+  const [itemId, setItemId] = useState('')
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
-  const currentQty = Number(item.quantity || 0)
+  const selected = useMemo(
+    () => inventory.find((i) => String(i.id) === String(itemId)) || null,
+    [inventory, itemId]
+  )
 
-  async function save() {
-    setSaving(true)
+  async function submit() {
     setError('')
+    setSuccess('')
+
+    const addAmount = Number(amount)
+    if (!selected) { setError('Select an ingredient first.'); return }
+    if (!amount || Number.isNaN(addAmount) || addAmount <= 0) {
+      setError('Enter an amount greater than 0.')
+      return
+    }
+
+    setSaving(true)
     try {
-      const value = Number(amount)
-      if (Number.isNaN(value) || value < 0) {
-        setError('Amount must be a non-negative number.')
-        setSaving(false)
-        return
-      }
+      const currentQty = Number(selected.quantity)
+      const nextQty = currentQty + addAmount
 
-      let nextQty = currentQty
-      if (mode === 'ADD') nextQty = currentQty + value
-      if (mode === 'DEDUCT') nextQty = Math.max(0, currentQty - value)
-      if (mode === 'SET') nextQty = value
-
-      await inventoryApi.update(item.id, {
+      await inventoryApi.update(selected.id, {
         quantity: nextQty,
-        note: note.trim() || `Stock ${mode.toLowerCase()} adjustment`,
+        note: note.trim() || 'Stock added',
       })
 
-      onSaved()
+      setSuccess(`Added ${addAmount} ${selected.ingredient?.unit} to ${selected.ingredient?.name}.`)
+      setAmount('')
+      setNote('')
+      await onSaved()
     } catch (e) {
       setError(e.message)
     } finally {
@@ -186,47 +197,27 @@ function AdjustStockModal({ item, onClose, onSaved }) {
   }
 
   return (
-    <Modal title={`Adjust Stock - ${item.ingredient?.name}`} onClose={onClose} width={420}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ padding: '10px 12px', background: 'var(--brown-50)', borderRadius: 'var(--radius-md)', fontSize: 13 }}>
-          Current: <strong>{currentQty.toFixed(3)} {item.ingredient?.unit}</strong>
-        </div>
-
+    <Section title="Add Quantity">
+      <div style={{ display: 'grid', gridTemplateColumns: isOwner ? '2fr 1fr 1fr auto' : '2fr 1fr auto', gap: 10, alignItems: 'end' }}>
         <div>
-          <label style={lbl}>Action</label>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {[
-              { key: 'ADD', label: 'Refill (+)' },
-              { key: 'DEDUCT', label: 'Deduct (-)' },
-              { key: 'SET', label: 'Set Exact' },
-            ].map((m) => (
-              <button
-                key={m.key}
-                onClick={() => setMode(m.key)}
-                style={{
-                  flex: 1,
-                  padding: '8px 6px',
-                  border: `1.5px solid ${mode === m.key ? 'var(--brown-600)' : 'var(--border)'}`,
-                  borderRadius: 'var(--radius-md)',
-                  background: mode === m.key ? 'var(--brown-600)' : '#fff',
-                  color: mode === m.key ? '#fff' : 'var(--brown-700)',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                }}
-              >
-                {m.label}
-              </button>
+          <label style={lbl}>Ingredient</label>
+          <select value={itemId} onChange={(e) => setItemId(e.target.value)} style={selectStyle}>
+            <option value="">Select ingredient...</option>
+            {inventory.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.ingredient?.name} {isOwner ? `— ${item.branch?.name}` : ''} (current: {Number(item.quantity).toFixed(3)} {item.ingredient?.unit})
+              </option>
             ))}
-          </div>
+          </select>
         </div>
 
         <Input
-          label={mode === 'SET' ? `Set Quantity (${item.ingredient?.unit})` : `Amount (${item.ingredient?.unit})`}
+          label={`Amount to Add${selected ? ` (${selected.ingredient?.unit})` : ''}`}
           type="number"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
         />
+
         <Input
           label="Note (optional)"
           value={note}
@@ -234,16 +225,14 @@ function AdjustStockModal({ item, onClose, onSaved }) {
           placeholder="e.g. Received new stock"
         />
 
-        {error && <div style={{ color: 'var(--red)', fontSize: 13 }}>{error}</div>}
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" fullWidth disabled={saving || amount === ''} onClick={save}>
-            {saving ? 'Saving...' : 'Apply'}
-          </Button>
-        </div>
+        <Button variant="primary" disabled={saving || !itemId || !amount} onClick={submit}>
+          {saving ? 'Adding...' : 'Add Stock'}
+        </Button>
       </div>
-    </Modal>
+
+      {error && <div style={{ color: 'var(--red)', fontSize: 13, marginTop: 10 }}>{error}</div>}
+      {success && <div style={{ color: 'var(--green-dark)', fontSize: 13, marginTop: 10 }}>{success}</div>}
+    </Section>
   )
 }
 
@@ -258,7 +247,7 @@ export default function InventoryPage() {
   const [report, setReport] = useState(null)
   const [error, setError] = useState('')
   const [showAdd, setShowAdd] = useState(false)
-  const [adjustItem, setAdjustItem] = useState(null)
+  const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
     if (!isOwner) return
@@ -293,6 +282,17 @@ export default function InventoryPage() {
     [inventory]
   )
 
+  // Filters the "All Ingredients" table by ingredient name and category as the user types.
+  const filteredInventory = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase()
+    if (!term) return inventory
+    return inventory.filter((item) => {
+      const name = item.ingredient?.name?.toLowerCase() || ''
+      const category = item.ingredient?.category?.toLowerCase() || ''
+      return name.includes(term) || category.includes(term)
+    })
+  }, [inventory, searchTerm])
+
   const categoryLowChartData = useMemo(() => {
     const m = {}
     for (const item of inventory) {
@@ -317,11 +317,6 @@ export default function InventoryPage() {
 
   const onSavedIngredient = async () => {
     setShowAdd(false)
-    await load()
-  }
-
-  const onSavedAdjustment = async () => {
-    setAdjustItem(null)
     await load()
   }
 
@@ -360,15 +355,32 @@ export default function InventoryPage() {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <Section title="All Ingredients List">
+        <AddQuantitySection inventory={inventory} isOwner={isOwner} onSaved={load} />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <Section
+          title="All Ingredients List"
+          right={
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name or category..."
+              style={searchInputStyle}
+            />
+          }
+        >
           {inventory.length === 0 ? (
             <EmptyState icon="??" title="No ingredients yet" subtitle="Add ingredients to start tracking stock" />
+          ) : filteredInventory.length === 0 ? (
+            <EmptyState icon="??" title="No matches" subtitle={`No ingredients match "${searchTerm}"`} />
           ) : (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: 'var(--brown-50)' }}>
-                    {['Ingredient', 'Category', 'Qty', 'Threshold', 'Price', 'Branch', 'Status', 'Actions'].map((h) => (
+                    {['Ingredient', 'Category', 'Qty', 'Threshold', 'Price', 'Branch', 'Status'].map((h) => (
                       <th key={h} style={{ padding: '9px 12px', textAlign: 'left', fontWeight: 700, color: 'var(--text-muted)', borderBottom: '1px solid var(--border)', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                         {h}
                       </th>
@@ -376,10 +388,10 @@ export default function InventoryPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {inventory.map((item, idx) => {
+                  {filteredInventory.map((item, idx) => {
                     const low = Number(item.quantity) <= Number(item.minThreshold)
                     return (
-                      <tr key={item.id} style={{ borderBottom: idx < inventory.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                      <tr key={item.id} style={{ borderBottom: idx < filteredInventory.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                         <td style={{ padding: '9px 12px', fontWeight: 600 }}>{item.ingredient?.name}</td>
                         <td style={{ padding: '9px 12px', color: 'var(--text-mid)' }}>{item.ingredient?.category}</td>
                         <td style={{ padding: '9px 12px' }}>{Number(item.quantity).toFixed(3)} {item.ingredient?.unit}</td>
@@ -390,28 +402,6 @@ export default function InventoryPage() {
                           <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 10px', borderRadius: 'var(--radius-full)', background: low ? 'var(--red-light)' : 'var(--green-light)', color: low ? 'var(--red-dark)' : 'var(--green-dark)' }}>
                             {low ? 'LOW' : 'OK'}
                           </span>
-                        </td>
-                        <td style={{ padding: '9px 12px' }}>
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'ADD' })}
-                              style={{ ...actionBtn, color: 'var(--green-dark)' }}
-                            >
-                              Refill
-                            </button>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'DEDUCT' })}
-                              style={{ ...actionBtn, color: 'var(--red-dark)' }}
-                            >
-                              Deduct
-                            </button>
-                            <button
-                              onClick={() => setAdjustItem({ ...item, presetMode: 'SET' })}
-                              style={actionBtn}
-                            >
-                              Edit
-                            </button>
-                          </div>
                         </td>
                       </tr>
                     )
@@ -497,14 +487,6 @@ export default function InventoryPage() {
           onSaved={onSavedIngredient}
         />
       )}
-
-      {adjustItem && (
-        <AdjustStockModal
-          item={adjustItem}
-          onClose={() => setAdjustItem(null)}
-          onSaved={onSavedAdjustment}
-        />
-      )}
     </div>
   )
 }
@@ -528,12 +510,11 @@ const selectStyle = {
   background: '#fff',
 }
 
-const actionBtn = {
+const searchInputStyle = {
+  padding: '8px 12px',
+  border: '1.5px solid var(--border)',
+  borderRadius: 'var(--radius-md)',
+  fontSize: 13,
   background: '#fff',
-  border: '1px solid var(--border)',
-  borderRadius: 6,
-  cursor: 'pointer',
-  padding: '4px 8px',
-  fontSize: 12,
-  fontWeight: 700,
+  minWidth: 220,
 }

@@ -7,6 +7,12 @@ import {
 
 const API = "http://localhost:8000/api";
 
+// TODO: replace with your real backend base URL / axios instance from
+// src/api/client.js. This is the Express + Prisma backend (port likely
+// 4000/5000, not the Python service above), and it needs the auth token
+// your AuthContext already attaches to other requests.
+const NODE_API = "http://localhost:5000/api";
+
 const C = {
   // Main brand colors
   primary:   "#8B3A0E", // dark brown-orange (navbar/title/buttons)
@@ -160,6 +166,24 @@ function Select({ value, onChange, options }) {
         <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>
       ))}
     </select>
+  );
+}
+
+// Small pill for stock status, reused in the ingredient recommendation table
+function StatusPill({ status }) {
+  const styles = {
+    OK:       { bg: "#EAF0DE", fg: C.success },
+    LOW:      { bg: "#FBF0DD", fg: "#B8770F" },
+    CRITICAL: { bg: "#FBE4E3", fg: C.danger },
+  };
+  const s = styles[status] || styles.OK;
+  return (
+    <span style={{
+      display: "inline-block", padding: "2px 10px", borderRadius: 20,
+      fontSize: 11, fontWeight: 700, background: s.bg, color: s.fg,
+    }}>
+      {status}
+    </span>
   );
 }
 
@@ -381,13 +405,8 @@ function ForecastSection() {
           <span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>Training model &amp; generating forecast…</span>
         </div>
       )}
-
-      {/* Error state */}
-      {triggered && !loading && error && (
-        <div style={{ padding: 32, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
-          ⚠️ Could not reach the Python service — make sure it's running on port 8000.
-        </div>
-      )}
+      
+      
 
       {/* Result */}
       {triggered && !loading && data && (
@@ -494,7 +513,7 @@ function ItemForecastSection() {
 
       {triggered && !loading && error && (
         <div style={{ padding: 32, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
-          ⚠️ Could not reach the Python service — make sure it's running on port 8000.
+          
         </div>
       )}
 
@@ -512,6 +531,237 @@ function ItemForecastSection() {
             />
           </AreaChart>
         </ResponsiveContainer>
+      )}
+    </Card>
+  );
+}
+
+// ─── Trending Items + Ingredient Recommendations ───────────────────────────────
+//
+// Two-step flow, kept as one section since they're one workflow for the user:
+//   1. Ask the Python service to rank items by recent GROWTH (not just
+//      volume), forecast the top N (1-5), and total up each item's
+//      projected demand over the horizon.
+//   2. Hand those {itemName, forecastQty} pairs to the Node backend, which
+//      knows the recipes + current stock (Python has neither), and get
+//      back a restock recommendation per ingredient.
+function TrendingItemsSection() {
+  const [topN, setTopN]           = useState("3");
+  const [days, setDays]           = useState("30");
+  const [triggered, setTriggered] = useState(false);
+
+  const [trendData, setTrendData]     = useState(null);
+  const [trendLoading, setTrendLoading] = useState(false);
+  const [trendError, setTrendError]   = useState(null);
+
+  const [recData, setRecData]         = useState(null);
+  const [recLoading, setRecLoading]   = useState(false);
+  const [recError, setRecError]       = useState(null);
+
+  async function handleRun() {
+    setTriggered(true);
+    setTrendLoading(true);
+    setTrendError(null);
+    setTrendData(null);
+    setRecData(null);
+    setRecError(null);
+
+    // Step 1: trending items + forecast, from the Python analytics service.
+    // Its own try/catch, so a failure here always lands in trendError —
+    // no guessing based on component state.
+    let trend;
+    try {
+      const res = await fetch(`${API}/trending-items-forecast?top_n=${topN}&days=${days}`);
+      if (!res.ok) throw new Error(`Analytics service returned ${res.status} ${res.statusText}`);
+      trend = await res.json();
+      setTrendData(trend);
+    } catch (e) {
+      // "Failed to fetch" here almost always means the Python service on
+      // :8000 isn't running or isn't reachable (CORS/port/host mismatch).
+      setTrendError(e.message);
+      setTrendLoading(false);
+      return;
+    }
+    setTrendLoading(false);
+
+    // Only items that got a real forecast (enough history) go on to
+    // the ingredient step — items with note/no forecast are skipped.
+    const forecastedItems = trend.topItems
+      .filter((i) => i.totalForecastQty != null)
+      .map((i) => ({ itemName: i.item, forecastQty: i.totalForecastQty }));
+
+    if (forecastedItems.length === 0) return;
+
+    // Step 2: ingredient recommendations, from the Node + Prisma backend.
+    // Separate try/catch so its errors never get lost behind step 1's state.
+    // TODO: swap for your authenticated client (adds JWT header, base URL
+    // from src/api/client.js) once dashboard.controller.js / routes.js
+    // expose this endpoint — see integration notes below the component.
+    setRecLoading(true);
+    try {
+      const recRes = await fetch(`${NODE_API}/dashboard/ingredient-recommendations`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: forecastedItems }),
+      });
+      if (!recRes.ok) throw new Error(`Backend returned ${recRes.status} ${recRes.statusText}`);
+      const rec = await recRes.json();
+      setRecData(rec);
+    } catch (e) {
+      setRecError(e.message);
+    } finally {
+      setRecLoading(false);
+    }
+  }
+
+  return (
+    <Card>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 }}>
+        <SectionHeader
+          title="Trending Items & Ingredient Recommendations"
+          sub={trendData
+            ? `Ranked by sales growth · ${trendData.rankedBy}`
+            : "Pick how many trending items to forecast, then click Run"}
+        />
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <Select
+            value={topN}
+            onChange={setTopN}
+            options={[1,2,3,4,5].map((n) => ({ value: String(n), label: `Top ${n} item${n > 1 ? "s" : ""}` }))}
+          />
+          <Select
+            value={days}
+            onChange={setDays}
+            options={[7,14,30,60,90].map((d) => ({ value: String(d), label: `Next ${d} days` }))}
+          />
+          <button
+            onClick={handleRun}
+            disabled={trendLoading || recLoading}
+            style={{
+              padding: "8px 20px", borderRadius: 8, border: "none",
+              background: (trendLoading || recLoading) ? C.grid : C.primary,
+              color: (trendLoading || recLoading) ? C.muted : "#fff",
+              fontWeight: 700, fontSize: 13,
+              cursor: (trendLoading || recLoading) ? "not-allowed" : "pointer",
+            }}
+          >
+            {trendLoading ? "Ranking…" : recLoading ? "Checking stock…" : "▶ Run"}
+          </button>
+        </div>
+      </div>
+
+      {!triggered && (
+        <div style={{
+          height: 180, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center", gap: 10,
+          color: C.muted, borderRadius: 8, background: C.pageBg,
+        }}>
+          <span style={{ fontSize: 36 }}>📈</span>
+          <span style={{ fontSize: 14 }}>Click <strong>Run</strong> to find trending items and check ingredient stock</span>
+        </div>
+      )}
+
+      {triggered && trendLoading && (
+        <div style={{ height: 180, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 14 }}>
+          <div style={{
+            width: 38, height: 38, border: `4px solid ${C.grid}`, borderTopColor: C.primary,
+            borderRadius: "50%", animation: "spin 0.75s linear infinite",
+          }} />
+          <span style={{ fontSize: 13, color: C.muted, fontWeight: 600 }}>Ranking items by growth…</span>
+        </div>
+      )}
+
+      {triggered && !trendLoading && trendError && (
+        <div style={{ padding: 32, textAlign: "center", color: "#dc2626", fontSize: 14 }}>
+          ⚠️ Trending items request failed: {trendError}
+        </div>
+      )}
+
+      {triggered && !trendLoading && trendData && (
+        <>
+          {/* Trending items list */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+            {trendData.topItems.map((it, i) => (
+              <div key={it.item} style={{
+                display: "flex", justifyContent: "space-between", alignItems: "center",
+                padding: "12px 16px", borderRadius: 10, background: C.pageBg,
+                border: `1px solid ${C.grid}`,
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: C.text, fontSize: 14 }}>
+                    #{i + 1} {it.item}
+                  </div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
+                    {it.recentAvgDaily} avg/day recently (was {it.priorAvgDaily})
+                    {it.note && ` · ${it.note}`}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{
+                    fontWeight: 800, fontSize: 15,
+                    color: it.growthPct >= 0 ? C.success : C.danger,
+                  }}>
+                    {it.growthPct >= 0 ? "+" : ""}{it.growthPct}%
+                  </div>
+                  {it.totalForecastQty != null && (
+                    <div style={{ fontSize: 12, color: C.muted }}>
+                      ~{fmt(it.totalForecastQty)} units / {trendData.forecastDays}d
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          
+
+          {recError && (
+            <div style={{ padding: 20, textAlign: "center", color: "#dc2626", fontSize: 13 }}>
+              
+            </div>
+          )}
+
+          {recData && (
+            <div>
+              <SectionHeader
+                title="Ingredient Restock Recommendations"
+                sub="Based on projected consumption for the items above vs. current stock"
+              />
+              {recData.recommendations.length === 0 ? (
+                <div style={{ fontSize: 13, color: C.muted }}>
+                  {recData.note || "No ingredient data found for these items."}
+                </div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: `1px solid ${C.grid}` }}>
+                        {["Ingredient","Status","Current Stock","Needed","Suggested Restock"].map((h) => (
+                          <th key={h} style={{ textAlign: "left", padding: "8px 10px", color: C.muted, fontWeight: 700, fontSize: 11, textTransform: "uppercase" }}>
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {recData.recommendations.map((r) => (
+                        <tr key={r.ingredientId} style={{ borderBottom: `1px solid ${C.grid}` }}>
+                          <td style={{ padding: "10px", fontWeight: 600, color: C.text }}>{r.name}</td>
+                          <td style={{ padding: "10px" }}><StatusPill status={r.status} /></td>
+                          <td style={{ padding: "10px", color: C.text }}>{r.currentStock} {r.unit}</td>
+                          <td style={{ padding: "10px", color: C.text }}>{r.requiredForForecast} {r.unit}</td>
+                          <td style={{ padding: "10px", fontWeight: 700, color: r.suggestedRestockQty > 0 ? C.danger : C.success }}>
+                            {r.suggestedRestockQty > 0 ? `+${r.suggestedRestockQty} ${r.unit}` : "None"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
     </Card>
   );
@@ -573,6 +823,7 @@ export default function SalesAnalyticsDashboard() {
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <ForecastSection />
             <ItemForecastSection />
+            <TrendingItemsSection />
           </div>
         )}
       </div>

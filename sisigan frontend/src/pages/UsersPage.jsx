@@ -28,6 +28,7 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
     name: editUser?.name || '',
     email: editUser?.email || '',
     password: '',
+    confirmPassword: '',
     role: editUser?.role || 'CASHIER',
     branchId: editUser?.branch?.id || branches[0]?.id || '',
   })
@@ -38,6 +39,10 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
   const assignableRoles = requestingRole === 'OWNER'
     ? ['MANAGER', 'CASHIER']
     : ['CASHIER']  // Manager can only create cashiers
+
+  // Only relevant on create — confirmPassword never gets sent to the backend,
+  // it's just a client-side check that the two fields match before we submit.
+  const passwordsMismatch = !isEdit && form.password !== '' && form.confirmPassword !== '' && form.password !== form.confirmPassword
 
   function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
@@ -55,6 +60,12 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
         // CREATE NEW ACCOUNT
         if (!form.password) {
           setError('Password is required.');
+          setLoading(false);
+          return
+        }
+
+        if (form.password !== form.confirmPassword) {
+          setError('Passwords do not match.');
           setLoading(false);
           return
         }
@@ -96,7 +107,21 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
         <Input label="Email" type="email" value={form.email} onChange={e => set('email', e.target.value)} placeholder="email@sisigan.ph" />
 
         {!isEdit && (
-          <Input label="Password" type="password" value={form.password} onChange={e => set('password', e.target.value)} placeholder="Minimum 6 characters" />
+          <>
+            <Input label="Password" type="password" value={form.password} onChange={e => set('password', e.target.value)} placeholder="Minimum 6 characters" />
+            <div>
+              <Input
+                label="Confirm Password"
+                type="password"
+                value={form.confirmPassword}
+                onChange={e => set('confirmPassword', e.target.value)}
+                placeholder="Re-enter password"
+              />
+              {passwordsMismatch && (
+                <p style={{ color: 'var(--red)', fontSize: 12, marginTop: 6 }}>Passwords do not match.</p>
+              )}
+            </div>
+          </>
         )}
 
         <div>
@@ -130,7 +155,12 @@ function UserModal({ editUser, branches, onClose, onSaved, requestingRole }) {
 
         <div style={{ display: 'flex', gap: 10 }}>
           <Button variant="outline" fullWidth onClick={onClose}>Cancel</Button>
-          <Button variant="primary" fullWidth disabled={loading} onClick={save}>
+          <Button
+            variant="primary"
+            fullWidth
+            disabled={loading || (!isEdit && (passwordsMismatch || !form.confirmPassword))}
+            onClick={save}
+          >
             {loading ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Account'}
           </Button>
         </div>

@@ -366,6 +366,45 @@ async function runDailyDeduction() {
   return { processed, skipped, total: items.length };
 }
 
+// Called right after a branch is created (see branch.service.js). Gives the new
+// branch one InventoryItem row per existing ingredient, quantity 0, seeded from
+// that ingredient's default* fields. Pass the transaction client so this lives
+// in the same transaction as the branch insert — if either fails, both roll back.
+async function seedBranchInventory(branchId, tx) {
+  const db = tx || prisma;
+
+  const ingredients = await db.ingredient.findMany();
+  if (!ingredients.length) return { seeded: 0 };
+
+  for (const ingredient of ingredients) {
+    const inventory = await db.inventoryItem.create({
+      data: {
+        branchId: Number(branchId),
+        ingredientId: ingredient.id,
+        quantity: 0,
+        minThreshold: ingredient.defaultMinThreshold ?? 0,
+        price: ingredient.defaultPrice ?? null,
+        consumptionRateDays: ingredient.defaultConsumptionRateDays ?? null,
+        consumptionLabel: ingredient.defaultConsumptionLabel ?? null,
+        dailyDeductionAmount: ingredient.defaultDailyDeduction ?? null,
+      },
+    });
+
+    await db.inventoryAuditLog.create({
+      data: {
+        inventoryItemId: inventory.id,
+        actionType: 'MANUAL_EDIT',
+        quantityBefore: 0,
+        quantityAfter: 0,
+        quantityChanged: 0,
+        note: 'Auto-seeded on branch creation',
+      },
+    });
+  }
+
+  return { seeded: ingredients.length };
+}
+
 async function getAuditLogs({ branchId, actionType, from, to, limit = 100 }, requestingUser) {
   const scopedBranchId = getScopedBranchId(requestingUser, branchId);
   const safeLimit = Math.max(1, Math.min(Number(limit) || 100, 500));
@@ -408,5 +447,6 @@ module.exports = {
   updateInventoryItem,
   deductInventoryForOrder,
   runDailyDeduction,
+  seedBranchInventory,
   getAuditLogs,
 };
