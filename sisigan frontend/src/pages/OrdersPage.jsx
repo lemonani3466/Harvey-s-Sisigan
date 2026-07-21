@@ -19,16 +19,18 @@ const labelStyle = {
   letterSpacing: 0.5, textTransform: 'uppercase', display: 'block', marginBottom: 7,
 }
 const inputStyle = {
-  width: '100%', padding: '12px 14px',
+  width: '100%', padding: '9px 12px',
   border: '1.5px solid var(--border)', borderRadius: 'var(--radius-md)',
-  fontSize: 14.5, background: '#fff', outline: 'none',
+  fontSize: 13.5, background: '#fff', outline: 'none',
 }
 
 const MODAL_WIDTH = 460
 const narrowStyle = { maxWidth: 320, margin: '0 auto' }
 
 // ── 3-Dot Menu ────────────────────────────────────────
-function OrderRowMenu({ order, onPay, onReprint, onCancel, onReopen }) {
+// Change 1: no reopen for COMPLETED
+// Change 2: View Order moved into menu
+function OrderRowMenu({ order, onView, onPay, onReprint, onCancel, onReopen }) {
   const [open, setOpen] = useState(false)
   const ref = useRef()
 
@@ -41,15 +43,17 @@ function OrderRowMenu({ order, onPay, onReprint, onCancel, onReopen }) {
   }, [])
 
   const isCancellable = order.status !== 'CANCELLED' && order.status !== 'COMPLETED'
-  const isReopenable  = order.status === 'CANCELLED'  || order.status === 'COMPLETED'
   const canPay        = !order.payment && order.status !== 'CANCELLED' && order.status !== 'COMPLETED'
-  const canReprint    = order.status === 'COMPLETED'  && order.payment
+  const canReprint    = order.status === 'COMPLETED' && order.payment
+  // Change 1: reopen only for CANCELLED, not COMPLETED
+  const isReopenable  = order.status === 'CANCELLED'
 
   const menuItems = [
-    canPay        && { label: '💳 Pay Now',        action: onPay },
-    canReprint    && { label: '🖨️ Reprint Receipt', action: onReprint },
-    isCancellable && { label: '❌ Cancel Order',   action: onCancel },
-    isReopenable  && { label: '🔓 Reopen Order',   action: onReopen },
+    { label: '👁 View Order', action: onView },  // Change 2: always first
+    canPay        && { label: '💳 Pay Now',         action: onPay },
+    canReprint    && { label: '🖨️ Reprint Receipt',  action: onReprint },
+    isCancellable && { label: '❌ Cancel Order',    action: onCancel },
+    isReopenable  && { label: '🔓 Reopen Order',    action: onReopen },
   ].filter(Boolean)
 
   return (
@@ -84,9 +88,6 @@ function OrderRowMenu({ order, onPay, onReprint, onCancel, onReopen }) {
               onMouseLeave={e => e.currentTarget.style.background = 'none'}
             >{item.label}</button>
           ))}
-          {menuItems.length === 0 && (
-            <div style={{ padding: '10px 14px', fontSize: 12, color: 'var(--text-faint)' }}>No actions</div>
-          )}
         </div>
       )}
     </div>
@@ -194,7 +195,7 @@ function ReopenView({ order, onClose, onReopened }) {
           Reopen {order.orderNumber}?
         </h3>
         <p style={{ fontSize: 13.5, color: 'var(--text-mid)' }}>
-          Enter your password to reopen this order and move it back to Pending.
+          Enter your password to reopen this order.
         </p>
       </div>
       <div style={{ ...narrowStyle, marginBottom: 18, textAlign: 'left' }}>
@@ -244,9 +245,7 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
             <div style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--red-dark)' }}>
               {PH_DISCOUNTS[discount.key]?.icon} {discount.label} ({discount.percentage}%)
             </div>
-            <div style={{ fontSize: 11.5, color: 'var(--red-dark)' }}>
-              - ₱{discount.deducted.toFixed(2)} → New total: ₱{total.toFixed(2)}
-            </div>
+            <div style={{ fontSize: 11.5, color: 'var(--red-dark)' }}>- ₱{discount.deducted.toFixed(2)} → New total: ₱{total.toFixed(2)}</div>
           </div>
           <button onClick={onRemoveDiscount} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--red-dark)', fontWeight: 700, fontSize: 18, padding: '0 4px' }}>✕</button>
         </div>
@@ -278,12 +277,9 @@ function PaymentView({ order, baseTotal, total, method, setMethod, amountPaid, s
 
       <div>
         <label style={labelStyle}>Amount Paid (P)</label>
-        <input
-          type="number" value={amountPaid}
-          onChange={e => setAmountPaid(e.target.value)}
+        <input type="number" value={amountPaid} onChange={e => setAmountPaid(e.target.value)}
           placeholder={`Minimum P${total.toFixed(2)}${method !== 'CASH' ? ` (max P${total.toFixed(2)})` : ''}`}
-          style={{ ...inputStyle, borderColor: nonCashOverpaid ? 'var(--red)' : undefined }}
-        />
+          style={{ ...inputStyle, borderColor: nonCashOverpaid ? 'var(--red)' : undefined }} />
         {nonCashOverpaid && (
           <p style={{ color: 'var(--red)', fontSize: 12, marginTop: 4 }}>
             {method} payments cannot exceed the payable amount of ₱{total.toFixed(2)}.
@@ -332,40 +328,40 @@ function ViewOnlyDetail({ order }) {
     <div>
       <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16, marginTop: -8 }}>
         <Badge status={order.status} />
-        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{order.type?.replace('_', ' ')}</span>
+        <span style={{ fontSize: 13.5, color: 'var(--text-muted)' }}>{order.type?.replace('_', ' ')}</span>
       </div>
       <div style={{ borderTop: '1px solid var(--border)', marginBottom: 12 }}>
         {order.items?.map(item => (
-          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '10px 0', borderBottom: '1px solid var(--border-light)' }}>
+          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '11px 0', borderBottom: '1px solid var(--border-light)' }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-dark)' }}>{item.menuItem?.name}</div>
-              {item.notes && <div style={{ fontSize: 11, color: 'var(--text-faint)', marginTop: 2 }}>{item.notes}</div>}
+              <div style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--text-dark)' }}>{item.menuItem?.name}</div>
+              {item.notes && <div style={{ fontSize: 11.5, color: 'var(--text-faint)', marginTop: 2 }}>{item.notes}</div>}
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 12 }}>
-              <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>x{item.quantity}</div>
-              <div style={{ fontWeight: 700, color: 'var(--brown-700)', fontSize: 14 }}>P{Number(item.subtotal).toFixed(2)}</div>
+              <div style={{ fontSize: 12.5, color: 'var(--text-muted)' }}>x{item.quantity}</div>
+              <div style={{ fontWeight: 700, color: 'var(--brown-700)', fontSize: 14.5 }}>P{Number(item.subtotal).toFixed(2)}</div>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '8px 0 16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '10px 0 18px' }}>
         <span style={{ fontWeight: 700, color: 'var(--text-mid)' }}>TOTAL</span>
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)', fontWeight: 700 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 24, color: 'var(--brown-800)', fontWeight: 700 }}>
           P{Number(order.totalAmount).toFixed(2)}
         </span>
       </div>
       {order.payment && (
-        <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '12px 14px', marginBottom: 16 }}>
-          <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 4, fontSize: 13 }}>Paid via {order.payment.method}</div>
-          <div style={{ color: 'var(--green-dark)', fontSize: 13 }}>
+        <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 16 }}>
+          <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 5, fontSize: 13.5 }}>Paid via {order.payment.method}</div>
+          <div style={{ color: 'var(--green-dark)', fontSize: 13.5 }}>
             Paid: P{Number(order.payment.amountPaid).toFixed(2)} | Change: P{Number(order.payment.change).toFixed(2)}
           </div>
           {order.payment.referenceNo && (
-            <div style={{ color: 'var(--green-dark)', fontSize: 12, marginTop: 2 }}>Ref: {order.payment.referenceNo}</div>
+            <div style={{ color: 'var(--green-dark)', fontSize: 12.5, marginTop: 3 }}>Ref: {order.payment.referenceNo}</div>
           )}
         </div>
       )}
-      <div style={{ marginTop: 8, fontSize: 11, color: 'var(--text-faint)', textAlign: 'right' }}>
+      <div style={{ marginTop: 8, fontSize: 11.5, color: 'var(--text-faint)', textAlign: 'right' }}>
         {order.cashier?.name} | {new Date(order.createdAt).toLocaleString('en-PH')}
       </div>
     </div>
@@ -375,7 +371,8 @@ function ViewOnlyDetail({ order }) {
 // ── Detail View (with actions) ─────────────────────────
 function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }) {
   const isCancellable = order.status !== 'CANCELLED' && order.status !== 'COMPLETED'
-  const isReopenable  = order.status === 'CANCELLED'  || order.status === 'COMPLETED'
+  // Change 1: reopen only for CANCELLED
+  const isReopenable  = order.status === 'CANCELLED'
 
   return (
     <div>
@@ -405,9 +402,7 @@ function DetailView({ order, onPayNow, onCancelOrder, onReopenOrder, onReprint }
       </div>
       {order.payment && (
         <div style={{ background: 'var(--green-light)', borderRadius: 'var(--radius-md)', padding: '14px 16px', marginBottom: 18 }}>
-          <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 5, fontSize: 13.5 }}>
-            Paid via {order.payment.method}
-          </div>
+          <div style={{ color: 'var(--green-dark)', fontWeight: 700, marginBottom: 5, fontSize: 13.5 }}>Paid via {order.payment.method}</div>
           <div style={{ color: 'var(--green-dark)', fontSize: 13.5 }}>
             Paid: P{Number(order.payment.amountPaid).toFixed(2)} | Change: P{Number(order.payment.change).toFixed(2)}
           </div>
@@ -571,14 +566,14 @@ function Pagination({ page, totalPages, onChange }) {
   for (let i = 1; i <= totalPages; i++) pages.push(i)
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '16px 0 4px' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, padding: '18px 0 4px' }}>
       <button onClick={() => onChange(page - 1)} disabled={page === 1}
-        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
+        style={{ padding: '7px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === 1 ? 'not-allowed' : 'pointer', color: page === 1 ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
         ← Prev
       </button>
       {pages.map(p => (
         <button key={p} onClick={() => onChange(p)} style={{
-          width: 34, height: 34,
+          width: 36, height: 36,
           border: `1.5px solid ${p === page ? 'var(--brown-600)' : 'var(--border)'}`,
           borderRadius: 'var(--radius-sm)',
           background: p === page ? 'var(--brown-600)' : '#fff',
@@ -587,7 +582,7 @@ function Pagination({ page, totalPages, onChange }) {
         }}>{p}</button>
       ))}
       <button onClick={() => onChange(page + 1)} disabled={page === totalPages}
-        style={{ padding: '6px 12px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
+        style={{ padding: '7px 14px', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: page === totalPages ? 'not-allowed' : 'pointer', color: page === totalPages ? 'var(--text-faint)' : 'var(--brown-700)', fontWeight: 700, fontSize: 13 }}>
         Next →
       </button>
     </div>
@@ -595,7 +590,8 @@ function Pagination({ page, totalPages, onChange }) {
 }
 
 // ── Order Row ──────────────────────────────────────────
-function OrderRow({ order, onView, onAction }) {
+// Change 2: eye button removed — view is now in the menu
+function OrderRow({ order, onAction }) {
   const displayName = order.customerName
     ? `${order.customerName} - ${order.orderNumber}`
     : order.orderNumber
@@ -605,8 +601,8 @@ function OrderRow({ order, onView, onAction }) {
 
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10,
-      padding: '11px 16px', borderBottom: '1px solid var(--border-light)',
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '12px 18px', borderBottom: '1px solid var(--border-light)',
       background: '#fff', transition: 'background 0.1s',
     }}
       onMouseEnter={e => e.currentTarget.style.background = 'var(--cream)'}
@@ -614,32 +610,32 @@ function OrderRow({ order, onView, onAction }) {
     >
       <OrderRowMenu
         order={order}
-        onPay={()    => onAction(order.id, 'pay')}
-        onReprint={() => onAction(order.id, 'reprint')}
-        onCancel={()  => onAction(order.id, 'cancel')}
-        onReopen={()  => onAction(order.id, 'reopen')}
+        onView={()    => onAction(order.id, 'viewonly')}
+        onPay={()     => onAction(order.id, 'pay')}
+        onReprint={()  => onAction(order.id, 'reprint')}
+        onCancel={()   => onAction(order.id, 'cancel')}
+        onReopen={()   => onAction(order.id, 'reopen')}
       />
-      <button
-        onClick={() => onView(order.id)}
-        style={{ width: 32, height: 32, border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', background: '#fff', cursor: 'pointer', fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brown-600)', flexShrink: 0 }}
-        title="View details (read-only)"
-      >👁</button>
+
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {displayName}
         </div>
-        <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
+        <div style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 2 }}>
           {order.items?.slice(0, 2).map(i => i.menuItem?.name).join(', ')}
           {order.items?.length > 2 ? ` +${order.items.length - 2} more` : ''}
         </div>
       </div>
-      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--brown-700)', fontSize: 14, flexShrink: 0 }}>
+
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--brown-700)', fontSize: 14.5, flexShrink: 0 }}>
         ₱{Number(order.totalAmount).toFixed(2)}
       </div>
-      <div style={{ fontSize: 12, color: 'var(--text-muted)', textAlign: 'right', flexShrink: 0, minWidth: 140 }}>
+
+      <div style={{ fontSize: 12.5, color: 'var(--text-muted)', textAlign: 'right', flexShrink: 0, minWidth: 150 }}>
         <div>{dateStr}</div>
         <div>{timeStr}</div>
       </div>
+
       <div style={{ flexShrink: 0 }}>
         <Badge status={order.status} />
       </div>
@@ -648,6 +644,7 @@ function OrderRow({ order, onView, onAction }) {
 }
 
 // ── Main Page ──────────────────────────────────────────
+// Change 3: layout/spacing matches Dashboard (95% width, maxWidth 1800, padding 28)
 export default function OrdersPage() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -710,8 +707,10 @@ export default function OrdersPage() {
       } catch (e) { console.error(e) }
       return
     }
-    setViewOnly(false)
-    setSelectedView(action)
+    // Change 2: viewonly comes from menu now
+    const isView = action === 'viewonly'
+    setViewOnly(isView)
+    setSelectedView(isView ? 'viewonly' : action)
     setSelectedId(orderId)
   }
 
@@ -731,87 +730,104 @@ export default function OrdersPage() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
-    <div style={{ padding: '16px 20px', maxWidth: '100%', margin: '0 auto', height: 'calc(100vh - var(--nav-height))', display: 'flex', flexDirection: 'column', boxSizing: 'border-box' }}>
+    // Change 3: match Dashboard layout — 95% width, maxWidth 1800, padding 28
+    <div style={{ width: '95%', maxWidth: 1800, margin: '0 auto', padding: 28 }}>
 
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexShrink: 0 }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--brown-800)' }}>Orders</h1>
+      {/* Header — matches Dashboard h1 size and spacing */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
+        <div>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, color: 'var(--brown-800)', marginBottom: 4 }}>
+            Orders
+          </h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+            Completed and cancelled order history
+          </p>
+        </div>
       </div>
 
-      {/* Toolbar: status tabs + search + date range */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap', flexShrink: 0 }}>
+      {/* Toolbar: status tabs + search + date range — matches Dashboard controls row */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 24, alignItems: 'center', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: 6 }}>
           {STATUSES.map(s => (
             <button key={s} onClick={() => setFilter(s)} style={{
-              padding: '7px 16px', borderRadius: 'var(--radius-full)', border: 'none',
+              padding: '10px 18px', borderRadius: 'var(--radius-full)', border: 'none',
               background: filter === s ? 'var(--brown-600)' : 'var(--brown-100)',
               color:      filter === s ? '#fff' : 'var(--brown-800)',
-              fontWeight: 700, fontSize: 12, cursor: 'pointer', transition: 'all 0.15s',
+              fontWeight: 700, fontSize: 12.5, cursor: 'pointer', transition: 'all 200ms ease',
+              boxShadow: filter === s ? '0 4px 14px rgba(180,83,9,0.28)' : 'none',
             }}>{s}</button>
           ))}
         </div>
 
-        <div style={{ position: 'relative', flex: 1, minWidth: 180 }}>
+        <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
           <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 13, pointerEvents: 'none' }}>🔍</span>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search orders…"
-            style={{ ...inputStyle, paddingLeft: 32, paddingTop: 8, paddingBottom: 8, fontSize: 13, boxSizing: 'border-box' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by order number, customer, or item…"
+            style={{ ...inputStyle, paddingLeft: 32, boxSizing: 'border-box' }} />
           {search && (
-            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}>✕</button>
+            <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--text-muted)' }}>✕</button>
           )}
         </div>
 
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>From</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>From</span>
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
-            style={{ ...inputStyle, width: 'auto', padding: '7px 9px', fontSize: 13 }} />
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 600 }}>To</span>
+            style={{ ...inputStyle, width: 'auto', padding: '9px 12px', fontSize: 13 }} />
+          <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 700 }}>To</span>
           <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
-            style={{ ...inputStyle, width: 'auto', padding: '7px 9px', fontSize: 13 }} />
+            style={{ ...inputStyle, width: 'auto', padding: '9px 12px', fontSize: 13 }} />
           {(dateFrom || dateTo) && (
             <button onClick={() => { setDateFrom(''); setDateTo('') }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--text-muted)', fontWeight: 600 }}>✕</button>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12.5, color: 'var(--text-muted)', fontWeight: 600 }}>✕</button>
           )}
         </div>
       </div>
 
       {/* Results count */}
       {(search || dateFrom || dateTo) && (
-        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 8, flexShrink: 0 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
           {filtered.length} result{filtered.length !== 1 ? 's' : ''} found
         </div>
       )}
 
-      {/* List */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {loading && orders.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-faint)' }}>Loading orders...</div>
-        ) : paginated.length === 0 ? (
-          <EmptyState icon="List" title={`No ${filter.toLowerCase()} orders`} subtitle="Orders will appear here" />
-        ) : (
-          <>
-            <div style={{ background: '#fff', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'var(--brown-50)', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, flexShrink: 0 }}>
-                <div style={{ width: 74, flexShrink: 0 }}>Actions</div>
-                <div style={{ flex: 1 }}>Order</div>
-                <div style={{ flexShrink: 0, minWidth: 80, textAlign: 'right' }}>Amount</div>
-                <div style={{ flexShrink: 0, minWidth: 140, textAlign: 'right' }}>Date & Time</div>
-                <div style={{ flexShrink: 0, width: 80, textAlign: 'right' }}>Status</div>
-              </div>
-              <div style={{ overflowY: 'auto', flex: 1 }}>
-                {paginated.map(order => (
-                  <OrderRow
-                    key={order.id}
-                    order={order}
-                    onView={id => { setViewOnly(true); setSelectedView('viewonly'); setSelectedId(id) }}
-                    onAction={handleAction}
-                  />
-                ))}
-              </div>
+      {/* List — matches Dashboard section card style */}
+      {loading && orders.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--text-faint)' }}>Loading orders...</div>
+      ) : paginated.length === 0 ? (
+        <EmptyState icon="📋" title={`No ${filter.toLowerCase()} orders`} subtitle="Orders will appear here" />
+      ) : (
+        <>
+          <div style={{
+            background: 'var(--cream)', border: '1.5px solid var(--border)',
+            borderRadius: 'var(--radius-lg)', overflow: 'hidden',
+            boxShadow: 'var(--shadow-sm)',
+          }}>
+            {/* List header */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 12,
+              padding: '10px 18px', background: 'var(--brown-50)',
+              borderBottom: '1px solid var(--border)',
+              fontSize: 11, fontWeight: 700, color: 'var(--text-muted)',
+              textTransform: 'uppercase', letterSpacing: 0.5,
+            }}>
+              <div style={{ width: 42, flexShrink: 0 }}>Menu</div>
+              <div style={{ flex: 1 }}>Order</div>
+              <div style={{ flexShrink: 0, minWidth: 90, textAlign: 'right' }}>Amount</div>
+              <div style={{ flexShrink: 0, minWidth: 150, textAlign: 'right' }}>Date & Time</div>
+              <div style={{ flexShrink: 0, width: 90, textAlign: 'right' }}>Status</div>
             </div>
-            <Pagination page={page} totalPages={totalPages} onChange={setPage} />
-          </>
-        )}
-      </div>
+
+            {paginated.map(order => (
+              <OrderRow
+                key={order.id}
+                order={order}
+                onAction={handleAction}
+              />
+            ))}
+          </div>
+
+          <Pagination page={page} totalPages={totalPages} onChange={setPage} />
+        </>
+      )}
 
       {selectedId && (
         <OrderDetailModal
