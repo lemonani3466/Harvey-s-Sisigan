@@ -6,17 +6,12 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
 } from 'recharts'
 
-const COLORS = ['#b45309', '#d97706', '#f59e0b', '#92400e', '#78350f', '#a16207']
 const CATEGORIES = ['SAUCE', 'SPICES', 'MAIN_INGREDIENT', 'RICE', 'UTILITIES', 'GAS']
 const UNITS = ['ML', 'GRAM', 'LITER', 'PCS', 'GALLON', 'TANK', 'BAG', 'PACK', 'TUB']
 
@@ -293,17 +288,6 @@ export default function InventoryPage() {
     })
   }, [inventory, searchTerm])
 
-  const categoryLowChartData = useMemo(() => {
-    const m = {}
-    for (const item of inventory) {
-      const key = item.ingredient?.category || 'OTHER'
-      if (!m[key]) m[key] = { name: key, low: 0, healthy: 0 }
-      if (Number(item.quantity) <= Number(item.minThreshold)) m[key].low += 1
-      else m[key].healthy += 1
-    }
-    return Object.values(m)
-  }, [inventory])
-
   const topUsageData = useMemo(() => {
     const rows = report?.usageByItem || []
     return rows
@@ -444,39 +428,21 @@ export default function InventoryPage() {
         </Section>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
-        <Section title="Top Weekly Ingredient Usage">
-          {topUsageData.length === 0 ? (
-            <EmptyState icon="📊" title="No usage logs yet" subtitle="Create orders or run daily deduction to populate" />
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={topUsageData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 11 }} />
-                <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(v) => [Number(v).toFixed(3), 'Used']} />
-                <Bar dataKey="usage" fill="var(--brown-500)" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </Section>
-
-        <Section title="Stock Health by Category">
-          {categoryLowChartData.length === 0 ? (
-            <EmptyState icon="📊" title="No inventory data" />
-          ) : (
-            <ResponsiveContainer width="100%" height={280}>
-              <PieChart>
-                <Pie data={categoryLowChartData} dataKey="low" nameKey="name" cx="50%" cy="50%" outerRadius={92} label={({ name, value }) => `${name}: ${value}`}>
-                  {categoryLowChartData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Pie>
-                <Tooltip formatter={(v) => [v, 'Low Stock Count']} />
-                <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </Section>
-      </div>
+      <Section title="Top Weekly Ingredient Usage">
+        {topUsageData.length === 0 ? (
+          <EmptyState icon="📊" title="No usage logs yet" subtitle="Create orders or run daily deduction to populate" />
+        ) : (
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={topUsageData} layout="vertical" margin={{ left: 10, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
+              <XAxis type="number" tick={{ fontSize: 11 }} />
+              <YAxis type="category" dataKey="name" width={140} tick={{ fontSize: 11 }} />
+              <Tooltip formatter={(v) => [Number(v).toFixed(3), 'Used']} />
+              <Bar dataKey="usage" fill="var(--brown-500)" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
+      </Section>
 
       {showAdd && (
         <AddIngredientModal

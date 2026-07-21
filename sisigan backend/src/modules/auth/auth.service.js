@@ -1,4 +1,4 @@
-// src/modules/auth/auth.service.js - UPDATED
+// src/modules/auth/auth.service.js
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
@@ -48,7 +48,7 @@ async function sendResetEmail(email, code) {
   }
 }
 
-// EXISTING LOGIN FUNCTION (keep as-is)
+// UPDATED LOGIN FUNCTION — now blocks disabled users and disabled branches
 async function login(email, password, metadata = {}) {
   const user = await prisma.user.findUnique({
     where: { email },
@@ -58,7 +58,8 @@ async function login(email, password, metadata = {}) {
       email: true,
       password: true,
       role: true,
-      branch: { select: { id: true, name: true, city: true } },
+      isActive: true, // NEW
+      branch: { select: { id: true, name: true, city: true, isActive: true } }, // NEW: isActive
     },
   });
 
@@ -72,8 +73,19 @@ async function login(email, password, metadata = {}) {
     throw new Error('Invalid email or password.');
   }
 
-  console.log('user.branch:', user.branch)
-  console.log('user.branchId:', user.branchId)
+  // NEW — block disabled user accounts
+  if (!user.isActive) {
+    throw new Error('This account has been disabled. Please contact your administrator.');
+  }
+
+  // NEW — block login when the user's branch is disabled.
+  // OWNER accounts are exempted here since owners oversee all branches
+  // rather than being tied to one. Remove the role check if you want
+  // owners blocked too.
+  if (user.role !== 'OWNER' && user.branch && !user.branch.isActive) {
+    throw new Error('This branch has been disabled. Please contact your administrator.');
+  }
+
   const token = jwt.sign(
     { id: user.id, email: user.email, role: user.role, branchId: user.branch?.id },
     process.env.JWT_SECRET || 'your_secret_key_here'
