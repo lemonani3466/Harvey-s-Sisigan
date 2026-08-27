@@ -411,8 +411,8 @@ function ForecastSection() {
           <span style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>Training model &amp; generating forecast…</span>
         </div>
       )}
-      
-      
+
+
 
       {/* Error state */}
       {triggered && !loading && error && (
@@ -435,9 +435,15 @@ function ForecastSection() {
               <CartesianGrid strokeDasharray="3 3" stroke={C.grid} />
               <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(v) => v.slice(5)} />
               <YAxis tick={{ fontSize: 11 }} />
+              {/* MODIFIED: formatter used to check n === "upper" / else "Lower 95%", but
+                  Recharts passes the `name` prop we already set on each Area/Line (e.g.
+                  "Upper 95%", "Lower 95%", "Forecast") — not the raw dataKey. That check
+                  never matched "upper", so every row fell into the else-branch and both
+                  bands showed as "Lower 95%" in the tooltip. Fixed by just passing the
+                  already-correct name straight through. */}
               <Tooltip
                 labelFormatter={(l, pl) => `${l} (${pl?.[0]?.payload?.dayOfWeek ?? ""})`}
-                formatter={(v, n) => [fmt(v), n === "predicted" ? "Forecast" : n === "upper" ? "Upper 95%" : "Lower 95%"]}
+                formatter={(v, n) => [fmt(v), n === "predicted" ? "Forecast" : n]}
               />
               <Area dataKey="upper"     stroke="none"       fill="url(#cg)" name="Upper 95%" />
               <Area dataKey="lower"     stroke="none"       fill={C.pageBg} name="Lower 95%" />
@@ -804,7 +810,6 @@ export default function SalesAnalyticsDashboard() {
       <div style={{
         background: "#fff", borderBottom: `1px solid ${C.grid}`,
         padding: "16px 32px", display: "flex", gap: 8,
-        position: "sticky", top: "var(--nav-height, 78px)", zIndex: 90,
       }}>
         {tabs.map((t) => (
           <button key={t.id} onClick={() => setActiveTab(t.id)} style={{

@@ -194,7 +194,7 @@ export default function ForgotPasswordPage() {
 
             <h1
               style={{
-                fontFamily: 'Poppins, sans-serif',
+                fontFamily: 'Georgia',
                 fontSize: 38,
                 fontWeight: 800,
                 lineHeight: 1.1,

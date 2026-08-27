@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { dashboardApi } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { Button, EmptyState } from '../components/ui'
-import * as XLSX from 'xlsx'
+import ExcelJS from 'exceljs'
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
@@ -63,175 +63,249 @@ function todayISO() {
   return new Date(d - tzOffset).toISOString().slice(0, 10)
 }
 
-// ── Excel download ─────────────────────────────────────────────────────────────
-function downloadExcel(data, periodLabel, branchLabel) {
+// ── Shared logo loader ──────────────────────────────────────────────────────────
+//   fetches the establishment logo once as an ArrayBuffer so it can be embedded
+//   into a workbook via wb.addImage(). Update the path/extension if the logo
+//   file or format ever changes (served from /public, so root-relative works).
+async function loadLogoImage(wb) {
+  const resp = await fetch('/logo1.jpg')
+  const buffer = await resp.arrayBuffer()
+  return wb.addImage({ buffer, extension: 'jpeg' })
+}
+
+//   shared "write workbook to disk" helper used by both exports below
+async function writeWorkbook(wb, filename) {
+  const buffer = await wb.xlsx.writeBuffer()
+  const blob = new Blob([buffer], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+// ── Excel download (full dashboard export) ─────────────────────────────────────
+//   built with ExcelJS so the logo can sit beside the establishment name on the
+//   Summary sheet (SheetJS/xlsx community edition can't embed images).
+async function downloadExcel(data, periodLabel, branchLabel) {
   const s = data?.summary || {}
-  const wb = XLSX.utils.book_new()
+  const wb = new ExcelJS.Workbook()
+  const logoId = await loadLogoImage(wb)
 
   // Sheet 1: Summary
+  const wsSummary = wb.addWorksheet('Summary')
+  wsSummary.columns = [{ width: 26 }, { width: 20 }]
+
+  wsSummary.getRow(1).height = 24
+  wsSummary.getRow(2).height = 24
+  wsSummary.getRow(3).height = 24
+
+  wsSummary.addImage(logoId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 64, height: 64 },
+  })
+
+  wsSummary.mergeCells('B1:B3')
+  const nameCell = wsSummary.getCell('B1')
+  nameCell.value = "Harvey's Special Crispy Sisig"
+  nameCell.font = { bold: true, size: 16, name: 'Arial' }
+  nameCell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: true }
+
   const summaryRows = [
-    { Metric: 'Period', Value: periodLabel },
-    { Metric: 'Branch', Value: branchLabel },
-    { Metric: 'Total Sales (PHP)', Value: Number(s.totalSales || 0) },
-    { Metric: 'Completed Orders', Value: Number(s.totalOrders || 0) },
-    { Metric: 'All Orders', Value: Number(s.allOrdersCount || 0) },
-    { Metric: 'Cancelled Orders', Value: Number(s.cancelledCount || 0) },
-    { Metric: 'Avg Order Value (PHP)', Value: Number(s.avgOrderValue || 0) },
+    ['Period', periodLabel],
+    ['Branch', branchLabel],
+    ['Total Sales (PHP)', Number(s.totalSales || 0)],
+    ['Completed Orders', Number(s.totalOrders || 0)],
+    ['All Orders', Number(s.allOrdersCount || 0)],
+    ['Cancelled Orders', Number(s.cancelledCount || 0)],
+    ['Avg Order Value (PHP)', Number(s.avgOrderValue || 0)],
   ]
-  const wsSummary = XLSX.utils.json_to_sheet(summaryRows)
-  wsSummary['!cols'] = [{ wch: 26 }, { wch: 20 }]
-  XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary')
+
+  const summaryHeaderRow = wsSummary.getRow(5)
+  summaryHeaderRow.getCell(1).value = 'Metric'
+  summaryHeaderRow.getCell(2).value = 'Value'
+  summaryHeaderRow.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FF78350F' } }
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }
+    cell.border = { bottom: { style: 'medium', color: { argb: 'FFD97706' } } }
+  })
+
+  summaryRows.forEach((r, i) => {
+    const row = wsSummary.getRow(6 + i)
+    row.getCell(1).value = r[0]
+    row.getCell(2).value = r[1]
+  })
 
   // Sheet 2: Sales Trend
   if (data?.salesTrend?.length) {
-    const trendRows = data.salesTrend.map(r => ({
-      Date: r.date,
-      'Sales (PHP)': Number(r.sales || 0),
-      Orders: Number(r.orders || 0),
-    }))
-    const wsTrend = XLSX.utils.json_to_sheet(trendRows)
-    wsTrend['!cols'] = [{ wch: 14 }, { wch: 16 }, { wch: 10 }]
-    XLSX.utils.book_append_sheet(wb, wsTrend, 'Sales Trend')
+    const wsTrend = wb.addWorksheet('Sales Trend')
+    wsTrend.columns = [
+      { header: 'Date', key: 'date', width: 14 },
+      { header: 'Sales (PHP)', key: 'sales', width: 16 },
+      { header: 'Orders', key: 'orders', width: 10 },
+    ]
+    wsTrend.getRow(1).font = { bold: true }
+    data.salesTrend.forEach(r => {
+      wsTrend.addRow({
+        date: r.date,
+        sales: Number(r.sales || 0),
+        orders: Number(r.orders || 0),
+      })
+    })
   }
 
   // Sheet 3: Best Sellers
   if (data?.bestSellers?.length) {
-    const sellerRows = data.bestSellers.map((item, i) => ({
-      Rank: i + 1,
-      'Menu Item': item.name,
-      'Qty Sold': item.qty,
-      'Revenue (PHP)': Number(item.revenue || 0),
-    }))
-    const wsSellers = XLSX.utils.json_to_sheet(sellerRows)
-    wsSellers['!cols'] = [{ wch: 6 }, { wch: 32 }, { wch: 12 }, { wch: 18 }]
-    XLSX.utils.book_append_sheet(wb, wsSellers, 'Best Sellers')
+    const wsSellers = wb.addWorksheet('Best Sellers')
+    wsSellers.columns = [
+      { header: 'Rank', key: 'rank', width: 6 },
+      { header: 'Menu Item', key: 'name', width: 32 },
+      { header: 'Qty Sold', key: 'qty', width: 12 },
+      { header: 'Revenue (PHP)', key: 'revenue', width: 18 },
+    ]
+    wsSellers.getRow(1).font = { bold: true }
+    data.bestSellers.forEach((item, i) => {
+      wsSellers.addRow({
+        rank: i + 1,
+        name: item.name,
+        qty: item.qty,
+        revenue: Number(item.revenue || 0),
+      })
+    })
   }
 
   // Sheet 4: Sales by Category
   if (data?.salesByCategory?.length) {
-    const catRows = data.salesByCategory.map(c => ({
-      Category: c.name,
-      'Sales (PHP)': Number(c.value || 0),
-    }))
-    const wsCat = XLSX.utils.json_to_sheet(catRows)
-    wsCat['!cols'] = [{ wch: 20 }, { wch: 18 }]
-    XLSX.utils.book_append_sheet(wb, wsCat, 'By Category')
+    const wsCat = wb.addWorksheet('By Category')
+    wsCat.columns = [
+      { header: 'Category', key: 'name', width: 20 },
+      { header: 'Sales (PHP)', key: 'value', width: 18 },
+    ]
+    wsCat.getRow(1).font = { bold: true }
+    data.salesByCategory.forEach(c => {
+      wsCat.addRow({ name: c.name, value: Number(c.value || 0) })
+    })
   }
 
   // Sheet 5: Payment Methods
   if (data?.paymentBreakdown?.length) {
-    const payRows = data.paymentBreakdown.map(p => ({
-      Method: p.method,
-      'Total (PHP)': Number(p.total || 0),
-      Transactions: p.count,
-    }))
-    const wsPay = XLSX.utils.json_to_sheet(payRows)
-    wsPay['!cols'] = [{ wch: 18 }, { wch: 16 }, { wch: 14 }]
-    XLSX.utils.book_append_sheet(wb, wsPay, 'Payment Methods')
+    const wsPay = wb.addWorksheet('Payment Methods')
+    wsPay.columns = [
+      { header: 'Method', key: 'method', width: 18 },
+      { header: 'Total (PHP)', key: 'total', width: 16 },
+      { header: 'Transactions', key: 'count', width: 14 },
+    ]
+    wsPay.getRow(1).font = { bold: true }
+    data.paymentBreakdown.forEach(p => {
+      wsPay.addRow({ method: p.method, total: Number(p.total || 0), count: p.count })
+    })
   }
 
   // Sheet 6: Branch comparison (owner only)
   if (data?.salesByBranch?.length) {
-    const branchRows = data.salesByBranch.map(b => ({
-      Branch: b.name,
-      'Sales (PHP)': Number(b.sales || 0),
-    }))
-    const wsBranch = XLSX.utils.json_to_sheet(branchRows)
-    wsBranch['!cols'] = [{ wch: 24 }, { wch: 16 }]
-    XLSX.utils.book_append_sheet(wb, wsBranch, 'By Branch')
+    const wsBranch = wb.addWorksheet('By Branch')
+    wsBranch.columns = [
+      { header: 'Branch', key: 'name', width: 24 },
+      { header: 'Sales (PHP)', key: 'sales', width: 16 },
+    ]
+    wsBranch.getRow(1).font = { bold: true }
+    data.salesByBranch.forEach(b => {
+      wsBranch.addRow({ name: b.name, sales: Number(b.sales || 0) })
+    })
   }
 
   const slug = periodLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')
-  XLSX.writeFile(wb, `dashboard_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  await writeWorkbook(wb, `dashboard_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 //   dedicated Excel export for the itemized Sales Report (all meals bought in the range)
-function downloadSalesReportExcel(data, periodLabel, branchLabel) {
-  const s     = data?.summary || {}
-  const wb    = XLSX.utils.book_new()
-
-  // All items sorted by qty descending (remove any top-10 limit)
+//   built with ExcelJS so the logo sits beside the establishment name.
+async function downloadSalesReportExcel(data, periodLabel, branchLabel) {
+  const s = data?.summary || {}
   const items = (data?.allSellers || data?.bestSellers || [])
   const totalQty = items.reduce((sum, item) => sum + Number(item.qty || 0), 0)
 
-  const rows = [
-    // 1. Establishment name
-    ["Harvey's Sisigan"],
-    [],
-    // 2. Report title + meta
-    ["Sales Report"],
-    ["Range:", periodLabel],
-    ["Branch:", branchLabel],
-    ["Generated:", new Date().toLocaleString("en-PH")],
-    [],
-    ["TOTAL SALES (PHP)", Number(s.totalSales || 0)],
-    ["TOTAL MEALS SOLD",  totalQty],
-    [],
-    // 3. Table header
-    ["#", "MEAL / ITEM", "QTY SOLD", "REVENUE (PHP)"],
+  const wb = new ExcelJS.Workbook()
+  const ws = wb.addWorksheet('Sales Report')
+  const logoId = await loadLogoImage(wb)
+
+  ws.columns = [
+    { width: 6 },   // #
+    { width: 38 },  // Meal / Item
+    { width: 14 },  // Qty Sold
+    { width: 20 },  // Revenue
   ]
 
-  // 4. All items (no limit)
+  // ── Logo (col A) + establishment name (cols B–D, merged) ──────────────
+  ws.getRow(1).height = 24
+  ws.getRow(2).height = 24
+  ws.getRow(3).height = 24
+
+  ws.addImage(logoId, {
+    tl: { col: 0, row: 0 },
+    ext: { width: 64, height: 64 },
+  })
+
+  ws.mergeCells('B1:D3')
+  const nameCell = ws.getCell('B1')
+  nameCell.value = "Harvey's Special Crispy Sisig"
+  nameCell.font = { bold: true, size: 20, name: 'Arial' }
+  nameCell.alignment = { vertical: 'middle', horizontal: 'left' }
+
+  // ── Meta rows ───────────────────────────────────────────────────────────
+  ws.getCell('A5').value = 'Sales Report'
+  ws.getCell('A5').font = { bold: true, size: 14 }
+
+  ws.getCell('A6').value = 'Range:'
+  ws.getCell('B6').value = periodLabel
+  ws.getCell('A7').value = 'Branch:'
+  ws.getCell('B7').value = branchLabel
+  ws.getCell('A8').value = 'Generated:'
+  ws.getCell('B8').value = new Date().toLocaleString('en-PH')
+
+  ws.getCell('A10').value = 'TOTAL SALES (PHP)'
+  ws.getCell('B10').value = Number(s.totalSales || 0)
+  ws.getCell('A10').font = { bold: true }
+
+  ws.getCell('A11').value = 'TOTAL MEALS SOLD'
+  ws.getCell('B11').value = totalQty
+  ws.getCell('A11').font = { bold: true }
+
+  // ── Table header ─────────────────────────────────────────────────────
+  const headerRowIdx = 13
+  const headers = ['#', 'MEAL / ITEM', 'QTY SOLD', 'REVENUE (PHP)']
+  headers.forEach((h, i) => {
+    const cell = ws.getCell(headerRowIdx, i + 1)
+    cell.value = h
+    cell.font = { bold: true, color: { argb: 'FF78350F' } }
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } }
+    cell.border = { bottom: { style: 'medium', color: { argb: 'FFD97706' } } }
+  })
+
+  // ── Item rows (no limit — every meal sold in the range) ────────────────
   items.forEach((item, i) => {
-    rows.push([i + 1, item.name, Number(item.qty || 0), Number(item.revenue || 0)])
+    const row = headerRowIdx + 1 + i
+    ws.getCell(row, 1).value = i + 1
+    ws.getCell(row, 2).value = item.name
+    ws.getCell(row, 3).value = Number(item.qty || 0)
+    ws.getCell(row, 4).value = Number(item.revenue || 0)
   })
 
-  // 5. Total row
-  rows.push(["", "TOTAL", totalQty, Number(s.totalSales || 0)])
-
-  const wsItems = XLSX.utils.aoa_to_sheet(rows)
-
-  // ── Styling ──────────────────────────────────────────
-  // Column widths
-  wsItems['!cols'] = [{ wch: 6 }, { wch: 38 }, { wch: 14 }, { wch: 20 }]
-
-  // Merge A1:D1 for establishment name
-  wsItems['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }]
-
-  // Bold + large font for establishment name (A1)
-  if (wsItems['A1']) {
-    wsItems['A1'].s = {
-      font:      { bold: true, sz: 32, name: 'Arial' },
-      alignment: { horizontal: 'center', vertical: 'center' },
-    }
-  }
-
-  // Bold for "Sales Report" (A3)
-  if (wsItems['A3']) {
-    wsItems['A3'].s = { font: { bold: true, sz: 14 } }
-  }
-
-  // Bold for totals row labels (A8, A9)
-  ;['A8', 'A9'].forEach(cell => {
-    if (wsItems[cell]) wsItems[cell].s = { font: { bold: true } }
+  // ── Total row ───────────────────────────────────────────────────────
+  const totalRow = headerRowIdx + 1 + items.length
+  ws.getCell(totalRow, 2).value = 'TOTAL'
+  ws.getCell(totalRow, 3).value = totalQty
+  ws.getCell(totalRow, 4).value = Number(s.totalSales || 0)
+  ;[2, 3, 4].forEach(c => {
+    ws.getCell(totalRow, c).font = { bold: true }
+    ws.getCell(totalRow, c).border = { top: { style: 'medium', color: { argb: 'FFD97706' } } }
   })
-
-  // Bold + background for table header row (row 11, index 10)
-  ;['A11', 'B11', 'C11', 'D11'].forEach(cell => {
-    if (wsItems[cell]) {
-      wsItems[cell].s = {
-        font:    { bold: true, color: { rgb: '78350F' } },
-        fill:    { fgColor: { rgb: 'FEF3C7' } },
-        border: {
-          bottom: { style: 'medium', color: { rgb: 'D97706' } },
-        },
-      }
-    }
-  })
-
-  // Bold + underline total row (last row)
-  const lastRow = rows.length
-  ;['B', 'C', 'D'].forEach(col => {
-    const cell = `${col}${lastRow}`
-    if (wsItems[cell]) {
-      wsItems[cell].s = { font: { bold: true } }
-    }
-  })
-
-  XLSX.utils.book_append_sheet(wb, wsItems, 'Sales Report')
 
   const slug = periodLabel.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '')
-  XLSX.writeFile(wb, `sales_report_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  await writeWorkbook(wb, `sales_report_${slug}_${new Date().toISOString().slice(0, 10)}.xlsx`)
 }
 
 //   separate HTML builder for the itemized "Sales Report" (all meals bought in range)

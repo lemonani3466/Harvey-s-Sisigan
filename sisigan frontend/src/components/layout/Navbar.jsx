@@ -39,9 +39,13 @@ export default function Navbar() {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       padding: '0 28px', boxShadow: '0 2px 14px rgba(28,10,0,0.25)',
       position: 'sticky', top: 0, zIndex: 100,
+      gap: 16, // ADDED: consistent spacing between the 3 sections when squeezed
     }}>
       {/* ── Logo section ───────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 14,
+        flexShrink: 0, // UNCHANGED: logo never shrinks
+      }}>
         <img
           src={logo}
           alt="Harvey's Sisig Logo"
@@ -49,9 +53,12 @@ export default function Navbar() {
             height: 46, width: 46, objectFit: 'cover',
             borderRadius: 'var(--radius-md)',
             boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
+            flexShrink: 0, // ADDED: prevent logo image itself from squishing
           }}
         />
-        <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+        {/* MODIFIED: hide the wordmark text on narrower widths so the pill bar gets
+            more room, instead of letting the whole navbar overflow vertically */}
+        <div className="navbar-brand-text" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
           <span style={{
             fontFamily: 'Georgia', color: '#fff',
             fontSize: 19, fontWeight: 700, whiteSpace: 'nowrap',
@@ -70,7 +77,23 @@ export default function Navbar() {
       </div>
 
       {/* ── Nav pills ──────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center' }}>
+      {/* MODIFIED: flexWrap removed (was causing the vertical stacking bug).
+          Container now scrolls horizontally instead, and flex:1/minWidth:0 lets
+          it actually shrink below its content width so overflow-x can kick in. */}
+      <div
+        className="navbar-scroll"
+        style={{
+          display: 'flex', gap: 6,
+          flexWrap: 'nowrap',        // MODIFIED: was 'wrap'
+          flex: '1 1 auto',          // ADDED: let this section shrink/grow
+          minWidth: 0,               // ADDED: required for overflow to work inside flexbox
+          overflowX: 'auto',         // ADDED: horizontal scroller
+          overflowY: 'hidden',       // ADDED: never grow the navbar's height
+          scrollbarWidth: 'thin',    // ADDED: thin scrollbar on Firefox
+          justifyContent: 'flex-start', // MODIFIED: was 'center' (center fights with scrolling)
+          WebkitOverflowScrolling: 'touch', // ADDED: smooth momentum scroll on touch devices
+        }}
+      >
         {navItems.map(item => (
           <NavLink
             key={item.to}
@@ -84,6 +107,7 @@ export default function Navbar() {
               boxShadow: isActive ? '0 2px 10px rgba(0,0,0,0.15)' : 'none',
               transition: 'background 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 180ms ease',
               whiteSpace: 'nowrap',
+              flexShrink: 0, // ADDED: pills keep their natural width, never get squished
             })}
             onMouseEnter={e => {
               if (e.currentTarget.getAttribute('aria-current') !== 'page') {
@@ -115,11 +139,12 @@ export default function Navbar() {
           }}>
             👤
           </div>
-          <div style={{ textAlign: 'left', lineHeight: 1.2 }}>
-            <div style={{ color: '#fff', fontSize: 13.5, fontWeight: 700 }}>{user?.name}</div>
+          {/* MODIFIED: hide name/role text block on narrower widths, same idea as brand text */}
+          <div className="navbar-user-text" style={{ textAlign: 'left', lineHeight: 1.2 }}>
+            <div style={{ color: '#fff', fontSize: 13.5, fontWeight: 700, whiteSpace: 'nowrap' }}>{user?.name}</div>
             <div style={{
               color: 'rgba(255,255,255,0.75)', fontSize: 10.5, fontWeight: 700,
-              textTransform: 'uppercase', letterSpacing: 0.6,
+              textTransform: 'uppercase', letterSpacing: 0.6, whiteSpace: 'nowrap',
             }}>
               {user?.role}
             </div>
@@ -134,6 +159,8 @@ export default function Navbar() {
             borderRadius: 'var(--radius-full)',
             fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
             transition: 'all 200ms ease',
+            flexShrink: 0, // ADDED: sign out button keeps its size
+            whiteSpace: 'nowrap', // ADDED
           }}
           onMouseEnter={e => {
             e.currentTarget.style.background = 'rgba(220,38,38,0.85)'
@@ -147,6 +174,29 @@ export default function Navbar() {
           Sign Out
         </button>
       </div>
+
+      {/* ADDED: responsive rules + custom thin scrollbar styling for the pill bar.
+          At <=1024px the brand wordmark and user name/role text collapse first,
+          giving the pill bar more room before it ever needs to scroll.
+          Below that, the pill bar scrolls horizontally instead of wrapping. */}
+      <style>{`
+        .navbar-scroll::-webkit-scrollbar {
+          height: 4px;
+        }
+        .navbar-scroll::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.35);
+          border-radius: 4px;
+        }
+        .navbar-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        @media (max-width: 1024px) {
+          .navbar-brand-text { display: none !important; }
+        }
+        @media (max-width: 860px) {
+          .navbar-user-text { display: none !important; }
+        }
+      `}</style>
     </nav>
   )
 }

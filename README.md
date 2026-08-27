@@ -46,16 +46,6 @@ npm run dev
 
 ### Terminal 3 — Analytics
 ```bash
-
 .\venv\Scripts\activate
 uvicorn analytics_service:app --reload --port 8000
-
 ```
-
-
-
-<<<<<<< HEAD
-|
-=======
-|
->>>>>>> 0a238746efde8312a5f608bcb22c4902a17b5ba1
